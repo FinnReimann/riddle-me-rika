@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="750" height="1050" viewBox="0 0 750 1050" font-family="Arial, Helvetica, sans-serif">
+  <!-- Riddle Me Rika – CARD BACK template, 750 x 1050 px. Shown on the draw pile only. -->
+  <rect x="0" y="0" width="750" height="1050" rx="67.5" ry="67.5" fill="#2f3d6b" stroke="#26325a" stroke-width="3"/>
+
+  <!-- safe area -->
+  <rect x="45" y="45" width="660" height="960" rx="36" ry="36" fill="none" stroke="#ffffff" stroke-opacity="0.75" stroke-width="3" stroke-dasharray="14 10"/>
+  <text x="70" y="85" font-size="20" font-weight="700" fill="#ffffff" fill-opacity="0.85">SAFE AREA · 45 px inset · keep logo / text inside</text>
+
+  <!-- centre motif zone -->
+  <circle cx="375" cy="525" r="200" fill="#ffffff" fill-opacity="0.06" stroke="#ffffff" stroke-opacity="0.6" stroke-width="3"/>
+  <text x="375" y="512" text-anchor="middle" font-size="36" font-weight="800" fill="#ffffff">centre motif</text>
+  <text x="375" y="552" text-anchor="middle" font-size="24" fill="#ffffff" fill-opacity="0.8">e.g. logo, ~400 px</text>
+
+  <!-- notes -->
+  <text x="375" y="900" text-anchor="middle" font-size="22" fill="#ffffff" fill-opacity="0.85">Pattern / colour can run edge to edge (full bleed)</text>
+  <text x="375" y="932" text-anchor="middle" font-size="22" fill="#ffffff" fill-opacity="0.85">Corners are cut round (radius 67.5 px)</text>
+  <text x="375" y="985" text-anchor="middle" font-size="22" font-weight="700" fill="#ffffff">CARD BACK · 750 x 1050 px · card-back.png</text>
+</svg>

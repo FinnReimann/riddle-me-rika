@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" font-family="Arial, Helvetica, sans-serif">
+  <!-- Riddle Me Rika – SYMBOL template, 512 x 512 px, transparent background.
+       Scaled to fit the symbol area (570 x 570 on a 750 px card, ~60–90 px on a phone). -->
+  <rect x="1.5" y="1.5" width="509" height="509" fill="none" stroke="#9aa4b3" stroke-width="3"/>
+  <!-- safe area -->
+  <rect x="40" y="40" width="432" height="432" fill="#2e9e4f" fill-opacity="0.06" stroke="#2e9e4f" stroke-width="3" stroke-dasharray="12 8"/>
+  <line x1="256" y1="40" x2="256" y2="472" stroke="#2e9e4f" stroke-opacity="0.25" stroke-width="2"/>
+  <line x1="40" y1="256" x2="472" y2="256" stroke="#2e9e4f" stroke-opacity="0.25" stroke-width="2"/>
+  <text x="256" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#24803f">SAFE AREA · 40 px padding · draw inside</text>
+  <text x="256" y="232" text-anchor="middle" font-size="30" font-weight="800" fill="#24803f">symbol</text>
+  <text x="256" y="296" text-anchor="middle" font-size="18" fill="#24803f">bold shapes, thick lines (≥ 16 px)</text>
+  <text x="256" y="322" text-anchor="middle" font-size="18" fill="#24803f">must still read at 60 px</text>
+  <text x="256" y="498" text-anchor="middle" font-size="16" font-weight="700" fill="#5b6676">512 x 512 px · transparent PNG · assets/symbols/&lt;name&gt;.png</text>
+</svg>

@@ -1,0 +1,448 @@
+/* =========================================================================
+   cards.css - THE CARD DESIGN LAYER for Riddle Me Rika
+   -------------------------------------------------------------------------
+   Everything about how cards, piles and fields LOOK lives here.
+   style.css only places things and computes the card width from the
+   screen size; game.js never sets visual styles.
+
+   QUICK START
+   - Change the variables in the first :root block (light mode).
+   - Change the same variables in the two dark blocks below it. The dark
+     values appear twice on purpose: once for "follow the system", once for a
+     forced <html data-theme="dark">. Keep them identical.
+   - Sizes that scale with the card use --card-w / --card-h (set by
+     style.css from the screen size), e.g. calc(var(--card-w) * 0.15).
+
+   CARD ANATOMY (portrait, like a playing card)
+     .card                     the card (face by default)
+       .card__word             word, at the TOP (data-len = s | m | l | xl)
+       .card__art              symbol area in the lower part
+         img.card__symbol      assets/symbols/<symbol>.png  (see SYMBOLS.md)
+         .card__placeholder    shown instead when the image is missing
+
+   CLASS MAP (stable names, used by game.js)
+   .pile--draw / .pile--discard / .pile--done   the three top-row piles
+   .card--back               face-down card under the draw pile's top card
+   .card--under              card edge under the discard pile's top card
+   .card--done, .card--done-under   Done pile card (+ edges under it)
+   .card--empty              empty pile placeholder (+ .card__hint text)
+   .card--field              a card inside a field (--i = 0..3, stack position)
+   .card.is-top              a playable card (top of draw / discard)
+   .card.is-selected         the card a tap on a field will play
+   .card.is-new              just landed in a field
+   .card.is-bounce           tapped onto a field where it didn't fit
+   .card.is-drag-source      original card while being dragged
+   .card-ghost               floating copy that follows the finger (+ .is-returning)
+   .card-flying              copies flying to the Done pile
+   .pile__flip               "Flip discard" button on the empty draw pile
+   .field (.is-empty, .is-complete, .is-wrong, .is-correct, .is-drop-target)
+   .field__hint / .field__reveal / .field__theme
+   .tier-1 ... .tier-4       sets --tier-bg / --tier-ink
+   .done__theme / .done__count / .done-list__item
+   ========================================================================= */
+
+:root {
+  /* ---- Size & shape ------------------------------------------------------ */
+  --card-ratio: 1.4;               /* height / width (1.4 = 5:7 playing card) */
+  --card-max-w: 132px;             /* never wider than this (tablets / desktop) */
+  --stack-ratio: 0.23;             /* visible strip of a covered card in a field, as a fraction of card height */
+  --stack-offset: calc(var(--card-h) * var(--stack-ratio));
+  --pile-offset: 2.5px;            /* how far cards under a pile's top card peek out */
+  --card-radius: calc(var(--card-w) * 0.09);
+  --card-border: 1px solid #e2d6bd;
+  --card-shadow: 0 1px 1px rgba(16, 24, 40, 0.07), 0 3px 8px rgba(16, 24, 40, 0.10);
+
+  /* ---- Card face ----------------------------------------------------------- */
+  --card-bg: #f9f0de;              /* shows while the image loads / if it is missing */
+  --card-face-image: url("assets/card-face.png");   /* none = plain --card-bg */
+  --card-face-image-size: cover;
+
+  /* ---- Word (top of the card) ---------------------------------------------- */
+  --word-font: "Bricolage Grotesque", "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --word-size: calc(var(--card-w) * 0.155);   /* for words up to 7 letters; longer words scale down */
+  --word-weight: 700;
+  --word-color: #151b26;
+  --word-tracking: -0.01em;
+  --word-transform: none;          /* try: uppercase (long words may then need a smaller --word-size) */
+  --word-top: calc(var(--card-h) * 0.052);    /* distance from the card's top edge */
+  --word-inset: 5%;                /* left/right padding */
+
+  /* ---- Symbol area (lower part of the card) ---------------------------------- */
+  --symbol-top: 30%;               /* top of the symbol area, % of card height */
+  --symbol-bottom: 8%;             /* gap below it */
+  --symbol-inset: 12%;             /* left/right gap */
+
+  /* ---- Placeholder (when assets/symbols/<symbol>.png is missing) ------------ */
+  --placeholder-size: 74%;         /* of the symbol area's width */
+  --placeholder-bg: rgba(160, 130, 80, 0.08);
+  --placeholder-border: 1.5px dashed #d3c19c;
+  --placeholder-radius: 22%;
+  --placeholder-color: #a48d63;
+  --placeholder-font: var(--word-font);
+  --placeholder-font-size: calc(var(--card-w) * 0.26);
+
+  /* ---- Card back (draw pile) ---------------------------------------------- */
+  --card-back-bg: #f9f0de;
+  --card-back-pattern: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.08) 0 5px, transparent 5px 11px);
+  --card-back-image: url("assets/card-back.png");   /* none = colour + pattern below */
+  --card-back-border: 1px solid #e2d6bd;
+
+  /* ---- Empty piles ------------------------------------------------------------ */
+  --slot-border: 1.5px dashed #c4ccd8;
+  --slot-bg: transparent;
+  --slot-ink: #8590a1;
+
+  /* ---- Flip discard button (empty draw pile) --------------------------------- */
+  --flip-bg: #e7eaff;
+  --flip-border: 1.5px dashed #6a78e0;
+  --flip-ink: #2b3aa8;
+
+  /* ---- Fields ------------------------------------------------------------------ */
+  --field-bg: rgba(255, 255, 255, 0.45);
+  --field-border: 1.5px dashed #c3cbd7;
+  --field-radius: calc(var(--card-radius) + 3px);
+  --field-hint: #9aa4b3;
+
+  /* ---- States --------------------------------------------------------------------- */
+  --selected-ring: #3446c9;        /* card a tap on a field will play */
+  --selected-lift: -4px;
+  --drop-ring: #3446c9;            /* target under the finger while dragging */
+  --drop-bg: rgba(52, 70, 201, 0.08);
+  --wrong: #d23b30;                /* "doesn't fit" flash */
+  --wrong-bg: rgba(210, 59, 48, 0.14);
+  --correct: #2e9e4f;              /* correct placement flash */
+  --correct-bg: rgba(46, 158, 79, 0.14);
+  --ghost-shadow: 0 16px 32px rgba(16, 24, 40, 0.28);
+  --ghost-rotate: -4deg;
+  --ghost-scale: 1.06;
+  --drag-source-opacity: 0.25;
+
+  /* ---- Tier colours (category difficulty; tier 1 = easy) ------------------------ */
+  --tier-1: #b7dfaa;  --tier-1-ink: #1c3a13;   /* green  */
+  --tier-2: #f3db7d;  --tier-2-ink: #3e3104;   /* yellow */
+  --tier-3: #f4b98b;  --tier-3-ink: #4b220a;   /* orange */
+  --tier-4: #cdbaf2;  --tier-4-ink: #2d1a5b;   /* purple */
+
+  /* ---- Done pile ----------------------------------------------------------------- */
+  --done-font-size: calc(var(--card-w) * 0.13);
+  --done-under-bg: #dfe4ec;
+}
+
+/* ---- Dark mode: follow the system (unless forced light) ----------------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --card-shadow: 0 1px 1px rgba(0, 0, 0, 0.3), 0 4px 10px rgba(0, 0, 0, 0.35);
+    --slot-border: 1.5px dashed #3a4454;
+    --slot-ink: #7d889a;
+    --flip-bg: #252c52;
+    --flip-border: 1.5px dashed #8f9dff;
+    --flip-ink: #d6dbff;
+    --field-bg: rgba(255, 255, 255, 0.03);
+    --field-border: 1.5px dashed #364050;
+    --field-hint: #5f6b7d;
+    --selected-ring: #8f9dff;
+    --drop-ring: #8f9dff;
+    --drop-bg: rgba(143, 157, 255, 0.1);
+    --wrong: #ff6b60;
+    --wrong-bg: rgba(255, 107, 96, 0.16);
+    --correct: #5fd17f;
+    --correct-bg: rgba(95, 209, 127, 0.14);
+    --ghost-shadow: 0 16px 32px rgba(0, 0, 0, 0.55);
+    --tier-1: #3f7a3c;  --tier-1-ink: #ecf8e6;
+    --tier-2: #86701f;  --tier-2-ink: #fff7d8;
+    --tier-3: #9a5527;  --tier-3-ink: #ffece0;
+    --tier-4: #6a4bab;  --tier-4-ink: #f2ebff;
+    --done-under-bg: #2c3442;
+  }
+}
+
+/* ---- Dark mode: forced with <html data-theme="dark"> (same values) ------ */
+:root[data-theme="dark"] {
+  --card-shadow: 0 1px 1px rgba(0, 0, 0, 0.3), 0 4px 10px rgba(0, 0, 0, 0.35);
+  --slot-border: 1.5px dashed #3a4454;
+  --slot-ink: #7d889a;
+  --flip-bg: #252c52;
+  --flip-border: 1.5px dashed #8f9dff;
+  --flip-ink: #d6dbff;
+  --field-bg: rgba(255, 255, 255, 0.03);
+  --field-border: 1.5px dashed #364050;
+  --field-hint: #5f6b7d;
+  --selected-ring: #8f9dff;
+  --drop-ring: #8f9dff;
+  --drop-bg: rgba(143, 157, 255, 0.1);
+  --wrong: #ff6b60;
+  --wrong-bg: rgba(255, 107, 96, 0.16);
+  --correct: #5fd17f;
+  --correct-bg: rgba(95, 209, 127, 0.14);
+  --ghost-shadow: 0 16px 32px rgba(0, 0, 0, 0.55);
+  --tier-1: #3f7a3c;  --tier-1-ink: #ecf8e6;
+  --tier-2: #86701f;  --tier-2-ink: #fff7d8;
+  --tier-3: #9a5527;  --tier-3-ink: #ffece0;
+  --tier-4: #6a4bab;  --tier-4-ink: #f2ebff;
+  --done-under-bg: #2c3442;
+}
+
+/* =========================================================================
+   Card
+   ========================================================================= */
+.card {
+  position: relative;
+  box-sizing: border-box;
+  display: block;
+  width: var(--card-w);
+  height: var(--card-h);
+  padding: 0;
+  margin: 0;
+  border-radius: var(--card-radius);
+  border: var(--card-border);
+  background: var(--card-face-image) center / var(--card-face-image-size) no-repeat, var(--card-bg);
+  box-shadow: var(--card-shadow);
+  color: var(--word-color);
+  font-family: var(--word-font);
+  text-align: center;
+  overflow: hidden;
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+
+.card__word {
+  position: absolute;
+  top: var(--word-top);
+  left: var(--word-inset);
+  right: var(--word-inset);
+  font-size: var(--word-size);
+  font-weight: var(--word-weight);
+  letter-spacing: var(--word-tracking);
+  text-transform: var(--word-transform);
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+}
+.card__word[data-len="m"]  { font-size: calc(var(--word-size) * 0.9); }   /* 8-9 letters */
+.card__word[data-len="l"]  { font-size: calc(var(--word-size) * 0.8); letter-spacing: -0.02em; }   /* 10-12 */
+.card__word[data-len="xl"] { font-size: calc(var(--word-size) * 0.66); letter-spacing: -0.03em; }  /* 13+ */
+
+.card__art {
+  position: absolute;
+  top: var(--symbol-top);
+  bottom: var(--symbol-bottom);
+  left: var(--symbol-inset);
+  right: var(--symbol-inset);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.card__symbol {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  -webkit-user-drag: none;
+}
+.card__placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--placeholder-size);
+  max-height: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--placeholder-radius);
+  border: var(--placeholder-border);
+  background: var(--placeholder-bg);
+  color: var(--placeholder-color);
+  font-family: var(--placeholder-font);
+  font-size: var(--placeholder-font-size);
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Cards under a pile's top card: --i = 1 (closest) .. 2 (deepest) */
+.card--back,
+.card--under,
+.card--done-under {
+  transform: translate(calc(var(--i, 1) * var(--pile-offset)), calc(var(--i, 1) * var(--pile-offset)));
+}
+.card--back {
+  background: var(--card-back-image) center / cover no-repeat, var(--card-back-pattern), var(--card-back-bg);
+  border: var(--card-back-border);
+}
+.card--done-under { background: var(--done-under-bg); }
+
+/* Empty pile */
+.card--empty {
+  background: var(--slot-bg);
+  border: var(--slot-border);
+  box-shadow: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.card__hint {
+  font-family: var(--word-font);
+  font-size: calc(var(--card-w) * 0.12);
+  font-weight: 600;
+  color: var(--slot-ink);
+}
+
+/* Playable cards */
+.card.is-top { cursor: grab; touch-action: none; }
+.card.is-selected {
+  box-shadow: 0 0 0 2.5px var(--selected-ring), var(--card-shadow);
+  transform: translateY(var(--selected-lift));
+}
+.card.is-new { animation: rr-card-in 220ms ease-out; }
+.card.is-bounce { animation: rr-bounce 420ms ease; }
+.card.is-drag-source { opacity: var(--drag-source-opacity); box-shadow: none; transform: none; }
+
+@keyframes rr-card-in {
+  from { transform: translateY(-10px) scale(0.96); opacity: 0.5; }
+  to   { transform: none; opacity: 1; }
+}
+@keyframes rr-bounce {
+  0%   { transform: translateY(var(--selected-lift)); }
+  25%  { transform: translateY(14px); }
+  55%  { transform: translateY(-8px); }
+  80%  { transform: translateY(2px); }
+  100% { transform: translateY(var(--selected-lift)); }
+}
+
+/* Dragging */
+.card-ghost {
+  box-shadow: var(--ghost-shadow) !important;
+  transform: rotate(var(--ghost-rotate)) scale(var(--ghost-scale));
+  animation: none !important;
+}
+.card-ghost.is-returning { transform: none; }
+.card-flying { box-shadow: var(--card-shadow); }
+
+/* =========================================================================
+   Top-row piles
+   ========================================================================= */
+.pile--draw, .pile--discard, .pile--done { border-radius: var(--card-radius); }
+.pile--done { cursor: pointer; }
+.slot--drop.is-drop-target .pile--discard > .card:last-child,
+.slot--drop.is-drop-target .pile--discard > .card--empty {
+  box-shadow: 0 0 0 2.5px var(--drop-ring), var(--card-shadow);
+}
+
+.pile__flip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: var(--card-radius);
+  border: var(--flip-border);
+  background: var(--flip-bg);
+  color: var(--flip-ink);
+  font-family: var(--word-font);
+  font-weight: 700;
+  padding: 0;
+}
+.pile__flip-icon { font-size: calc(var(--card-w) * 0.34); line-height: 1; }
+.pile__flip-text { font-size: calc(var(--card-w) * 0.12); line-height: 1.1; }
+
+/* Done pile */
+.tier-1 { --tier-bg: var(--tier-1); --tier-ink: var(--tier-1-ink); }
+.tier-2 { --tier-bg: var(--tier-2); --tier-ink: var(--tier-2-ink); }
+.tier-3 { --tier-bg: var(--tier-3); --tier-ink: var(--tier-3-ink); }
+.tier-4 { --tier-bg: var(--tier-4); --tier-ink: var(--tier-4-ink); }
+
+.card--done {
+  background: var(--tier-bg);
+  color: var(--tier-ink);
+  border-color: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 6%;
+}
+.done__theme {
+  font-size: var(--done-font-size);
+  font-weight: 800;
+  line-height: 1.12;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  overflow-wrap: anywhere;
+}
+.done__count {
+  font-family: var(--word-font);
+  font-size: calc(var(--card-w) * 0.12);
+  font-weight: 700;
+  opacity: 0.8;
+  font-variant-numeric: tabular-nums;
+}
+.card--done.is-pop { animation: rr-pop-card 360ms cubic-bezier(0.2, 0.8, 0.25, 1.3); }
+@keyframes rr-pop-card { from { transform: scale(0.86); } to { transform: none; } }
+
+/* Completed categories sheet */
+.done-list__item {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--tier-bg);
+  color: var(--tier-ink);
+}
+.done-list__theme { font-family: var(--word-font); font-size: 14px; text-transform: uppercase; letter-spacing: 0.03em; }
+.done-list__words { font-size: 14px; }
+
+/* =========================================================================
+   Fields
+   ========================================================================= */
+.field {
+  border-radius: var(--field-radius);
+  border: var(--field-border);
+  background: var(--field-bg);
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.field__hint {
+  font-family: var(--word-font);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--field-hint);
+}
+.field.is-drop-target { border-color: transparent; background: var(--drop-bg); box-shadow: 0 0 0 2.5px var(--drop-ring); }
+.field.is-wrong { animation: rr-shake 0.42s ease; border-color: transparent; background: var(--wrong-bg); box-shadow: 0 0 0 2.5px var(--wrong); }
+.field.is-correct { border-color: transparent; background: var(--correct-bg); box-shadow: 0 0 0 2.5px var(--correct); }
+
+.card--field { box-shadow: 0 -1px 2px rgba(16, 24, 40, 0.06), var(--card-shadow); }
+
+/* Completed field: theme name shown for a moment */
+.field__reveal {
+  padding: 8px 4px;
+  border-radius: 10px;
+  background: var(--tier-bg);
+  color: var(--tier-ink);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+  text-align: center;
+  animation: rr-reveal 300ms cubic-bezier(0.2, 0.8, 0.25, 1.2) both;
+}
+.field__reveal.is-leaving { opacity: 0; transition: opacity 0.2s ease; }
+.field__theme {
+  font-family: var(--word-font);
+  font-size: calc(var(--card-w) * 0.13);
+  font-weight: 800;
+  line-height: 1.12;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  overflow-wrap: anywhere;
+}
+@keyframes rr-reveal { from { transform: scale(0.6); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes rr-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(3px); }
+}
+
+/* =========================================================================
+   Reduced motion
+   ========================================================================= */
+@media (prefers-reduced-motion: reduce) {
+  .card, .field { transition: none; }
+  .card.is-new, .card.is-bounce, .card--done.is-pop, .field.is-wrong, .field__reveal { animation: none; }
+  .card-ghost { transform: none; }
+}

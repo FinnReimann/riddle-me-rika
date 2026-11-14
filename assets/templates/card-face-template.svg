@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="750" height="1050" viewBox="0 0 750 1050" font-family="Arial, Helvetica, sans-serif">
+  <!-- Riddle Me Rika – CARD FACE template, 750 x 1050 px (5:7, like a poker card at 300 dpi).
+       Zones match cards.css: word-top 5.2%, word-inset 5%, symbol-top 30%,
+       symbol-bottom 8%, symbol-inset 12%, stack-ratio 0.23, card-radius 9% of width. -->
+  <defs>
+    <clipPath id="card"><rect x="0" y="0" width="750" height="1050" rx="67.5" ry="67.5"/></clipPath>
+  </defs>
+
+  <!-- whole card -->
+  <rect x="0" y="0" width="750" height="1050" rx="67.5" ry="67.5" fill="#ffffff" stroke="#9aa4b3" stroke-width="3"/>
+
+  <g clip-path="url(#card)">
+    <!-- visible strip when cards are stacked in a field -->
+    <rect x="0" y="0" width="750" height="241.5" fill="#3446c9" fill-opacity="0.08"/>
+    <line x1="0" y1="241.5" x2="750" y2="241.5" stroke="#3446c9" stroke-width="3" stroke-dasharray="14 10"/>
+    <text x="375" y="232" text-anchor="middle" font-size="20" font-weight="700" fill="#3446c9">STACK LINE · top 23% (241 px) stays visible when covered</text>
+  </g>
+
+  <!-- word zone -->
+  <rect x="37.5" y="55" width="675" height="140" fill="#f2a64a" fill-opacity="0.16" stroke="#d9822b" stroke-width="3" stroke-dasharray="12 8"/>
+  <text x="375" y="148" text-anchor="middle" font-size="96" font-weight="800" fill="#151b26" fill-opacity="0.35">Calculator</text>
+  <text x="375" y="44" text-anchor="middle" font-size="20" font-weight="700" fill="#b0661c">WORD · set by the game as text · x 37–712, y 55–195</text>
+
+  <!-- symbol area -->
+  <rect x="90" y="315" width="570" height="651" fill="#2e9e4f" fill-opacity="0.06" stroke="#2e9e4f" stroke-width="3" stroke-dasharray="12 8"/>
+  <text x="102" y="342" font-size="20" font-weight="700" fill="#24803f">SYMBOL AREA · x 90–660, y 315–966 (570 x 651)</text>
+  <!-- square symbol, centred in the area -->
+  <rect x="90" y="355.5" width="570" height="570" fill="none" stroke="#2e9e4f" stroke-width="4"/>
+  <line x1="90" y1="355.5" x2="660" y2="925.5" stroke="#2e9e4f" stroke-opacity="0.25" stroke-width="2"/>
+  <line x1="660" y1="355.5" x2="90" y2="925.5" stroke="#2e9e4f" stroke-opacity="0.25" stroke-width="2"/>
+  <text x="375" y="625" text-anchor="middle" font-size="34" font-weight="800" fill="#24803f">your symbol</text>
+  <text x="375" y="668" text-anchor="middle" font-size="24" fill="#24803f">square PNG, shown at 570 x 570 here</text>
+  <text x="375" y="702" text-anchor="middle" font-size="24" fill="#24803f">(separate file, see symbol-template)</text>
+
+  <!-- corner radius -->
+  <path d="M 0 67.5 A 67.5 67.5 0 0 1 67.5 0" fill="none" stroke="#c23a30" stroke-width="4"/>
+  <text x="375" y="1028" text-anchor="middle" font-size="18" font-weight="700" fill="#c23a30">round corners, radius 67.5 px · keep details away from them</text>
+
+  <!-- size label -->
+  <text x="375" y="998" text-anchor="middle" font-size="22" font-weight="700" fill="#5b6676">CARD FACE · 750 x 1050 px · background behind word + symbol</text>
+</svg>
