@@ -2,7 +2,7 @@
    Strategy: serve from cache right away, refresh the cache in the background
    (stale-while-revalidate). Bump CACHE_VERSION when you want every device to
    drop its old copy at once (e.g. after a big redesign). */
-const CACHE_VERSION = 'rmr-v1';
+const CACHE_VERSION = 'rmr-v2';
 
 const CORE = [
   './',
@@ -10,6 +10,7 @@ const CORE = [
   './style.css',
   './cards.css',
   './categories.js',
+  './i18n.js',
   './game.js',
   './manifest.webmanifest',
   './assets/card-face.png',

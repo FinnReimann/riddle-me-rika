@@ -6,7 +6,8 @@
               via module.exports and exposed in the browser as window.RikaCore.
    2. UI    - DOM rendering, pointer/touch handling, persistence, modals.
               Only runs when a `document` exists.
-   Categories come from window.CATEGORIES (categories.js).
+   Categories come from window.CATEGORIES (categories.js), all texts from
+   window.RIKA_I18N (i18n.js, loaded before this file).
    ========================================================================= */
 (function (root) {
   'use strict';
@@ -79,6 +80,9 @@
 
     function tierOf(c) { return typeof c.tier === 'number' ? c.tier : 1; }
 
+    /** Optional text field (e.g. wordDe): string, or '' if missing. */
+    function optText(v) { return (typeof v === 'string' || typeof v === 'number') ? String(v) : ''; }
+
     function validCard(cd) {
       return cd && (typeof cd.word === 'string' || typeof cd.word === 'number') && String(cd.word).length > 0;
     }
@@ -95,7 +99,9 @@
 
     /**
      * The daily game: same for everyone on a given day.
-     * Returns { cats:[{id,theme,tier}], cards:[{id,word,symbol,cat}], order:[ids], sig }
+     * Returns { cats:[{id,theme,themeDe,tier}], cards:[{id,word,wordDe,symbol,cat}], order:[ids], sig }
+     * (themeDe / wordDe are '' when categories.js has no German text).
+     * sig only uses the English words, so a save survives a language switch.
      * or null if the pool is too small.
      */
     function buildGame(list, day) {
@@ -105,9 +111,9 @@
       var picked = shuffleWith(pool, rng).slice(0, CATEGORIES_PER_GAME);
       var cats = [], cards = [];
       picked.forEach(function (c, ci) {
-        cats.push({ id: c.id, theme: c.theme, tier: tierOf(c) });
+        cats.push({ id: c.id, theme: c.theme, themeDe: optText(c.themeDe), tier: tierOf(c) });
         shuffleWith(c.cards.filter(validCard), rng).slice(0, CARDS_PER_CATEGORY).forEach(function (cd) {
-          cards.push({ id: cards.length, word: String(cd.word), symbol: cd.symbol ? String(cd.symbol) : '', cat: ci });
+          cards.push({ id: cards.length, word: String(cd.word), wordDe: optText(cd.wordDe), symbol:cd.symbol ? String(cd.symbol) : '', cat: ci });
         });
       });
       var order = shuffleWith(cards.map(function (c) { return c.id; }), rng);
@@ -313,12 +319,20 @@
       return s.lastWonDay === today || s.lastWonDay === today - 1 ? s.streak : 0;
     }
 
-    function shareText(puzzleNo, mistakes, streak) {
+    /**
+     * Share text. `tr` (optional) translates: tr(key, vars) with the i18n.js
+     * keys mistakeCountOne / mistakeCountOther / shareStreak. Default: English.
+     */
+    function shareText(puzzleNo, mistakes, streak, tr) {
+      var t = tr || function (key, v) {
+        if (key === 'shareStreak') return 'Streak: ' + v.n;
+        return v.n + (key === 'mistakeCountOne' ? ' mistake' : ' mistakes');
+      };
       return [
         "Riddle Me Rika #" + puzzleNo,
         starString(stars(mistakes)),
-        mistakes + (mistakes === 1 ? ' mistake' : ' mistakes'),
-        'Streak: ' + streak
+        t(mistakes === 1 ? 'mistakeCountOne' : 'mistakeCountOther', { n: mistakes }),
+        t('shareStreak', { n: streak })
       ].join('\n');
     }
 
@@ -412,12 +426,59 @@
     return el;
   }
 
+  /* ---------- language (texts in i18n.js) ---------- */
+  var KEY_LANG = 'rr:lang';
+  var LANGS = ['en', 'de'];
+  var I18N = root.RIKA_I18N || {};
+  var lang = initialLang();
+
+  function initialLang() {
+    var saved = store.get(KEY_LANG);
+    if (LANGS.indexOf(saved) >= 0) return saved;
+    var nav = '';
+    try { nav = String(navigator.language || ''); } catch (e) { /* ignore */ }
+    return nav.toLowerCase().indexOf('de') === 0 ? 'de' : 'en';
+  }
+
+  function otherLang() { return lang === 'de' ? 'en' : 'de'; }
+
+  /** Translated text for `key`, {placeholders} filled from `vars`. Falls back to English, then the key. */
+  function t(key, vars) {
+    var tab = I18N[lang] || {};
+    var s = tab[key];
+    if (s === undefined) s = (I18N.en || {})[key];
+    if (s === undefined) s = key;
+    return String(s).replace(/\{(\w+)\}/g, function (m, k) {
+      return vars && vars[k] !== undefined ? String(vars[k]) : m;
+    });
+  }
+
+  /** Singular / plural: key + 'One' when n === 1, else key + 'Other'. */
+  function tn(key, n, vars) {
+    var v = vars || {};
+    v.n = n;
+    return t(key + (n === 1 ? 'One' : 'Other'), v);
+  }
+
+  /** Card word / category name in the active language (English if no German text). */
+  function wordOf(c) { return lang === 'de' && c.wordDe ? c.wordDe : c.word; }
+  function themeOf(cat) { return lang === 'de' && cat.themeDe ? cat.themeDe : cat.theme; }
+
+  /** Length class for a category name, from its longest word: s <=9, l 10-12, xl 13+. */
+  function themeLen(theme) {
+    var n = 0;
+    theme.replace(/­/g, '').split(/\s+/).forEach(function (w) { n = Math.max(n, w.length); });
+    return n <= 9 ? 's' : n <= 12 ? 'l' : 'xl';
+  }
+
+  /** Word-length class for the card's top text: s <=7, m <=9, l <=11, xl <=13, xxl 14+. */
   function lenClass(word) {
-    var n = word.length;
+    var n = word.replace(/­/g, '').length; // soft hyphens (­) don't count
     if (n <= 7) return 's';
     if (n <= 9) return 'm';
-    if (n <= 12) return 'l';
-    return 'xl';
+    if (n <= 11) return 'l';
+    if (n <= 13) return 'xl';
+    return 'xxl';
   }
 
   function reducedMotion() {
@@ -438,6 +499,7 @@
   var ptr = null;       // active pointer interaction
   var toastTimer = 0;
   var failedSymbols = {}; // symbol -> true once its image failed to load
+  var fatalKey = null;    // i18n key of the error shown instead of the game
 
   function gameKey(d) { return KEY_GAME_PREFIX + d; }
   function save() { store.set(gameKey(day), JSON.stringify(state)); }
@@ -465,8 +527,12 @@
     els.mistakes = document.getElementById('mistakes');
     els.sub = document.getElementById('sub');
     els.toast = document.getElementById('toast');
+    els.langBtn = document.getElementById('lang-btn');
+    els.langImg = els.langBtn.querySelector('.lang-btn__icon');
+    els.langText = els.langBtn.querySelector('.lang-btn__text');
 
     bindModals();
+    bindLang();
 
     var params;
     try { params = new URLSearchParams(root.location.search); } catch (e) { params = null; }
@@ -476,13 +542,12 @@
     day = isOverride ? parseInt(dayParam, 10) : realDay;
     puzzleNo = day + 1;
 
-    var date = Core.dateForDay(day);
-    els.sub.textContent = '#' + puzzleNo + ' · ' +
-      date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    applyStatic();
 
     game = Core.buildGame(root.CATEGORIES, day);
     if (!game) {
-      showFatal(Array.isArray(root.CATEGORIES) ? 'Not enough categories for a game.' : 'No categories found.');
+      fatalKey = Array.isArray(root.CATEGORIES) ? 'errNotEnough' : 'errNoCategories';
+      showFatal();
       return;
     }
 
@@ -516,8 +581,65 @@
     document.addEventListener('visibilitychange', function () { if (!document.hidden) tick(); });
   }
 
-  function showFatal(msg) {
-    els.fields.replaceChildren(h('p', { class: 'fatal', text: msg }));
+  function showFatal() {
+    els.fields.replaceChildren(h('p', { class: 'fatal', text: t(fatalKey) }));
+  }
+
+  /* ---------- language: static texts + toggle ---------- */
+  /**
+   * Texts that live in index.html: elements with data-i18n="key" get their
+   * text, data-i18n-aria="key" their aria-label. Also the header subtitle,
+   * <html lang> and the language button.
+   */
+  function applyStatic() {
+    document.documentElement.lang = lang;
+    var vars = { cards: Core.CONFIG.CARDS_PER_CATEGORY, cats: Core.CONFIG.CATEGORIES_PER_GAME };
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+      el.textContent = t(el.getAttribute('data-i18n'), vars);
+    });
+    document.querySelectorAll('[data-i18n-aria]').forEach(function (el) {
+      el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria'), vars));
+    });
+    if (puzzleNo !== undefined) {
+      var date = Core.dateForDay(day);
+      els.sub.textContent = t('sub', {
+        no: puzzleNo,
+        date: date.toLocaleDateString(t('dateLocale'), { month: 'short', day: 'numeric', year: 'numeric' })
+      });
+    }
+    renderLangBtn();
+  }
+
+  /**
+   * Language button: icon assets/icons/lang.png (set in index.html) plus a
+   * small badge with the CURRENT language ("EN" / "DE"). If the icon is
+   * missing, .lang-btn.no-icon shows only the text, larger.
+   */
+  function renderLangBtn() {
+    els.langBtn.setAttribute('aria-label', t('langSwitch'));
+    els.langText.textContent = t('langBadge');
+  }
+
+  function bindLang() {
+    function noIcon() { els.langBtn.classList.add('no-icon'); }
+    els.langImg.addEventListener('error', noIcon);
+    // the image may already have failed before this script ran
+    if (els.langImg.complete && !els.langImg.naturalWidth) noIcon();
+    els.langBtn.addEventListener('click', function () { setLang(otherLang()); });
+  }
+
+  /** Switch language instantly, keeping the game as it is. */
+  function setLang(l) {
+    if (LANGS.indexOf(l) < 0 || l === lang) return;
+    lang = l;
+    store.set(KEY_LANG, l);
+    applyStatic();
+    if (!game) { if (fatalKey) showFatal(); return; }
+    if (ptr) onCancel(); // a drag in progress snaps back
+    // mid-completion-animation the board re-renders by itself when done
+    if (!ui.busy) render();
+    renderStats();
+    renderDoneList();
   }
 
   function tick() {
@@ -530,7 +652,7 @@
 
   /* ---------- card elements ---------- */
   function placeholderEl(c) {
-    return h('span', { class: 'card__placeholder', 'aria-hidden': 'true', text: c.word.charAt(0).toUpperCase() });
+    return h('span', { class: 'card__placeholder', 'aria-hidden': 'true', text: wordOf(c).charAt(0).toUpperCase() });
   }
 
   function artEl(c) {
@@ -558,7 +680,7 @@
     Object.keys(a).forEach(function (k) { if (k !== 'cls') props[k] = a[k]; });
     if (tag === 'button') props.type = 'button';
     return h(tag, props,
-      h('span', { class: 'card__word', 'data-len': lenClass(c.word), text: c.word }),
+      h('span', { class: 'card__word', 'data-len': lenClass(wordOf(c)), text: wordOf(c) }),
       artEl(c));
   }
 
@@ -606,17 +728,17 @@
         cls: 'is-top' + (sel === 'draw' ? ' is-selected' : ''),
         'data-drag': 'draw',
         'aria-pressed': sel === 'draw' ? 'true' : 'false',
-        'aria-label': 'Draw pile: ' + c.word + (sel === 'draw' ? ' (selected, tap again to discard)' : '')
+        'aria-label': t(sel === 'draw' ? 'ariaDrawSelected' : 'ariaDraw', { word: wordOf(c) })
       }));
     } else if (Core.canFlip(state)) {
-      kids = [h('button', { type: 'button', class: 'pile__flip', 'data-action': 'flip', 'aria-label': 'Flip discard pile into draw pile' },
+      kids = [h('button', { type: 'button', class: 'pile__flip', 'data-action': 'flip', 'aria-label': t('ariaFlip') },
         h('span', { class: 'pile__flip-icon', 'aria-hidden': 'true', text: '↻' }),
-        h('span', { class: 'pile__flip-text', text: 'Flip discard' }))];
+        h('span', { class: 'pile__flip-text', text: t('flipDiscard') }))];
     } else {
       kids = [h('div', { class: 'card card--empty', 'aria-hidden': 'true' })];
     }
     els.draw.replaceChildren.apply(els.draw, kids);
-    els.drawLabel.textContent = 'Draw · ' + n;
+    els.drawLabel.textContent = t('labelDraw', { n: n });
   }
 
   function renderDiscard(sel) {
@@ -628,15 +750,15 @@
         cls: 'is-top' + (sel === 'discard' ? ' is-selected' : ''),
         'data-drag': 'discard',
         'aria-pressed': sel === 'discard' ? 'true' : 'false',
-        'aria-label': 'Discard pile: ' + c.word + (sel === 'discard' ? ' (selected)' : '')
+        'aria-label': t(sel === 'discard' ? 'ariaDiscardCardSelected' : 'ariaDiscardCard', { word: wordOf(c) })
       }));
     } else {
       kids = [h('div', { class: 'card card--empty', 'aria-hidden': 'true' },
-        state.status === 'playing' ? h('span', { class: 'card__hint', text: 'Park here' }) : null)];
+        state.status === 'playing' ? h('span', { class: 'card__hint', text: t('parkHere') }) : null)];
     }
     els.discard.replaceChildren.apply(els.discard, kids);
-    els.discard.setAttribute('aria-label', 'Discard pile, ' + n + (n === 1 ? ' card' : ' cards'));
-    els.discardLabel.textContent = 'Discard · ' + n;
+    els.discard.setAttribute('aria-label', tn('ariaDiscard', n));
+    els.discardLabel.textContent = t('labelDiscard', { n: n });
   }
 
   function renderDone() {
@@ -650,15 +772,15 @@
       kids = underCards(k, 'card--done-under').concat(h('div', {
         class: 'card card--done tier-' + cat.tier + (ui.donePop ? ' is-pop' : '')
       },
-        h('span', { class: 'done__theme', text: cat.theme }),
+        h('span', { class: 'done__theme', 'data-len': themeLen(themeOf(cat)), text: themeOf(cat) }),
         h('span', { class: 'done__count', text: k + '/' + total })));
     } else {
       kids = [h('div', { class: 'card card--empty' },
         h('span', { class: 'card__hint', text: '0/' + total }))];
     }
     els.done.replaceChildren.apply(els.done, kids);
-    els.done.setAttribute('aria-label', 'Done pile, ' + k + ' of ' + total + ' categories. Show completed categories');
-    els.doneLabel.textContent = 'Done · ' + k + '/' + total;
+    els.done.setAttribute('aria-label', t('ariaDone', { k: k, total: total }));
+    els.doneLabel.textContent = t('labelDone', { k: k, total: total });
   }
 
   function renderFields() {
@@ -679,19 +801,21 @@
           style: '--i:' + i, 'aria-hidden': 'true'
         });
       });
-      var words = ids.map(function (id) { return game.cards[id].word; }).join(', ');
+      var words = ids.map(function (id) { return wordOf(game.cards[id]); }).join(', ');
       var kids = cardsEls;
       if (reveal) {
         var cat = game.cats[reveal.cat];
         kids = kids.concat(h('div', { class: 'field__reveal tier-' + cat.tier },
-          h('span', { class: 'field__theme', text: cat.theme })));
+          h('span', { class: 'field__theme', 'data-len': themeLen(themeOf(cat)), text: themeOf(cat) })));
       } else if (!ids.length) {
-        kids = [h('span', { class: 'field__hint', text: 'Empty' })];
+        kids = [h('span', { class: 'field__hint', text: t('empty') })];
       }
       nodes.push(h('div', {
         class: 'field' + (ids.length ? '' : ' is-empty') + (reveal ? ' is-complete' : ''),
         'data-drop': String(f), role: 'button', tabindex: '0',
-        'aria-label': 'Field ' + (f + 1) + (ids.length ? ', ' + ids.length + ' of ' + Core.CONFIG.CARDS_PER_CATEGORY + ': ' + words : ', empty')
+        'aria-label': ids.length
+          ? t('ariaField', { f: f + 1, k: ids.length, max: Core.CONFIG.CARDS_PER_CATEGORY, words: words })
+          : t('ariaFieldEmpty', { f: f + 1 })
       }, kids));
     }
     els.fields.replaceChildren.apply(els.fields, nodes);
@@ -699,14 +823,15 @@
 
   function resultPanel() {
     var m = state.mistakes;
-    var shareBtn = h('button', { type: 'button', class: 'btn btn--primary result__share' }, 'Share');
+    var shareBtn = h('button', { type: 'button', class: 'btn btn--primary result__share' }, t('share'));
     shareBtn.addEventListener('click', share);
     return h('section', { class: 'result', 'aria-live': 'polite' },
-      h('h2', { class: 'result__title', text: 'Solved!' }),
-      h('p', { class: 'result__stars', 'aria-label': Core.stars(m) + ' of 3 stars', text: Core.starString(Core.stars(m)) }),
-      h('p', { class: 'result__meta', text: m + (m === 1 ? ' mistake' : ' mistakes') + ' · Streak ' + streakNow() }),
+      h('h2', { class: 'result__title', text: t('solved') }),
+      h('p', { class: 'result__stars', 'aria-label': t('ariaStars', { n: Core.stars(m) }), text: Core.starString(Core.stars(m)) }),
+      h('p', { class: 'result__meta', text: t('resultMeta', { mistakes: tn('mistakeCount', m), streak: streakNow() }) }),
       shareBtn,
-      h('p', { class: 'result__next' }, 'Next puzzle in ', h('span', { class: 'result__timer', id: 'timer', text: '--:--:--' }))
+      h('p', { class: 'result__next' }, t('nextPuzzle'),
+        h('span', { class: 'result__timer', id: 'timer', text: Core.formatCountdown(Core.msUntilMidnight(new Date())) }))
     );
   }
 
@@ -747,7 +872,7 @@
       if (res.mistake) {
         flash(dropEl(to), 'is-wrong');
         flash(els.mistakes.parentNode, 'is-bump');
-        toast('Doesn’t fit');
+        toast(t('toastWrong'));
       }
       return;
     }
@@ -787,7 +912,7 @@
         els.board.classList.remove('is-busy');
         if (res.won) recordResult();
         render();
-        if (res.won) toast('Solved!');
+        if (res.won) toast(t('toastSolved'));
       }, flyMs);
     }, quick ? 500 : REVEAL_MS);
   }
@@ -1030,7 +1155,7 @@
 
   /* ---------- share ---------- */
   function share() {
-    var text = Core.shareText(puzzleNo, state.mistakes, streakNow());
+    var text = Core.shareText(puzzleNo, state.mistakes, streakNow(), t);
     var coarse = false;
     try { coarse = root.matchMedia('(pointer: coarse)').matches; } catch (e) { /* ignore */ }
     if (navigator.share && coarse) {
@@ -1059,11 +1184,11 @@
         ok = document.execCommand('copy');
         document.body.removeChild(ta);
       } catch (e) { ok = false; }
-      toast(ok ? 'Copied' : 'Could not copy');
+      toast(t(ok ? 'toastCopied' : 'toastCopyFailed'));
     }
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(function () { toast('Copied'); }, fallback);
+        navigator.clipboard.writeText(text).then(function () { toast(t('toastCopied')); }, fallback);
         return;
       }
     } catch (e) { /* fall through */ }
@@ -1106,14 +1231,14 @@
   function renderDoneList() {
     var list = document.getElementById('done-list');
     if (!state || !state.done.length) {
-      list.replaceChildren(h('li', { class: 'done-list__empty', text: 'No categories completed yet.' }));
+      list.replaceChildren(h('li', { class: 'done-list__empty', text: t('doneEmpty') }));
       return;
     }
     list.replaceChildren.apply(list, state.done.map(function (ci) {
       var cat = game.cats[ci];
-      var words = game.cards.filter(function (c) { return c.cat === ci; }).map(function (c) { return c.word; });
+      var words = game.cards.filter(function (c) { return c.cat === ci; }).map(wordOf);
       return h('li', { class: 'done-list__item tier-' + cat.tier },
-        h('strong', { class: 'done-list__theme', text: cat.theme }),
+        h('strong', { class: 'done-list__theme', text: themeOf(cat) }),
         h('span', { class: 'done-list__words', text: words.join(' · ') }));
     }));
   }
@@ -1121,10 +1246,10 @@
   function renderStats() {
     var s = loadStats();
     var items = [
-      [s.played, 'Solved'],
-      [Core.currentStreak(s, realDay), 'Current streak'],
-      [s.best, 'Best streak'],
-      [s.stars[2], '★★★ games']
+      [s.played, t('statSolved')],
+      [Core.currentStreak(s, realDay), t('statStreak')],
+      [s.best, t('statBest')],
+      [s.stars[2], t('statThreeStars')]
     ];
     var grid = document.getElementById('stats-grid');
     grid.replaceChildren.apply(grid, items.map(function (it) {

@@ -10,193 +10,193 @@ Checklist of every card symbol in `categories.js`: **24 categories × 6 cards = 
 Tick a box (`[x]`) once a symbol is drawn.
 
 ## Fruit
-- [ ] apple.png — Apple
-- [ ] banana.png — Banana
-- [ ] pear.png — Pear
-- [ ] grapes.png — Grapes
-- [ ] pineapple.png — Pineapple
-- [ ] cherry.png — Cherry
+- [ ] apple.png — Apple / Apfel
+- [ ] banana.png — Banana / Banane
+- [ ] pear.png — Pear / Birne
+- [ ] grapes.png — Grapes / Weintrauben
+- [ ] pineapple.png — Pineapple / Ananas
+- [ ] cherry.png — Cherry / Kirsche
 
 ## Vegetables
-- [ ] carrot.png — Carrot
-- [ ] broccoli.png — Broccoli
-- [ ] onion.png — Onion
-- [ ] potato.png — Potato
-- [ ] garlic.png — Garlic
-- [ ] eggplant.png — Eggplant
+- [ ] carrot.png — Carrot / Karotte
+- [ ] broccoli.png — Broccoli / Brokkoli
+- [ ] onion.png — Onion / Zwiebel
+- [ ] potato.png — Potato / Kartoffel
+- [ ] garlic.png — Garlic / Knoblauch
+- [ ] eggplant.png — Eggplant / Aubergine
 
 ## Farm Animals
-- [ ] cow.png — Cow
-- [ ] pig.png — Pig
-- [ ] sheep.png — Sheep
-- [ ] horse.png — Horse
-- [ ] goat.png — Goat
-- [ ] donkey.png — Donkey
+- [ ] cow.png — Cow / Kuh
+- [ ] pig.png — Pig / Schwein
+- [ ] sheep.png — Sheep / Schaf
+- [ ] horse.png — Horse / Pferd
+- [ ] goat.png — Goat / Ziege
+- [ ] donkey.png — Donkey / Esel
 
 ## Sea Creatures
-- [ ] octopus.png — Octopus
-- [ ] whale.png — Whale
-- [ ] jellyfish.png — Jellyfish
-- [ ] starfish.png — Starfish
-- [ ] shark.png — Shark
-- [ ] seahorse.png — Seahorse
+- [ ] octopus.png — Octopus / Krake
+- [ ] whale.png — Whale / Wal
+- [ ] jellyfish.png — Jellyfish / Qualle
+- [ ] starfish.png — Starfish / Seestern
+- [ ] shark.png — Shark / Hai
+- [ ] seahorse.png — Seahorse / Seepferdchen
 
 ## Insects
-- [ ] bee.png — Bee
-- [ ] ant.png — Ant
-- [ ] butterfly.png — Butterfly
-- [ ] ladybug.png — Ladybug
-- [ ] grasshopper.png — Grasshopper
-- [ ] dragonfly.png — Dragonfly
+- [ ] bee.png — Bee / Biene
+- [ ] ant.png — Ant / Ameise
+- [ ] butterfly.png — Butterfly / Schmetterling
+- [ ] ladybug.png — Ladybug / Marienkäfer
+- [ ] grasshopper.png — Grasshopper / Heuschrecke
+- [ ] dragonfly.png — Dragonfly / Libelle
 
 ## Birds
-- [ ] owl.png — Owl
-- [ ] parrot.png — Parrot
-- [ ] eagle.png — Eagle
-- [ ] flamingo.png — Flamingo
-- [ ] swan.png — Swan
-- [ ] peacock.png — Peacock
+- [ ] owl.png — Owl / Eule
+- [ ] parrot.png — Parrot / Papagei
+- [ ] eagle.png — Eagle / Adler
+- [ ] flamingo.png — Flamingo / Flamingo
+- [ ] swan.png — Swan / Schwan
+- [ ] peacock.png — Peacock / Pfau
 
 ## Safari Animals
-- [ ] lion.png — Lion
-- [ ] elephant.png — Elephant
-- [ ] giraffe.png — Giraffe
-- [ ] zebra.png — Zebra
-- [ ] rhino.png — Rhino
-- [ ] hippo.png — Hippo
+- [ ] lion.png — Lion / Löwe
+- [ ] elephant.png — Elephant / Elefant
+- [ ] giraffe.png — Giraffe / Giraffe
+- [ ] zebra.png — Zebra / Zebra
+- [ ] rhino.png — Rhino / Nashorn
+- [ ] hippo.png — Hippo / Nilpferd
 
 ## Tools
-- [ ] hammer.png — Hammer
-- [ ] saw.png — Saw
-- [ ] screwdriver.png — Screwdriver
-- [ ] wrench.png — Wrench
-- [ ] pliers.png — Pliers
-- [ ] drill.png — Drill
+- [ ] hammer.png — Hammer / Hammer
+- [ ] saw.png — Saw / Säge
+- [ ] screwdriver.png — Screwdriver / Schraubendreher
+- [ ] wrench.png — Wrench / Maulschlüssel
+- [ ] pliers.png — Pliers / Zange
+- [ ] drill.png — Drill / Bohrmaschine
 
 ## Musical Instruments
-- [ ] guitar.png — Guitar
-- [ ] drum.png — Drum
-- [ ] trumpet.png — Trumpet
-- [ ] violin.png — Violin
-- [ ] piano.png — Piano
-- [ ] harp.png — Harp
+- [ ] guitar.png — Guitar / Gitarre
+- [ ] drum.png — Drum / Trommel
+- [ ] trumpet.png — Trumpet / Trompete
+- [ ] violin.png — Violin / Geige
+- [ ] piano.png — Piano / Klavier
+- [ ] harp.png — Harp / Harfe
 
 ## Vehicles
-- [ ] car.png — Car
-- [ ] bus.png — Bus
-- [ ] truck.png — Truck
-- [ ] train.png — Train
-- [ ] helicopter.png — Helicopter
-- [ ] motorcycle.png — Motorcycle
+- [ ] car.png — Car / Auto
+- [ ] bus.png — Bus / Bus
+- [ ] truck.png — Truck / Lastwagen
+- [ ] train.png — Train / Zug
+- [ ] helicopter.png — Helicopter / Hubschrauber
+- [ ] motorcycle.png — Motorcycle / Motorrad
 
 ## Clothing
-- [ ] shirt.png — Shirt
-- [ ] dress.png — Dress
-- [ ] jeans.png — Jeans
-- [ ] skirt.png — Skirt
-- [ ] shorts.png — Shorts
-- [ ] socks.png — Socks
+- [ ] shirt.png — Shirt / Hemd
+- [ ] dress.png — Dress / Kleid
+- [ ] jeans.png — Jeans / Jeans
+- [ ] skirt.png — Skirt / Rock
+- [ ] shorts.png — Shorts / Shorts
+- [ ] socks.png — Socks / Socken
 
 ## Jewelry
-- [ ] ring.png — Ring
-- [ ] necklace.png — Necklace
-- [ ] earrings.png — Earrings
-- [ ] bracelet.png — Bracelet
-- [ ] brooch.png — Brooch
-- [ ] tiara.png — Tiara
+- [ ] ring.png — Ring / Ring
+- [ ] necklace.png — Necklace / Halskette
+- [ ] earrings.png — Earrings / Ohrringe
+- [ ] bracelet.png — Bracelet / Armband
+- [ ] brooch.png — Brooch / Brosche
+- [ ] tiara.png — Tiara / Diadem
 
 ## Kitchen Utensils
-- [ ] whisk.png — Whisk
-- [ ] ladle.png — Ladle
-- [ ] spatula.png — Spatula
-- [ ] grater.png — Grater
-- [ ] frying-pan.png — Frying Pan
-- [ ] colander.png — Colander
+- [ ] whisk.png — Whisk / Schneebesen
+- [ ] ladle.png — Ladle / Schöpfkelle
+- [ ] spatula.png — Spatula / Pfannenwender
+- [ ] grater.png — Grater / Reibe
+- [ ] frying-pan.png — Frying Pan / Bratpfanne
+- [ ] colander.png — Colander / Nudelsieb
 
 ## Weather
-- [ ] cloud.png — Cloud
-- [ ] lightning.png — Lightning
-- [ ] rainbow.png — Rainbow
-- [ ] tornado.png — Tornado
-- [ ] raindrop.png — Raindrop
-- [ ] snowflake.png — Snowflake
+- [ ] cloud.png — Cloud / Wolke
+- [ ] lightning.png — Lightning / Blitz
+- [ ] rainbow.png — Rainbow / Regenbogen
+- [ ] tornado.png — Tornado / Tornado
+- [ ] raindrop.png — Raindrop / Regentropfen
+- [ ] snowflake.png — Snowflake / Schneeflocke
 
 ## Space
-- [ ] planet.png — Planet
-- [ ] moon.png — Moon
-- [ ] comet.png — Comet
-- [ ] satellite.png — Satellite
-- [ ] astronaut.png — Astronaut
-- [ ] telescope.png — Telescope
+- [ ] planet.png — Planet / Planet
+- [ ] moon.png — Moon / Mond
+- [ ] comet.png — Comet / Komet
+- [ ] satellite.png — Satellite / Satellit
+- [ ] astronaut.png — Astronaut / Astronaut
+- [ ] telescope.png — Telescope / Teleskop
 
 ## Furniture
-- [ ] chair.png — Chair
-- [ ] table.png — Table
-- [ ] sofa.png — Sofa
-- [ ] bed.png — Bed
-- [ ] wardrobe.png — Wardrobe
-- [ ] bookshelf.png — Bookshelf
+- [ ] chair.png — Chair / Stuhl
+- [ ] table.png — Table / Tisch
+- [ ] sofa.png — Sofa / Sofa
+- [ ] bed.png — Bed / Bett
+- [ ] wardrobe.png — Wardrobe / Schrank
+- [ ] bookshelf.png — Bookshelf / Bücherregal
 
 ## Desserts
-- [ ] ice-cream.png — Ice Cream
-- [ ] cupcake.png — Cupcake
-- [ ] donut.png — Donut
-- [ ] cake.png — Cake
-- [ ] pudding.png — Pudding
-- [ ] popsicle.png — Popsicle
+- [ ] ice-cream.png — Ice Cream / Eistüte
+- [ ] cupcake.png — Cupcake / Cupcake
+- [ ] donut.png — Donut / Donut
+- [ ] cake.png — Cake / Torte
+- [ ] pudding.png — Pudding / Pudding
+- [ ] popsicle.png — Popsicle / Stieleis
 
 ## Fast Food
-- [ ] pizza.png — Pizza
-- [ ] burger.png — Burger
-- [ ] fries.png — Fries
-- [ ] hot-dog.png — Hot Dog
-- [ ] taco.png — Taco
-- [ ] sandwich.png — Sandwich
+- [ ] pizza.png — Pizza / Pizza
+- [ ] burger.png — Burger / Burger
+- [ ] fries.png — Fries / Pommes
+- [ ] hot-dog.png — Hot Dog / Hotdog
+- [ ] taco.png — Taco / Taco
+- [ ] sandwich.png — Sandwich / Sandwich
 
 ## Drinks
-- [ ] coffee.png — Coffee
-- [ ] tea.png — Tea
-- [ ] milk.png — Milk
-- [ ] juice.png — Juice
-- [ ] lemonade.png — Lemonade
-- [ ] smoothie.png — Smoothie
+- [ ] coffee.png — Coffee / Kaffee
+- [ ] tea.png — Tea / Tee
+- [ ] milk.png — Milk / Milch
+- [ ] juice.png — Juice / Saft
+- [ ] lemonade.png — Lemonade / Limonade
+- [ ] smoothie.png — Smoothie / Smoothie
 
 ## Sports Equipment
-- [ ] basketball.png — Basketball
-- [ ] racket.png — Racket
-- [ ] dumbbell.png — Dumbbell
-- [ ] hockey-stick.png — Hockey Stick
-- [ ] boxing-glove.png — Boxing Glove
-- [ ] bowling-pin.png — Bowling Pin
+- [ ] basketball.png — Basketball / Basketball
+- [ ] racket.png — Racket / Tennisschläger
+- [ ] dumbbell.png — Dumbbell / Hantel
+- [ ] hockey-stick.png — Hockey Stick / Hockeyschläger
+- [ ] boxing-glove.png — Boxing Glove / Boxhandschuh
+- [ ] bowling-pin.png — Bowling Pin / Bowlingkegel
 
 ## Bathroom
-- [ ] toothbrush.png — Toothbrush
-- [ ] toothpaste.png — Toothpaste
-- [ ] toilet.png — Toilet
-- [ ] bathtub.png — Bathtub
-- [ ] soap.png — Soap
-- [ ] shower.png — Shower
+- [ ] toothbrush.png — Toothbrush / Zahnbürste
+- [ ] toothpaste.png — Toothpaste / Zahnpasta
+- [ ] toilet.png — Toilet / Toilette
+- [ ] bathtub.png — Bathtub / Badewanne
+- [ ] soap.png — Soap / Seife
+- [ ] shower.png — Shower / Dusche
 
 ## Camping
-- [ ] tent.png — Tent
-- [ ] campfire.png — Campfire
-- [ ] lantern.png — Lantern
-- [ ] sleeping-bag.png — Sleeping Bag
-- [ ] compass.png — Compass
-- [ ] binoculars.png — Binoculars
+- [ ] tent.png — Tent / Zelt
+- [ ] campfire.png — Campfire / Lagerfeuer
+- [ ] lantern.png — Lantern / Laterne
+- [ ] sleeping-bag.png — Sleeping Bag / Schlafsack
+- [ ] compass.png — Compass / Kompass
+- [ ] binoculars.png — Binoculars / Fernglas
 
 ## Office Supplies
-- [ ] stapler.png — Stapler
-- [ ] paperclip.png — Paperclip
-- [ ] pencil.png — Pencil
-- [ ] eraser.png — Eraser
-- [ ] calculator.png — Calculator
-- [ ] pushpin.png — Pushpin
+- [ ] stapler.png — Stapler / Tacker
+- [ ] paperclip.png — Paperclip / Büroklammer
+- [ ] pencil.png — Pencil / Bleistift
+- [ ] eraser.png — Eraser / Radiergummi
+- [ ] calculator.png — Calculator / Taschenrechner
+- [ ] pushpin.png — Pushpin / Reißzwecke
 
 ## Shapes
-- [ ] circle.png — Circle
-- [ ] square.png — Square
-- [ ] triangle.png — Triangle
-- [ ] heart.png — Heart
-- [ ] pentagon.png — Pentagon
-- [ ] hexagon.png — Hexagon
+- [ ] circle.png — Circle / Kreis
+- [ ] square.png — Square / Quadrat
+- [ ] triangle.png — Triangle / Dreieck
+- [ ] heart.png — Heart / Herz
+- [ ] pentagon.png — Pentagon / Fünfeck
+- [ ] hexagon.png — Hexagon / Sechseck

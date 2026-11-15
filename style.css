@@ -7,19 +7,22 @@
 
 :root {
   color-scheme: light;
-  --bg: #eef1f5;
-  --surface: #ffffff;
-  --surface-2: #e2e7ee;
-  --ink: #18202b;
-  --muted: #5b6676;
-  --line: #d2d9e2;
-  --accent: #3446c9;
+  --bg: #eaf6e7;
+  --surface: #fffdf6;
+  --surface-2: #f9f3df;
+  --ink: #3b2f2a;
+  --muted: #6f6157;
+  --line: #e3d7c4;
+  --accent: #b95a26;
   --accent-ink: #ffffff;
-  --danger: #c23a30;
-  --focus: #3446c9;
-  --toast-bg: #18202b;
-  --toast-ink: #ffffff;
-  --backdrop: rgba(15, 20, 30, 0.45);
+  --danger: #c2453a;
+  --focus: #b95a26;
+  --toast-bg: #3b2f2a;
+  --toast-ink: #fff8ec;
+  --backdrop: rgba(59, 47, 42, 0.45);
+  /* Palette (assets/templates/riddle-me-rika.afpalette): cream #f9f3df, mint #cdf2ca, pink #ffdefa, peach #ffc898 */
+  --glow-1: rgba(255, 222, 250, 0.85);   /* pink, top left */
+  --glow-2: rgba(255, 200, 152, 0.45);   /* peach, bottom right */
   --ui-font: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
   /* ---- Layout + card sizing ------------------------------------------- */
@@ -62,37 +65,41 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --bg: #11151c;
-    --surface: #1a2029;
-    --surface-2: #252d39;
-    --ink: #e8edf4;
-    --muted: #9aa5b5;
-    --line: #2e3744;
-    --accent: #8f9dff;
-    --accent-ink: #0d1020;
-    --danger: #ff7b70;
-    --focus: #8f9dff;
-    --toast-bg: #e8edf4;
-    --toast-ink: #11151c;
+    --bg: #1f1a17;
+    --surface: #2a2420;
+    --surface-2: #352e29;
+    --ink: #f9f3df;
+    --muted: #bfaf9e;
+    --line: #463c35;
+    --accent: #ffc898;
+    --accent-ink: #3b2f2a;
+    --danger: #ff8f80;
+    --focus: #ffc898;
+    --toast-bg: #f9f3df;
+    --toast-ink: #2a2420;
     --backdrop: rgba(0, 0, 0, 0.6);
+    --glow-1: rgba(255, 222, 250, 0.07);
+    --glow-2: rgba(255, 200, 152, 0.07);
   }
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #11151c;
-  --surface: #1a2029;
-  --surface-2: #252d39;
-  --ink: #e8edf4;
-  --muted: #9aa5b5;
-  --line: #2e3744;
-  --accent: #8f9dff;
-  --accent-ink: #0d1020;
-  --danger: #ff7b70;
-  --focus: #8f9dff;
-  --toast-bg: #e8edf4;
-  --toast-ink: #11151c;
+  --bg: #1f1a17;
+  --surface: #2a2420;
+  --surface-2: #352e29;
+  --ink: #f9f3df;
+  --muted: #bfaf9e;
+  --line: #463c35;
+  --accent: #ffc898;
+  --accent-ink: #3b2f2a;
+  --danger: #ff8f80;
+  --focus: #ffc898;
+  --toast-bg: #f9f3df;
+  --toast-ink: #2a2420;
   --backdrop: rgba(0, 0, 0, 0.6);
+  --glow-1: rgba(255, 222, 250, 0.07);
+  --glow-2: rgba(255, 200, 152, 0.07);
 }
 
 /* ---- Base --------------------------------------------------------------- */
@@ -106,7 +113,11 @@ html, body {
 }
 
 body {
-  background: var(--bg);
+  background:
+    radial-gradient(circle at 0% 0%, var(--glow-1), transparent 55%),
+    radial-gradient(circle at 100% 100%, var(--glow-2), transparent 55%),
+    var(--bg);
+  background-attachment: fixed;
   color: var(--ink);
   font-family: var(--ui-font);
   font-size: 16px;
@@ -180,8 +191,8 @@ button {
 .topbar__actions { display: flex; gap: 6px; flex: 0 0 auto; }
 
 .icon-btn {
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -192,6 +203,44 @@ button {
   padding: 0;
 }
 .icon-btn:active { background: var(--surface-2); }
+
+/* Language button: icon assets/icons/lang.png + badge with the current
+   language (EN / DE). Without the icon (.no-icon) the text alone is shown. */
+.lang-btn { position: relative; }
+.lang-btn__icon {
+  display: block;
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+.lang-btn__text {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  min-width: 20px;
+  padding: 1px 4px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 9.5px;
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: 0.04em;
+  text-align: center;
+  pointer-events: none;
+}
+.lang-btn.no-icon .lang-btn__icon { display: none; }
+.lang-btn.no-icon .lang-btn__text {
+  position: static;
+  min-width: 0;
+  padding: 0;
+  background: none;
+  color: var(--ink);
+  font-size: 14px;
+  letter-spacing: 0.06em;
+}
 
 /* ---- Status row ----------------------------------------------------------- */
 .status {
