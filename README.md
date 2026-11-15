@@ -49,6 +49,7 @@ big change, bump `CACHE_VERSION` in `sw.js` so every device drops its old copy.
 | Card images | `assets/card-face.png`, `assets/card-back.png` (750 × 1050) |
 | Symbols | `assets/symbols/<name>.png` (512 × 512), list in `SYMBOLS.md` |
 | Design templates | `assets/templates/` |
+| Affinity files, sketches (local only, not in git) | `designer/` |
 | Categories and words (English `word`/`theme`, German `wordDe`/`themeDe`) | `categories.js` |
 | All other texts (buttons, help, toasts, share text), English + German | `i18n.js` |
 | Language button icon | `assets/icons/lang.png` (96 × 96, transparent; see below) |

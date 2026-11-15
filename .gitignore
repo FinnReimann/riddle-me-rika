@@ -8,3 +8,7 @@ desktop.ini
 # Local tool settings
 .claude/
 .vscode/
+
+# Design source files (Affinity, sketches) - kept locally, not published
+/designer/
+*.afdesign
