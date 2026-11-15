@@ -9,8 +9,8 @@ works offline and can be installed on the home screen.
 - 40 cards per day: 8 categories × (1 category card + 4 word cards), dealt the
   same for everyone (seeded by the day).
 - Board: Draw, Discard, Done in the top row; below 6 fields. The 3 top fields
-  start empty; each of the 3 bottom fields starts with 3 face-down cards. The
-  other 31 cards are the draw pile.
+  start empty; each of the 3 bottom fields starts with 10 face-down cards (a
+  quarter of the deck each). The last 10 cards are the draw pile.
 - Tap a face-down card to turn it over (free). Only the top card of a bottom
   field can be face up; it is playable like the draw / discard card. Nothing
   can be placed onto a bottom field while it still has cards; once empty it is
@@ -34,7 +34,7 @@ works offline and can be installed on the home screen.
 | `CATEGORIES_PER_GAME` | 8 | categories per day |
 | `CARDS_PER_CATEGORY` | 4 | word cards per category |
 | `TOP_FIELDS` / `BOTTOM_FIELDS` | 3 / 3 | empty top fields / bottom fields with face-down cards |
-| `FACE_DOWN_PER_FIELD` | 3 | face-down cards per bottom field |
+| `FACE_DOWN_PER_FIELD` | 10 | face-down cards per bottom field |
 | `MOVES` | 85 | move budget |
 | `STAR3_LEFT` / `STAR2_LEFT` | 20 / 8 | moves left needed for ★★★ / ★★☆ |
 | `SYMBOL_DIR` + `SYMBOL_EXT` | `assets/symbols/`, `png` | the owner's symbols (always win) |

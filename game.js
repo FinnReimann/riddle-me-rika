@@ -17,7 +17,7 @@
   var CARDS_PER_CATEGORY = 4;   // word cards per category (category card + these = full stack)
   var TOP_FIELDS = 3;           // fields in the upper row, start empty
   var BOTTOM_FIELDS = 3;        // fields in the lower row, start with face-down cards
-  var FACE_DOWN_PER_FIELD = 3;  // face-down cards dealt onto each bottom field
+  var FACE_DOWN_PER_FIELD = 10; // face-down cards per bottom field (3 x 10 = 3/4 of the 40 cards, 1/4 = 10 to draw)
   // Move budget, calibrated with a greedy auto-player over 2000 daily deals
   // (40 cards = at least 40 moves; greedy needs 45-78, median 58).
   var MOVES = 85;               // move budget (every card play costs 1, also a wrong one)
@@ -35,7 +35,7 @@
      1. CORE
      ======================================================================= */
   var Core = (function () {
-    var SAVE_VERSION = 3;
+    var SAVE_VERSION = 4;
     var STATS_VERSION = 3;
     var EPOCH_UTC = Date.UTC(2026, 10, 14); // 2026-11-14 = puzzle #1
     var DAY_MS = 86400000;
