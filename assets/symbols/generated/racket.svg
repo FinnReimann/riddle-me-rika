@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="marker" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <!-- 1. wobbly hand-drawn edges -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="10" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <!-- 2. soft marker edge -->
+      <feGaussianBlur in="wobble" stdDeviation="1.6" result="soft"/>
+      <!-- 3. blotchy marker shading (dark patches) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="34" result="blotch"/>
+      <feColorMatrix in="blotch" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.25 -0.62" result="blotchA"/>
+      <feComposite in="blotchA" in2="soft" operator="in" result="shade"/>
+      <!-- 4. fine paper/fibre texture (light speckles) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="86" result="fibre"/>
+      <feColorMatrix in="fibre" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.75 -0.55" result="fibreA"/>
+      <feComposite in="fibreA" in2="soft" operator="in" result="speckle"/>
+      <feMerge><feMergeNode in="soft"/><feMergeNode in="shade"/><feMergeNode in="speckle"/></feMerge>
+    </filter>
+    <clipPath id="bed"><ellipse cx="256" cy="168" rx="104" ry="124"/></clipPath>
+  </defs>
+  <g filter="url(#marker)">
+    <g transform="rotate(-35 256 256)">
+      <!-- handle -->
+      <rect x="236" y="318" width="40" height="150" rx="14" fill="#5a3a26"/>
+      <path d="M244 360 L268 350 M244 392 L268 382 M244 424 L268 414" stroke="#3e271a" stroke-width="10" stroke-linecap="round" fill="none"/>
+      <!-- throat -->
+      <path d="M206 284 L256 334 L306 284" stroke="#c8432c" stroke-width="24" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+      <!-- string bed -->
+      <ellipse cx="256" cy="168" rx="104" ry="124" fill="#efe8d8"/>
+      <g clip-path="url(#bed)" stroke="#b7bdc5" stroke-width="10" fill="none">
+        <path d="M196 30 L196 300 M236 30 L236 300 M276 30 L276 300 M316 30 L316 300"/>
+        <path d="M140 88 L380 88 M140 128 L380 128 M140 168 L380 168 M140 208 L380 208 M140 248 L380 248"/>
+      </g>
+      <!-- frame -->
+      <ellipse cx="256" cy="168" rx="116" ry="136" stroke="#c8432c" stroke-width="26" fill="none"/>
+    </g>
+    <!-- ball -->
+    <circle cx="122" cy="392" r="48" fill="#cfd84a"/>
+    <path d="M88 362 Q122 392 112 438" stroke="#f4efe6" stroke-width="10" stroke-linecap="round" fill="none"/>
+  </g>
+</svg>

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="marker" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <!-- 1. wobbly hand-drawn edges -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="10" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <!-- 2. soft marker edge -->
+      <feGaussianBlur in="wobble" stdDeviation="1.6" result="soft"/>
+      <!-- 3. blotchy marker shading (dark patches) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="34" result="blotch"/>
+      <feColorMatrix in="blotch" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.25 -0.62" result="blotchA"/>
+      <feComposite in="blotchA" in2="soft" operator="in" result="shade"/>
+      <!-- 4. fine paper/fibre texture (light speckles) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="54" result="fibre"/>
+      <feColorMatrix in="fibre" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.75 -0.55" result="fibreA"/>
+      <feComposite in="fibreA" in2="soft" operator="in" result="speckle"/>
+      <feMerge><feMergeNode in="soft"/><feMergeNode in="shade"/><feMergeNode in="speckle"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#marker)">
+    <!-- shape sorter box with a star block and a cross block on top -->
+    <path d="M90 222 L160 160 L450 160 L380 222 Z" fill="#7db3e0"/>
+    <path d="M380 222 L450 160 L450 380 L380 444 Z" fill="#2c4f8f"/>
+    <path d="M90 222 L380 222 L380 444 L90 444 Z" fill="#3f8fd0"/>
+    <circle cx="166" cy="334" r="42" fill="#1f3a6b"/>
+    <path d="M236 372 L282 288 L328 372 Z" fill="#1f3a6b"/>
+    <path d="M152 95 L188 95 L188 122 L215 122 L215 158 L188 158 L188 185 L152 185 L152 158 L125 158 L125 122 L152 122 Z" fill="#c8432c"/>
+    <path d="M290 55 L304.7 94.8 L347.1 96.5 L313.8 122.7 L325.3 163.5 L290 140 L254.7 163.5 L266.2 122.7 L232.9 96.5 L275.3 94.8 Z" fill="#f2c230" stroke="#f2c230" stroke-width="10" stroke-linejoin="round"/>
+    <path d="M108 240 L362 240" stroke="#7db3e0" stroke-width="10" stroke-linecap="round" fill="none"/>
+  </g>
+</svg>

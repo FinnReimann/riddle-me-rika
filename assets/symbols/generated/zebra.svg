@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="marker" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <!-- 1. wobbly hand-drawn edges -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="10" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <!-- 2. soft marker edge -->
+      <feGaussianBlur in="wobble" stdDeviation="1.6" result="soft"/>
+      <!-- 3. blotchy marker shading (dark patches) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="20" result="blotch"/>
+      <feColorMatrix in="blotch" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.25 -0.62" result="blotchA"/>
+      <feComposite in="blotchA" in2="soft" operator="in" result="shade"/>
+      <!-- 4. fine paper/fibre texture (light speckles) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="40" result="fibre"/>
+      <feColorMatrix in="fibre" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.75 -0.55" result="fibreA"/>
+      <feComposite in="fibreA" in2="soft" operator="in" result="speckle"/>
+      <feMerge><feMergeNode in="soft"/><feMergeNode in="shade"/><feMergeNode in="speckle"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#marker)">
+    <path d="M398 214 Q420 260 428 300" stroke="#33302e" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <ellipse cx="430" cy="310" rx="12" ry="18" fill="#33302e"/>
+    <path d="M178 300 L176 446 M218 300 L222 446 M330 300 L328 446 M370 300 L376 446" stroke="#f4efe6" stroke-width="26" stroke-linecap="round" fill="none"/>
+    <path d="M164 448 L190 448 M208 448 L234 448 M316 448 L342 448 M362 448 L390 448" stroke="#33302e" stroke-width="16" stroke-linecap="round" fill="none"/>
+    <path d="M166 360 L190 360 M208 360 L232 360 M318 360 L342 360 M362 360 L386 360 M166 400 L190 400 M210 400 L234 400 M316 400 L340 400 M364 400 L388 400" stroke="#33302e" stroke-width="12" stroke-linecap="round" fill="none"/>
+    <path d="M140 200 Q150 180 210 184 L340 184 Q398 186 402 242 Q402 302 350 308 L180 308 Q138 302 140 250 Z" fill="#f4efe6"/>
+    <path d="M190 212 L130 110 Q118 88 96 100 L56 174 Q50 196 74 200 L110 196 L162 264 Z" fill="#f4efe6"/>
+    <path d="M126 102 L136 58 L152 106 Z" fill="#f4efe6"/>
+    <ellipse cx="72" cy="182" rx="22" ry="18" fill="#33302e"/>
+    <path d="M138 92 L206 186" stroke="#33302e" stroke-width="16" stroke-linecap="round" fill="none"/>
+    <path d="M118 134 L142 120 M120 166 L156 146 M134 196 L170 176 M158 228 L186 208 M232 192 Q244 240 232 300 M272 190 Q284 240 270 302 M312 190 Q324 240 312 302 M352 192 Q366 240 354 300 M386 216 Q396 250 386 290" stroke="#33302e" stroke-width="14" stroke-linecap="round" fill="none"/>
+    <path d="M180 302 L340 302" stroke="#b7bdc5" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <circle cx="112" cy="132" r="9" fill="#33302e"/>
+  </g>
+</svg>

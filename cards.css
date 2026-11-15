@@ -14,11 +14,15 @@
      style.css from the screen size), e.g. calc(var(--card-w) * 0.15).
 
    CARD ANATOMY (portrait, like a playing card)
-     .card                     the card (face by default)
+     .card                     a word card (face by default)
        .card__word             word, at the TOP (data-len = s | m | l | xl | xxl)
        .card__art              symbol area in the lower part
-         img.card__symbol      assets/symbols/<symbol>.png  (see SYMBOLS.md)
-         .card__placeholder    shown instead when the image is missing
+         img.card__symbol      assets/symbols/<symbol>.png, else
+                               assets/symbols/generated/<symbol>.svg (see SYMBOLS.md)
+         .card__placeholder    shown instead when both images are missing
+     .card.card--category.tier-N   a CATEGORY card (see "Category card" below)
+       .card__catname          category name in a tier-coloured band at the top
+       .card__art              symbol category-<categoryId>
 
    CLASS MAP (stable names, used by game.js)
    .pile--draw / .pile--discard / .pile--done   the three top-row piles
@@ -26,8 +30,12 @@
    .card--under              card edge under the discard pile's top card
    .card--done, .card--done-under   Done pile card (+ edges under it)
    .card--empty              empty pile placeholder (+ .card__hint text)
-   .card--field              a card inside a field (--i = 0..3, stack position)
-   .card.is-top              a playable card (top of draw / discard)
+   .card--field              a card inside a field stack (--i = 0..4, stack position;
+                             0 = the category card)
+   .card--down               face-down card on a bottom field (--i = depth, 0 = lowest)
+   .card--down.is-turnable   the top face-down card: tap to turn it over
+   .card--down-top           face-up top card of a bottom field (playable)
+   .card.is-top              a playable card (top of draw / discard / bottom field)
    .card.is-selected         the card a tap on a field will play
    .card.is-new              just landed in a field
    .card.is-bounce           tapped onto a field where it didn't fit
@@ -35,7 +43,8 @@
    .card-ghost               floating copy that follows the finger (+ .is-returning)
    .card-flying              copies flying to the Done pile
    .pile__flip               "Flip discard" button on the empty draw pile
-   .field (.is-empty, .is-complete, .is-wrong, .is-correct, .is-drop-target)
+   .field (.field--top, .field--bottom, .field--pile, .is-empty, .is-complete,
+           .is-wrong, .is-correct, .is-drop-target)
    .field__hint / .field__reveal / .field__theme
    .tier-1 ... .tier-4       sets --tier-bg / --tier-ink
    .done__theme / .done__count / .done-list__item
@@ -45,8 +54,10 @@
   /* ---- Size & shape ------------------------------------------------------ */
   --card-ratio: 1.4;               /* height / width (1.4 = 5:7 playing card) */
   --card-max-w: 132px;             /* never wider than this (tablets / desktop) */
-  --stack-ratio: 0.23;             /* visible strip of a covered card in a field, as a fraction of card height */
+  --stack-ratio: 0.23;             /* visible strip of a covered card in a field, as a fraction of card height
+                                      (smaller on short screens, see "Short screens" below) */
   --stack-offset: calc(var(--card-h) * var(--stack-ratio));
+  --down-offset: calc(var(--card-h) * 0.07);  /* step between face-down cards on a bottom field */
   --pile-offset: 2.5px;            /* how far cards under a pile's top card peek out */
   --card-radius: calc(var(--card-w) * 0.09);
   --card-border: 1px solid #e2d6bd;
@@ -96,6 +107,24 @@
   --flip-bg: #ffe6d0;
   --flip-border: 1.5px dashed #e08a4a;
   --flip-ink: #86431a;
+
+  /* ---- Category card (one per category; always the bottom card of a stack) ---- */
+  --category-card-bg: #fffaf0;     /* card background (no face image) */
+  --category-card-image: none;     /* e.g. url("assets/category-face.png") */
+  --category-card-ink: #151b26;    /* text colour outside the band */
+  --category-card-border-w: 2.5px; /* border in the tier colour */
+  --category-band-h: 22%;          /* tier-coloured band at the top (holds the name; stays
+                                      visible when the card is covered in a stack) */
+  --category-name-font: var(--word-font);
+  --category-name-size: calc(var(--card-w) * 0.14);   /* names up to 9 letters per word; longer shrink */
+  --category-name-weight: 800;
+  --category-name-transform: uppercase;
+  --category-name-tracking: 0.01em;
+
+  /* ---- Face-down cards on bottom fields --------------------------------------- */
+  --turn-ring: #e07b3c;            /* ring around the top face-down card (tap to turn) */
+  --turn-badge-bg: #e07b3c;
+  --turn-badge-ink: #ffffff;
 
   /* ---- Fields ------------------------------------------------------------------ */
   --field-bg: rgba(255, 253, 246, 0.55);
@@ -149,6 +178,9 @@
     --correct: #5fd17f;
     --correct-bg: rgba(205, 242, 202, 0.14);
     --ghost-shadow: 0 16px 32px rgba(0, 0, 0, 0.55);
+    --turn-ring: #ffc898;
+    --turn-badge-bg: #ffc898;
+    --turn-badge-ink: #3b2f2a;
     --done-under-bg: #3a322c;
   }
 }
@@ -173,7 +205,16 @@
   --correct: #5fd17f;
   --correct-bg: rgba(205, 242, 202, 0.14);
   --ghost-shadow: 0 16px 32px rgba(0, 0, 0, 0.55);
+  --turn-ring: #ffc898;
+  --turn-badge-bg: #ffc898;
+  --turn-badge-ink: #3b2f2a;
   --done-under-bg: #3a322c;
+}
+
+/* ---- Short screens (e.g. iPhone SE with Safari bars): covered cards show a
+   thinner strip so a full stack of 5 still fits without scrolling. -------- */
+@media (max-height: 600px) {
+  :root { --stack-ratio: 0.19; }
 }
 
 /* =========================================================================
@@ -311,6 +352,86 @@
 }
 .card-ghost.is-returning { transform: none; }
 .card-flying { box-shadow: var(--card-shadow); }
+
+/* =========================================================================
+   Category card
+   -------------------------------------------------------------------------
+   Variables: --category-* (top of this file). Tier colour (--tier-bg /
+   --tier-ink) comes from the .tier-N class the game sets on the card.
+   The name is the category name (themeDe in German; soft hyphens break
+   long words cleanly). Symbol: category-<categoryId>.png (SYMBOLS.md).
+   ========================================================================= */
+.card--category {
+  background: var(--category-card-image) center / cover no-repeat, var(--category-card-bg);
+  border: var(--category-card-border-w) solid var(--tier-bg);
+  color: var(--category-card-ink);
+}
+.card--category::before {           /* the tier band */
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--category-band-h);
+  background: var(--tier-bg);
+}
+.card__catname {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: 4%;
+  right: 4%;
+  height: var(--category-band-h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--tier-ink);
+  font-family: var(--category-name-font);
+  font-size: var(--category-name-size);
+  font-weight: var(--category-name-weight);
+  text-transform: var(--category-name-transform);
+  letter-spacing: var(--category-name-tracking);
+  line-height: 1.02;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+  overflow-wrap: anywhere;
+  overflow: hidden;
+}
+/* Longer names (longest word: l 10-12, xl 13+) shrink */
+.card__catname[data-len="l"]  { font-size: calc(var(--category-name-size) * 0.8); letter-spacing: -0.01em; }
+.card__catname[data-len="xl"] { font-size: calc(var(--category-name-size) * 0.7); letter-spacing: -0.02em; }
+.card--category .card__art { top: calc(var(--category-band-h) + 6%); }
+
+/* =========================================================================
+   Face-down cards on the bottom fields
+   ========================================================================= */
+.card--down { transform: none; }
+.card--down.is-turnable {
+  cursor: pointer;
+  touch-action: manipulation;
+  box-shadow: 0 0 0 2px var(--turn-ring), var(--card-shadow);
+}
+.card--down.is-turnable::after {    /* small "turn" badge */
+  content: "\21BB";
+  position: absolute;
+  left: 50%;
+  bottom: 8%;
+  width: calc(var(--card-w) * 0.3);
+  height: calc(var(--card-w) * 0.3);
+  margin-left: calc(var(--card-w) * -0.15);
+  border-radius: 50%;
+  background: var(--turn-badge-bg);
+  color: var(--turn-badge-ink);
+  font-family: var(--ui-font, sans-serif);
+  font-size: calc(var(--card-w) * 0.2);
+  font-weight: 800;
+  line-height: calc(var(--card-w) * 0.3);
+  text-align: center;
+  animation: rr-turn-hint 2.4s ease-in-out infinite;
+}
+.card--down.is-turnable:active { transform: scale(0.97); }
+@keyframes rr-turn-hint { 0%, 70%, 100% { transform: none; } 80% { transform: rotate(-25deg); } 90% { transform: rotate(10deg); } }
 
 /* =========================================================================
    Top-row piles
@@ -454,4 +575,5 @@
   .card, .field { transition: none; }
   .card.is-new, .card.is-bounce, .card--done.is-pop, .field.is-wrong, .field__reveal { animation: none; }
   .card-ghost { transform: none; }
+  .card--down.is-turnable::after { animation: none; }
 }

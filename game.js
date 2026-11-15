@@ -13,17 +13,30 @@
   'use strict';
 
   /* ---- CONFIG ---------------------------------------------------------- */
-  var FIELDS = 4;               // fields below the piles
-  var CATEGORIES_PER_GAME = 6;  // categories in one daily game
-  var CARDS_PER_CATEGORY = 4;   // cards per category (= cards to complete a field)
+  var CATEGORIES_PER_GAME = 8;  // categories in one daily game (each has 1 category card)
+  var CARDS_PER_CATEGORY = 4;   // word cards per category (category card + these = full stack)
+  var TOP_FIELDS = 3;           // fields in the upper row, start empty
+  var BOTTOM_FIELDS = 3;        // fields in the lower row, start with face-down cards
+  var FACE_DOWN_PER_FIELD = 3;  // face-down cards dealt onto each bottom field
+  // Move budget, calibrated with a greedy auto-player over 2000 daily deals
+  // (40 cards = at least 40 moves; greedy needs 45-78, median 58).
+  var MOVES = 85;               // move budget (every card play costs 1, also a wrong one)
+  var STAR3_LEFT = 20;          // moves left for ★★★ (= finished in 65 moves or less)
+  var STAR2_LEFT = 8;           // moves left for ★★☆ (less = ★☆☆)
   var MAX_TIER = 1;             // only categories with tier <= MAX_TIER are used
-  var SYMBOL_DIR = 'assets/symbols/';
-  var SYMBOL_EXT = 'png';       // symbol file extension (assets/symbols/<symbol>.<ext>)
+  var SYMBOL_DIR = 'assets/symbols/';            // the owner's drawings: <symbol>.png (always win)
+  var SYMBOL_EXT = 'png';
+  var SYMBOL_GEN_DIR = 'assets/symbols/generated/'; // generated fallback: <symbol>.svg
+  var SYMBOL_GEN_EXT = 'svg';
+  var CATEGORY_SYMBOL_PREFIX = 'category-';     // category card symbol = category-<categoryId>
+  var FIELDS = TOP_FIELDS + BOTTOM_FIELDS;
 
   /* =======================================================================
      1. CORE
      ======================================================================= */
   var Core = (function () {
+    var SAVE_VERSION = 3;
+    var STATS_VERSION = 3;
     var EPOCH_UTC = Date.UTC(2026, 10, 14); // 2026-11-14 = puzzle #1
     var DAY_MS = 86400000;
 
@@ -99,10 +112,12 @@
 
     /**
      * The daily game: same for everyone on a given day.
-     * Returns { cats:[{id,theme,themeDe,tier}], cards:[{id,word,wordDe,symbol,cat}], order:[ids], sig }
-     * (themeDe / wordDe are '' when categories.js has no German text).
-     * sig only uses the English words, so a save survives a language switch.
-     * or null if the pool is too small.
+     * Returns { cats:[{id,theme,themeDe,tier}], cards:[card], order:[ids], sig } or null.
+     * card = { id, kind:'cat'|'word', cat, word, wordDe, symbol }.
+     *   Category cards: word/wordDe = theme/themeDe, symbol = category-<categoryId>.
+     * order = the shuffled deal: the first BOTTOM_FIELDS * FACE_DOWN_PER_FIELD
+     * cards go face down onto the bottom fields, the rest is the draw pile.
+     * sig only uses English texts, so a save survives a language switch.
      */
     function buildGame(list, day) {
       var pool = eligibleCategories(list);
@@ -112,8 +127,11 @@
       var cats = [], cards = [];
       picked.forEach(function (c, ci) {
         cats.push({ id: c.id, theme: c.theme, themeDe: optText(c.themeDe), tier: tierOf(c) });
+        cards.push({ id: cards.length, kind: 'cat', cat: ci, word: c.theme, wordDe: optText(c.themeDe),
+          symbol: CATEGORY_SYMBOL_PREFIX + c.id });
         shuffleWith(c.cards.filter(validCard), rng).slice(0, CARDS_PER_CATEGORY).forEach(function (cd) {
-          cards.push({ id: cards.length, word: String(cd.word), wordDe: optText(cd.wordDe), symbol:cd.symbol ? String(cd.symbol) : '', cat: ci });
+          cards.push({ id: cards.length, kind: 'word', cat: ci, word: String(cd.word), wordDe: optText(cd.wordDe),
+            symbol: cd.symbol ? String(cd.symbol) : '' });
         });
       });
       var order = shuffleWith(cards.map(function (c) { return c.id; }), rng);
@@ -122,24 +140,32 @@
       return { cats: cats, cards: cards, order: order, sig: sig };
     }
 
-    function emptyFields() {
-      var f = [];
-      for (var i = 0; i < FIELDS; i++) f.push([]);
-      return f;
-    }
-
+    /**
+     * Fresh state. fields[f] = { c:[card ids, bottom first], d:face-down count, p:pile? }
+     *   p = true while a bottom field still holds its dealt cards (nothing can be
+     *   placed on it; its face-down cards are always the lowest d cards, so only
+     *   the top card can be face up). Once empty it becomes p = false, a free field.
+     */
     function newGame(game, day) {
+      var fields = [], k = 0;
+      for (var f = 0; f < FIELDS; f++) {
+        if (f < TOP_FIELDS) { fields.push({ c: [], d: 0, p: false }); continue; }
+        var c = game.order.slice(k, k + FACE_DOWN_PER_FIELD);
+        k += c.length;
+        fields.push({ c: c, d: c.length, p: c.length > 0 });
+      }
       return {
-        v: 2,
+        v: SAVE_VERSION,
         day: day,
         sig: game.sig,
-        draw: game.order.slice(),   // draw[0] is the top card
+        draw: game.order.slice(k),  // draw[0] is the top card
         discard: [],                // last element is the top card
-        fields: emptyFields(),      // card ids per field, bottom first
+        fields: fields,
         done: [],                   // completed category indices, in order
-        mistakes: 0,
-        moves: 0,
-        status: 'playing',          // 'playing' | 'won'
+        movesLeft: MOVES,
+        moves: 0,                   // moves spent
+        wrong: 0,                   // wrong placements (part of moves)
+        status: 'playing',          // 'playing' | 'won' | 'lost'
         recorded: false             // stats already updated?
       };
     }
@@ -149,11 +175,12 @@
     /** Validate a saved state against today's game. Returns state or null. */
     function restoreState(obj, game, day) {
       try {
-        if (!obj || obj.v !== 2 || obj.day !== day || obj.sig !== game.sig) return null;
+        if (!obj || obj.v !== SAVE_VERSION || obj.day !== day || obj.sig !== game.sig) return null;
         if (!Array.isArray(obj.draw) || !Array.isArray(obj.discard) || !Array.isArray(obj.done)) return null;
         if (!Array.isArray(obj.fields) || obj.fields.length !== FIELDS) return null;
-        if (!isInt(obj.mistakes) || obj.mistakes < 0 || !isInt(obj.moves) || obj.moves < 0) return null;
-        if (obj.status !== 'playing' && obj.status !== 'won') return null;
+        if (!isInt(obj.movesLeft) || obj.movesLeft < 0 || obj.movesLeft > MOVES) return null;
+        if (!isInt(obj.moves) || obj.moves < 0 || !isInt(obj.wrong) || obj.wrong < 0) return null;
+        if (['playing', 'won', 'lost'].indexOf(obj.status) < 0) return null;
         var nCards = game.cards.length;
         var seen = {};
         function take(id) {
@@ -172,95 +199,167 @@
         for (var i = 0; i < all.length; i++) if (!take(all[i])) return null;
         var fieldCats = {};
         for (var f = 0; f < FIELDS; f++) {
-          var ids = obj.fields[f];
-          if (!Array.isArray(ids) || ids.length >= CARDS_PER_CATEGORY) return null;
-          for (var j = 0; j < ids.length; j++) {
-            if (!take(ids[j])) return null;
-            if (game.cards[ids[j]].cat !== game.cards[ids[0]].cat) return null;
-          }
-          if (ids.length) {
-            var fc = game.cards[ids[0]].cat;
-            if (fieldCats[fc] || doneSeen[fc]) return null;
-            fieldCats[fc] = true;
+          var fl = obj.fields[f];
+          if (!fl || !Array.isArray(fl.c) || !isInt(fl.d) || typeof fl.p !== 'boolean') return null;
+          var ids = fl.c;
+          for (var j = 0; j < ids.length; j++) if (!take(ids[j])) return null;
+          if (fl.p) {
+            if (f < TOP_FIELDS || !ids.length || ids.length > FACE_DOWN_PER_FIELD) return null;
+            if (fl.d !== ids.length && fl.d !== ids.length - 1) return null;
+          } else {
+            if (fl.d !== 0 || ids.length > CARDS_PER_CATEGORY) return null;
+            if (ids.length) {
+              var base = game.cards[ids[0]];
+              if (base.kind !== 'cat' || fieldCats[base.cat] || doneSeen[base.cat]) return null;
+              fieldCats[base.cat] = true;
+              for (var w = 1; w < ids.length; w++) {
+                var wc = game.cards[ids[w]];
+                if (wc.kind !== 'word' || wc.cat !== base.cat) return null;
+              }
+            }
           }
         }
         if (Object.keys(seen).length !== nCards) return null;
-        if ((obj.status === 'won') !== (obj.done.length === game.cats.length)) return null;
+        var allDone = obj.done.length === game.cats.length;
+        if ((obj.status === 'won') !== allDone) return null;
+        if (obj.status === 'lost' && obj.movesLeft !== 0) return null;
+        if (obj.status === 'playing' && obj.movesLeft === 0) return null;
         return obj;
       } catch (e) {
         return null;
       }
     }
 
+    function validFrom(from) {
+      return from === 'draw' || from === 'discard' || (isInt(from) && from >= 0 && from < FIELDS);
+    }
+
+    /** Playable card id at `from` ('draw' | 'discard' | field index), or null. */
     function topCard(state, from) {
       if (from === 'draw') return state.draw.length ? state.draw[0] : null;
       if (from === 'discard') return state.discard.length ? state.discard[state.discard.length - 1] : null;
+      if (!isInt(from)) return null;
+      var fl = state.fields[from];
+      if (fl && fl.p && fl.c.length && fl.d < fl.c.length) return fl.c[fl.c.length - 1];
       return null;
     }
 
-    /** Category index of field f, or null if empty. */
+    /** All places with a playable card right now. */
+    function playableSources(state) {
+      var out = [];
+      if (state.draw.length) out.push('draw');
+      if (state.discard.length) out.push('discard');
+      for (var f = 0; f < FIELDS; f++) if (topCard(state, f) !== null) out.push(f);
+      return out;
+    }
+
+    /** Can the top card of bottom pile f be turned face up? */
+    function canTurn(state, f) {
+      var fl = isInt(f) ? state.fields[f] : null;
+      return state.status === 'playing' && !!fl && fl.p && fl.c.length > 0 && fl.d === fl.c.length;
+    }
+
+    /** Turn the top face-down card of pile f face up. Free (no move). */
+    function turn(state, f) {
+      if (!canTurn(state, f)) return false;
+      state.fields[f].d -= 1;
+      return true;
+    }
+
+    /** Is field f a free field (empty, accepts a category card)? */
+    function isFree(state, f) {
+      var fl = state.fields[f];
+      return !!fl && !fl.p && fl.c.length === 0;
+    }
+
+    /** Category index of the stack on field f, or null (empty / pile). */
     function fieldCat(state, game, f) {
-      var ids = state.fields[f];
-      return ids && ids.length ? game.cards[ids[0]].cat : null;
-    }
-
-    /** Why card `id` may not go on field f: null (fits) | 'mismatch' | 'active'. */
-    function placeReject(state, game, id, f) {
-      var cat = game.cards[id].cat;
-      var fc = fieldCat(state, game, f);
-      if (fc !== null) return fc === cat ? null : 'mismatch';
-      for (var o = 0; o < FIELDS; o++) {
-        if (o !== f && fieldCat(state, game, o) === cat) return 'active';
-      }
-      return null;
-    }
-
-    function takeFrom(state, from) {
-      return from === 'draw' ? state.draw.shift() : state.discard.pop();
+      var fl = state.fields[f];
+      return fl && !fl.p && fl.c.length ? game.cards[fl.c[0]].cat : null;
     }
 
     /**
-     * Play the top card of `from` ('draw' | 'discard') onto `to`
+     * Why card `id` may not go on field f:
+     *   null (fits) | 'locked' (a bottom pile, not a target at all, no move)
+     *   | 'needCategory' (word card on an empty field) | 'occupied' (category card
+     *   on a non-empty field) | 'mismatch' (word card of another category).
+     */
+    function placeReject(state, game, id, f) {
+      var fl = state.fields[f];
+      if (fl.p) return 'locked';
+      var card = game.cards[id];
+      if (!fl.c.length) return card.kind === 'cat' ? null : 'needCategory';
+      if (card.kind === 'cat') return 'occupied';
+      return game.cards[fl.c[0]].cat === card.cat ? null : 'mismatch';
+    }
+
+    function takeFrom(state, from) {
+      if (from === 'draw') return state.draw.shift();
+      if (from === 'discard') return state.discard.pop();
+      var fl = state.fields[from];
+      var id = fl.c.pop();
+      if (!fl.c.length) { fl.p = false; fl.d = 0; } // emptied bottom field = free field
+      return id;
+    }
+
+    function spend(state, res) {
+      state.movesLeft -= 1;
+      state.moves += 1;
+      res.cost = true;
+      if (state.status === 'playing' && state.movesLeft <= 0) {
+        state.movesLeft = 0;
+        state.status = 'lost';
+        res.lost = true;
+      }
+      return res;
+    }
+
+    /**
+     * Play the card at `from` ('draw' | 'discard' | field index) onto `to`
      * ('discard' | field index). Mutates state.
-     * Returns { ok:true, id, to, completed?, completedCards?, won? }
-     *       | { ok:false, reason, mistake?, id? }
-     *   reason: 'over' | 'empty' | 'same' | 'invalid' | 'mismatch' | 'active'
+     * Every attempt that reaches a real target costs 1 move (also a wrong one).
+     * Returns { ok:true, id, to, cost, completed?, completedCards?, won?, lost? }
+     *       | { ok:false, reason, cost?, mistake?, id?, lost? }
+     *   reason (no cost): 'over' | 'invalid' | 'empty' | 'same' | 'locked'
+     *   reason (costs a move): 'needCategory' | 'occupied' | 'mismatch'
      */
     function play(state, game, from, to) {
       if (state.status !== 'playing') return { ok: false, reason: 'over' };
-      if (from !== 'draw' && from !== 'discard') return { ok: false, reason: 'invalid' };
+      if (!validFrom(from)) return { ok: false, reason: 'invalid' };
       var id = topCard(state, from);
       if (id === null) return { ok: false, reason: 'empty' };
       if (to === 'discard') {
         if (from === 'discard') return { ok: false, reason: 'same' };
-        state.discard.push(takeFrom(state, from));
-        state.moves++;
-        return { ok: true, id: id, to: 'discard' };
+        takeFrom(state, from);
+        state.discard.push(id);
+        return spend(state, { ok: true, id: id, to: 'discard' });
       }
       if (!isInt(to) || to < 0 || to >= FIELDS) return { ok: false, reason: 'invalid' };
+      if (to === from) return { ok: false, reason: 'same' };
       var reason = placeReject(state, game, id, to);
+      if (reason === 'locked') return { ok: false, reason: reason };
       if (reason) {
-        state.mistakes++;
-        return { ok: false, reason: reason, mistake: true, id: id };
+        state.wrong += 1;
+        return spend(state, { ok: false, reason: reason, mistake: true, id: id });
       }
       takeFrom(state, from);
-      state.fields[to].push(id);
-      state.moves++;
+      var stack = state.fields[to].c;
+      stack.push(id);
       var res = { ok: true, id: id, to: to };
-      if (state.fields[to].length >= CARDS_PER_CATEGORY) {
+      if (stack.length >= 1 + CARDS_PER_CATEGORY) {
         res.completed = game.cards[id].cat;
-        res.completedCards = state.fields[to].slice();
+        res.completedCards = stack.slice();
         state.done.push(res.completed);
-        state.fields[to] = [];
+        state.fields[to].c = [];
         if (state.done.length >= game.cats.length) {
           state.status = 'won';
           res.won = true;
         }
       }
-      return res;
+      return spend(state, res);
     }
 
-    /** Turn the discard pile over into the empty draw pile (first discarded = new top). */
+    /** Turn the discard pile over into the empty draw pile (first discarded = new top). Free. */
     function canFlip(state) {
       return state.status === 'playing' && state.draw.length === 0 && state.discard.length > 0;
     }
@@ -272,10 +371,10 @@
       return true;
     }
 
-    /** 0-1 mistakes: 3 stars, 2-4: 2 stars, 5+: 1 star. */
-    function stars(mistakes) {
-      if (mistakes <= 1) return 3;
-      if (mistakes <= 4) return 2;
+    /** Stars by moves left: >= STAR3_LEFT 3, >= STAR2_LEFT 2, else 1. */
+    function stars(movesLeft) {
+      if (movesLeft >= STAR3_LEFT) return 3;
+      if (movesLeft >= STAR2_LEFT) return 2;
       return 1;
     }
 
@@ -284,13 +383,15 @@
     }
 
     function defaultStats() {
-      return { played: 0, streak: 0, best: 0, lastWonDay: null, lastPlayedDay: null, stars: [0, 0, 0] };
+      return { v: STATS_VERSION, played: 0, solved: 0, streak: 0, best: 0,
+        lastWonDay: null, lastPlayedDay: null, stars: [0, 0, 0] };
     }
 
+    /** Stats in the current shape; older versions are reset. */
     function normalizeStats(s) {
       var d = defaultStats();
-      if (!s || typeof s !== 'object') return d;
-      ['played', 'streak', 'best', 'lastWonDay', 'lastPlayedDay'].forEach(function (k) {
+      if (!s || typeof s !== 'object' || s.v !== STATS_VERSION) return d;
+      ['played', 'solved', 'streak', 'best', 'lastWonDay', 'lastPlayedDay'].forEach(function (k) {
         if (typeof s[k] === 'number' && isFinite(s[k])) d[k] = s[k];
       });
       if (Array.isArray(s.stars) && s.stars.length === 3) {
@@ -299,16 +400,24 @@
       return d;
     }
 
-    /** Record a solved game. Idempotent per day. Returns new stats object. */
-    function updateStats(stats, day, mistakes) {
+    /**
+     * Record a finished game (won or lost). Idempotent per day.
+     * A loss breaks the streak. Returns a new stats object.
+     */
+    function updateStats(stats, day, won, movesLeft) {
       var s = normalizeStats(stats);
       if (s.lastPlayedDay === day) return s;
       s.played += 1;
       s.lastPlayedDay = day;
-      s.streak = s.lastWonDay === day - 1 ? s.streak + 1 : 1;
-      s.best = Math.max(s.best, s.streak);
-      s.lastWonDay = day;
-      s.stars[stars(mistakes) - 1] += 1;
+      if (won) {
+        s.solved += 1;
+        s.streak = s.lastWonDay === day - 1 ? s.streak + 1 : 1;
+        s.best = Math.max(s.best, s.streak);
+        s.lastWonDay = day;
+        s.stars[stars(movesLeft) - 1] += 1;
+      } else {
+        s.streak = 0;
+      }
       return s;
     }
 
@@ -319,28 +428,42 @@
       return s.lastWonDay === today || s.lastWonDay === today - 1 ? s.streak : 0;
     }
 
+    var SHARE_EN = {
+      movesLeftOne: '{n} move left',
+      movesLeftOther: '{n} moves left',
+      shareLost: 'Out of moves · {k}/{total}',
+      shareStreak: 'Streak: {n}'
+    };
+
     /**
-     * Share text. `tr` (optional) translates: tr(key, vars) with the i18n.js
-     * keys mistakeCountOne / mistakeCountOther / shareStreak. Default: English.
+     * Share text (no spoilers). r = { won, movesLeft, done, total }.
+     * `tr` (optional) translates: tr(key, vars) with the i18n.js keys
+     * movesLeftOne / movesLeftOther / shareLost / shareStreak. Default: English.
      */
-    function shareText(puzzleNo, mistakes, streak, tr) {
+    function shareText(puzzleNo, r, streak, tr) {
       var t = tr || function (key, v) {
-        if (key === 'shareStreak') return 'Streak: ' + v.n;
-        return v.n + (key === 'mistakeCountOne' ? ' mistake' : ' mistakes');
+        return SHARE_EN[key].replace(/\{(\w+)\}/g, function (m, k) { return String(v[k]); });
       };
-      return [
-        "Riddle Me Rika #" + puzzleNo,
-        starString(stars(mistakes)),
-        t(mistakes === 1 ? 'mistakeCountOne' : 'mistakeCountOther', { n: mistakes }),
-        t('shareStreak', { n: streak })
-      ].join('\n');
+      var lines = ['Riddle Me Rika #' + puzzleNo];
+      if (r.won) {
+        lines.push(starString(stars(r.movesLeft)));
+        lines.push(t(r.movesLeft === 1 ? 'movesLeftOne' : 'movesLeftOther', { n: r.movesLeft }));
+      } else {
+        lines.push(t('shareLost', { k: r.done, total: r.total }));
+      }
+      lines.push(t('shareStreak', { n: streak }));
+      return lines.join('\n');
     }
 
     return {
       CONFIG: {
-        FIELDS: FIELDS, CATEGORIES_PER_GAME: CATEGORIES_PER_GAME,
-        CARDS_PER_CATEGORY: CARDS_PER_CATEGORY, MAX_TIER: MAX_TIER,
-        SYMBOL_DIR: SYMBOL_DIR, SYMBOL_EXT: SYMBOL_EXT
+        FIELDS: FIELDS, TOP_FIELDS: TOP_FIELDS, BOTTOM_FIELDS: BOTTOM_FIELDS,
+        FACE_DOWN_PER_FIELD: FACE_DOWN_PER_FIELD, MOVES: MOVES,
+        STAR3_LEFT: STAR3_LEFT, STAR2_LEFT: STAR2_LEFT,
+        CATEGORIES_PER_GAME: CATEGORIES_PER_GAME, CARDS_PER_CATEGORY: CARDS_PER_CATEGORY,
+        MAX_TIER: MAX_TIER, SYMBOL_DIR: SYMBOL_DIR, SYMBOL_EXT: SYMBOL_EXT,
+        SYMBOL_GEN_DIR: SYMBOL_GEN_DIR, SYMBOL_GEN_EXT: SYMBOL_GEN_EXT,
+        CATEGORY_SYMBOL_PREFIX: CATEGORY_SYMBOL_PREFIX, SAVE_VERSION: SAVE_VERSION
       },
       dayNumber: dayNumber,
       dateForDay: dateForDay,
@@ -354,6 +477,10 @@
       newGame: newGame,
       restoreState: restoreState,
       topCard: topCard,
+      playableSources: playableSources,
+      canTurn: canTurn,
+      turn: turn,
+      isFree: isFree,
       fieldCat: fieldCat,
       placeReject: placeReject,
       play: play,
@@ -378,12 +505,14 @@
      ======================================================================= */
 
   var KEY_STATS = 'rr:stats';
-  var KEY_HELP = 'rr:seenHelp';
+  var KEY_HELP = 'rr:seenHelp3';
   var KEY_GAME_PREFIX = 'rr:game:';
   var DRAG_THRESHOLD = 7;
   var REVEAL_MS = 900;     // theme name shown on a completed field
   var FLY_MS = 420;        // cards flying to the Done pile
   var FEEDBACK_MS = 480;   // red / green field flash
+  var LOST_DELAY_MS = 700; // let the last move show before the result panel
+  var LOW_MOVES = 5;       // move counter turns red at or below this
 
   /* ---------- storage (never throws) ---------- */
   var store = {
@@ -460,20 +589,27 @@
     return t(key + (n === 1 ? 'One' : 'Other'), v);
   }
 
+  var SHY = /­/g; // soft hyphen
+
   /** Card word / category name in the active language (English if no German text). */
   function wordOf(c) { return lang === 'de' && c.wordDe ? c.wordDe : c.word; }
   function themeOf(cat) { return lang === 'de' && cat.themeDe ? cat.themeDe : cat.theme; }
+  /** Text for screen readers (no soft hyphens; category cards are announced as such). */
+  function cardLabel(c) {
+    var w = wordOf(c).replace(SHY, '');
+    return c.kind === 'cat' ? t('ariaCategoryCard', { name: w }) : w;
+  }
 
   /** Length class for a category name, from its longest word: s <=9, l 10-12, xl 13+. */
   function themeLen(theme) {
     var n = 0;
-    theme.replace(/­/g, '').split(/\s+/).forEach(function (w) { n = Math.max(n, w.length); });
+    theme.replace(SHY, '').split(/\s+/).forEach(function (w) { n = Math.max(n, w.length); });
     return n <= 9 ? 's' : n <= 12 ? 'l' : 'xl';
   }
 
   /** Word-length class for the card's top text: s <=7, m <=9, l <=11, xl <=13, xxl 14+. */
   function lenClass(word) {
-    var n = word.replace(/­/g, '').length; // soft hyphens (­) don't count
+    var n = word.replace(SHY, '').length; // soft hyphens don't count
     if (n <= 7) return 's';
     if (n <= 9) return 'm';
     if (n <= 11) return 'l';
@@ -489,8 +625,9 @@
   var els = {};
   var game, state, day, realDay, puzzleNo, isOverride;
   var ui = {
-    sel: 'draw',        // which playable card is selected: 'draw' | 'discard'
-    busy: false,        // true during the completion animation
+    sel: 'draw',        // selected playable card: 'draw' | 'discard' | field index (bottom pile)
+    busy: false,        // true during the completion / end animation
+    hold: false,        // keep showing the board (not the result) for a moment
     reveal: null,       // {field, cards, cat} while a completed field shows its theme
     lastPlaced: null,   // card id that just landed in a field
     donePop: false,
@@ -498,7 +635,9 @@
   };
   var ptr = null;       // active pointer interaction
   var toastTimer = 0;
-  var failedSymbols = {}; // symbol -> true once its image failed to load
+  // symbol -> 0 = try PNG, 1 = try generated SVG, 2 = placeholder.
+  // Only moves forward on a load error, so re-renders never re-request a failed file.
+  var symbolStage = {};
   var fatalKey = null;    // i18n key of the error shown instead of the game
 
   function gameKey(d) { return KEY_GAME_PREFIX + d; }
@@ -506,9 +645,15 @@
   function loadStats() { return Core.normalizeStats(store.getJSON(KEY_STATS)); }
   function streakNow() { return Core.currentStreak(loadStats(), realDay); }
 
+  /** 'draw' | 'discard' | 'f3' <-> core source ('draw' | 'discard' | 3). */
+  function srcKey(from) { return typeof from === 'number' ? 'f' + from : from; }
+  function parseSrc(key) { return /^f\d+$/.test(key) ? parseInt(key.slice(1), 10) : key; }
+
   /** The card a tap on a field would play. */
   function selSource() {
-    if (ui.sel === 'discard' && state.discard.length) return 'discard';
+    var s = ui.sel;
+    if (typeof s === 'number' && Core.topCard(state, s) !== null) return s;
+    if (s === 'discard' && state.discard.length) return 'discard';
     if (state.draw.length) return 'draw';
     if (state.discard.length) return 'discard';
     return null;
@@ -524,7 +669,7 @@
     els.discardLabel = document.getElementById('label-discard');
     els.doneLabel = document.getElementById('label-done');
     els.fields = document.getElementById('fields');
-    els.mistakes = document.getElementById('mistakes');
+    els.moves = document.getElementById('moves');
     els.sub = document.getElementById('sub');
     els.toast = document.getElementById('toast');
     els.langBtn = document.getElementById('lang-btn');
@@ -565,8 +710,9 @@
       if (k && k.indexOf(KEY_GAME_PREFIX) === 0 && k !== gameKey(day) && k !== gameKey(realDay)) store.remove(k);
     });
 
+    // old saves (other version) fail restoreState and are replaced by a new game
     state = Core.restoreState(store.getJSON(gameKey(day)), game, day) || Core.newGame(game, day);
-    if (state.status === 'won') recordResult();
+    if (state.status !== 'playing') recordResult();
     save();
 
     bindBoard();
@@ -593,7 +739,7 @@
    */
   function applyStatic() {
     document.documentElement.lang = lang;
-    var vars = { cards: Core.CONFIG.CARDS_PER_CATEGORY, cats: Core.CONFIG.CATEGORIES_PER_GAME };
+    var vars = { cards: Core.CONFIG.CARDS_PER_CATEGORY, cats: Core.CONFIG.CATEGORIES_PER_GAME, moves: Core.CONFIG.MOVES };
     document.querySelectorAll('[data-i18n]').forEach(function (el) {
       el.textContent = t(el.getAttribute('data-i18n'), vars);
     });
@@ -636,7 +782,7 @@
     applyStatic();
     if (!game) { if (fatalKey) showFatal(); return; }
     if (ptr) onCancel(); // a drag in progress snaps back
-    // mid-completion-animation the board re-renders by itself when done
+    // mid-animation the board re-renders by itself when done
     if (!ui.busy) render();
     renderStats();
     renderDoneList();
@@ -655,58 +801,69 @@
     return h('span', { class: 'card__placeholder', 'aria-hidden': 'true', text: wordOf(c).charAt(0).toUpperCase() });
   }
 
+  function symbolUrl(sym, stage) {
+    return stage === 0
+      ? SYMBOL_DIR + encodeURIComponent(sym) + '.' + SYMBOL_EXT
+      : SYMBOL_GEN_DIR + encodeURIComponent(sym) + '.' + SYMBOL_GEN_EXT;
+  }
+
+  /**
+   * Symbol with a fallback chain: assets/symbols/<symbol>.png (the owner's
+   * drawing) -> assets/symbols/generated/<symbol>.svg -> placeholder.
+   */
   function artEl(c) {
     var art = h('span', { class: 'card__art', 'aria-hidden': 'true' });
-    if (!c.symbol || failedSymbols[c.symbol]) {
+    var sym = c.symbol;
+    var stage = sym ? (symbolStage[sym] || 0) : 2;
+    if (stage >= 2) {
       art.appendChild(placeholderEl(c));
       return art;
     }
-    var img = h('img', {
-      class: 'card__symbol', alt: '', draggable: 'false',
-      src: SYMBOL_DIR + encodeURIComponent(c.symbol) + '.' + SYMBOL_EXT
-    });
+    var img = h('img', { class: 'card__symbol', alt: '', draggable: 'false', src: symbolUrl(sym, stage) });
     img.addEventListener('error', function () {
-      failedSymbols[c.symbol] = true;
-      if (img.parentNode) img.parentNode.replaceChild(placeholderEl(c), img);
+      var cur = symbolStage[sym] || 0;
+      if (cur === stage) symbolStage[sym] = cur + 1; // another <img> may have advanced it already
+      stage = symbolStage[sym];
+      if (stage < 2) img.src = symbolUrl(sym, stage);
+      else if (img.parentNode) img.parentNode.replaceChild(placeholderEl(c), img);
     });
     art.appendChild(img);
     return art;
   }
 
-  /** A face-up card. tag 'button' for playable cards. */
+  /** A face-up card (word or category card). tag 'button' for playable cards. */
   function cardEl(c, tag, attrs) {
     var a = attrs || {};
-    var props = { class: 'card' + (a.cls ? ' ' + a.cls : ''), 'data-card': c.id };
+    var cls = 'card' + (c.kind === 'cat' ? ' card--category tier-' + game.cats[c.cat].tier : '') + (a.cls ? ' ' + a.cls : '');
+    var props = { class: cls, 'data-card': c.id };
     Object.keys(a).forEach(function (k) { if (k !== 'cls') props[k] = a[k]; });
     if (tag === 'button') props.type = 'button';
-    return h(tag, props,
-      h('span', { class: 'card__word', 'data-len': lenClass(wordOf(c)), text: wordOf(c) }),
-      artEl(c));
+    var text = wordOf(c);
+    var label = c.kind === 'cat'
+      ? h('span', { class: 'card__catname', 'data-len': themeLen(text), text: text })
+      : h('span', { class: 'card__word', 'data-len': lenClass(text), text: text });
+    return h(tag, props, label, artEl(c));
   }
 
   /* ---------- rendering ---------- */
   function render() {
     var a = document.activeElement;
-    var focusSel = null;
-    if (a && els.board.contains(a)) {
-      if (a.dataset.drag) focusSel = '[data-drag="' + a.dataset.drag + '"]';
-      else if (a.dataset.action) focusSel = '[data-action="' + a.dataset.action + '"]';
-      else if (a.dataset.drop) focusSel = '[data-drop="' + a.dataset.drop + '"]';
-    }
+    var fk = a && els.board.contains(a) ? a.getAttribute('data-fk') : null;
 
-    els.mistakes.textContent = String(state.mistakes);
-    var sel = selSource();
+    els.moves.textContent = String(state.movesLeft);
+    els.moves.parentNode.classList.toggle('is-low', state.movesLeft <= LOW_MOVES);
+    var sel = state.status === 'playing' ? selSource() : null;
     renderDraw(sel);
     renderDiscard(sel);
     renderDone();
-    renderFields();
+    renderFields(sel);
     els.board.classList.toggle('is-finished', state.status !== 'playing');
 
     ui.lastPlaced = null;
     ui.donePop = false;
 
-    if (focusSel) {
-      var n = els.board.querySelector(focusSel);
+    if (fk) {
+      var n = els.board.querySelector('[data-fk="' + fk + '"]');
       if (n && n.tabIndex >= 0) { try { n.focus({ preventScroll: true }); } catch (e) { n.focus(); } }
     }
   }
@@ -726,12 +883,12 @@
       var c = game.cards[state.draw[0]];
       kids = underCards(n, 'card--back').concat(cardEl(c, 'button', {
         cls: 'is-top' + (sel === 'draw' ? ' is-selected' : ''),
-        'data-drag': 'draw',
+        'data-drag': 'draw', 'data-fk': 'draw',
         'aria-pressed': sel === 'draw' ? 'true' : 'false',
-        'aria-label': t(sel === 'draw' ? 'ariaDrawSelected' : 'ariaDraw', { word: wordOf(c) })
+        'aria-label': t(sel === 'draw' ? 'ariaDrawSelected' : 'ariaDraw', { word: cardLabel(c) })
       }));
     } else if (Core.canFlip(state)) {
-      kids = [h('button', { type: 'button', class: 'pile__flip', 'data-action': 'flip', 'aria-label': t('ariaFlip') },
+      kids = [h('button', { type: 'button', class: 'pile__flip', 'data-action': 'flip', 'data-fk': 'flip', 'aria-label': t('ariaFlip') },
         h('span', { class: 'pile__flip-icon', 'aria-hidden': 'true', text: '↻' }),
         h('span', { class: 'pile__flip-text', text: t('flipDiscard') }))];
     } else {
@@ -748,9 +905,9 @@
       var c = game.cards[state.discard[n - 1]];
       kids = underCards(n, 'card--under').concat(cardEl(c, 'button', {
         cls: 'is-top' + (sel === 'discard' ? ' is-selected' : ''),
-        'data-drag': 'discard',
+        'data-drag': 'discard', 'data-fk': 'discard',
         'aria-pressed': sel === 'discard' ? 'true' : 'false',
-        'aria-label': t(sel === 'discard' ? 'ariaDiscardCardSelected' : 'ariaDiscardCard', { word: wordOf(c) })
+        'aria-label': t(sel === 'discard' ? 'ariaDiscardCardSelected' : 'ariaDiscardCard', { word: cardLabel(c) })
       }));
     } else {
       kids = [h('div', { class: 'card card--empty', 'aria-hidden': 'true' },
@@ -783,8 +940,8 @@
     els.doneLabel.textContent = t('labelDone', { k: k, total: total });
   }
 
-  function renderFields() {
-    if (state.status === 'won' && !ui.reveal) {
+  function renderFields(sel) {
+    if (state.status !== 'playing' && !ui.reveal && !ui.hold) {
       els.fields.classList.add('is-result');
       els.fields.replaceChildren(resultPanel());
       updateTimer();
@@ -792,52 +949,97 @@
     }
     els.fields.classList.remove('is-result');
     var nodes = [];
-    for (var f = 0; f < state.fields.length; f++) {
-      var reveal = ui.reveal && ui.reveal.field === f ? ui.reveal : null;
-      var ids = reveal ? reveal.cards : state.fields[f];
-      var cardsEls = ids.map(function (id, i) {
-        return cardEl(game.cards[id], 'div', {
-          cls: 'card--field' + (ui.lastPlaced === id ? ' is-new' : ''),
-          style: '--i:' + i, 'aria-hidden': 'true'
-        });
-      });
-      var words = ids.map(function (id) { return wordOf(game.cards[id]); }).join(', ');
-      var kids = cardsEls;
-      if (reveal) {
-        var cat = game.cats[reveal.cat];
-        kids = kids.concat(h('div', { class: 'field__reveal tier-' + cat.tier },
-          h('span', { class: 'field__theme', 'data-len': themeLen(themeOf(cat)), text: themeOf(cat) })));
-      } else if (!ids.length) {
-        kids = [h('span', { class: 'field__hint', text: t('empty') })];
-      }
-      nodes.push(h('div', {
-        class: 'field' + (ids.length ? '' : ' is-empty') + (reveal ? ' is-complete' : ''),
-        'data-drop': String(f), role: 'button', tabindex: '0',
-        'aria-label': ids.length
-          ? t('ariaField', { f: f + 1, k: ids.length, max: Core.CONFIG.CARDS_PER_CATEGORY, words: words })
-          : t('ariaFieldEmpty', { f: f + 1 })
-      }, kids));
-    }
+    for (var f = 0; f < state.fields.length; f++) nodes.push(fieldEl(f, sel));
     els.fields.replaceChildren.apply(els.fields, nodes);
   }
 
+  /** A bottom field that still holds dealt cards: face-down cards, top one turnable or face up. */
+  function pileFieldEl(f, fl, sel) {
+    var n = fl.c.length;
+    var kids = [];
+    for (var i = 0; i < n - 1; i++) {
+      kids.push(h('div', { class: 'card card--back card--down', style: '--i:' + i, 'aria-hidden': 'true' }));
+    }
+    var top = fl.c[n - 1];
+    if (fl.d === n) {
+      kids.push(h('button', {
+        type: 'button', class: 'card card--back card--down is-turnable', style: '--i:' + (n - 1),
+        'data-action': 'turn', 'data-field': f, 'data-fk': 'turn' + f,
+        'aria-label': t('ariaTurn', { f: f + 1, n: n })
+      }));
+    } else {
+      var c = game.cards[top];
+      var selected = sel === f;
+      kids.push(cardEl(c, 'button', {
+        cls: 'card--down-top is-top' + (selected ? ' is-selected' : '') + (ui.lastPlaced === top ? ' is-new' : ''),
+        style: '--i:' + (n - 1),
+        'data-drag': 'f' + f, 'data-fk': 'f' + f,
+        'aria-pressed': selected ? 'true' : 'false',
+        'aria-label': t(selected ? 'ariaPileCardSelected' : 'ariaPileCard', { f: f + 1, word: cardLabel(c), n: fl.d })
+      }));
+    }
+    return h('div', {
+      class: 'field field--bottom field--pile', 'data-drop': String(f), role: 'group',
+      'aria-label': t('ariaPile', { f: f + 1, n: n })
+    }, kids);
+  }
+
+  function fieldEl(f, sel) {
+    var fl = state.fields[f];
+    var reveal = ui.reveal && ui.reveal.field === f ? ui.reveal : null;
+    var rowCls = f < Core.CONFIG.TOP_FIELDS ? ' field--top' : ' field--bottom';
+    if (!reveal && fl.p) return pileFieldEl(f, fl, sel);
+    var ids = reveal ? reveal.cards : fl.c;
+    var kids = ids.map(function (id, i) {
+      return cardEl(game.cards[id], 'div', {
+        cls: 'card--field' + (ui.lastPlaced === id ? ' is-new' : ''),
+        style: '--i:' + i, 'aria-hidden': 'true'
+      });
+    });
+    var label;
+    if (reveal) {
+      var cat = game.cats[reveal.cat];
+      kids.push(h('div', { class: 'field__reveal tier-' + cat.tier },
+        h('span', { class: 'field__theme', 'data-len': themeLen(themeOf(cat)), text: themeOf(cat) })));
+      label = themeOf(cat).replace(SHY, '');
+    } else if (!ids.length) {
+      kids = [h('span', { class: 'field__hint', text: t('fieldHint') })];
+      label = t('ariaFieldEmpty', { f: f + 1 });
+    } else {
+      var base = game.cards[ids[0]];
+      label = t('ariaField', {
+        f: f + 1, cat: wordOf(base).replace(SHY, ''), k: ids.length - 1, max: Core.CONFIG.CARDS_PER_CATEGORY,
+        words: ids.slice(1).map(function (id) { return wordOf(game.cards[id]); }).join(', ') || '–'
+      });
+    }
+    return h('div', {
+      class: 'field' + rowCls + (ids.length ? '' : ' is-empty') + (reveal ? ' is-complete' : ''),
+      'data-drop': String(f), 'data-fk': 'drop' + f, role: 'button', tabindex: '0', 'aria-label': label
+    }, kids);
+  }
+
   function resultPanel() {
-    var m = state.mistakes;
+    var won = state.status === 'won';
+    var left = state.movesLeft;
     var shareBtn = h('button', { type: 'button', class: 'btn btn--primary result__share' }, t('share'));
     shareBtn.addEventListener('click', share);
-    return h('section', { class: 'result', 'aria-live': 'polite' },
-      h('h2', { class: 'result__title', text: t('solved') }),
-      h('p', { class: 'result__stars', 'aria-label': t('ariaStars', { n: Core.stars(m) }), text: Core.starString(Core.stars(m)) }),
-      h('p', { class: 'result__meta', text: t('resultMeta', { mistakes: tn('mistakeCount', m), streak: streakNow() }) }),
-      shareBtn,
-      h('p', { class: 'result__next' }, t('nextPuzzle'),
-        h('span', { class: 'result__timer', id: 'timer', text: Core.formatCountdown(Core.msUntilMidnight(new Date())) }))
-    );
+    var parts = [h('h2', { class: 'result__title', text: t(won ? 'solved' : 'outOfMoves') })];
+    if (won) {
+      parts.push(h('p', { class: 'result__stars', 'aria-label': t('ariaStars', { n: Core.stars(left) }), text: Core.starString(Core.stars(left)) }));
+      parts.push(h('p', { class: 'result__meta', text: t('resultMeta', { moves: tn('movesLeft', left), streak: streakNow() }) }));
+    } else {
+      parts.push(h('p', { class: 'result__lost', text: t('resultLost', { k: state.done.length, total: game.cats.length }) }));
+      parts.push(h('p', { class: 'result__meta', text: t('resultMetaLost', { streak: streakNow() }) }));
+    }
+    parts.push(shareBtn);
+    parts.push(h('p', { class: 'result__next' }, t('nextPuzzle'),
+      h('span', { class: 'result__timer', id: 'timer', text: Core.formatCountdown(Core.msUntilMidnight(new Date())) })));
+    return h('section', { class: 'result' + (won ? '' : ' result--lost'), 'aria-live': 'polite' }, parts);
   }
 
   function updateTimer() {
-    var t = document.getElementById('timer');
-    if (t) t.textContent = Core.formatCountdown(Core.msUntilMidnight(new Date()));
+    var el = document.getElementById('timer');
+    if (el) el.textContent = Core.formatCountdown(Core.msUntilMidnight(new Date()));
   }
 
   function flash(el, cls, ms) {
@@ -859,39 +1061,65 @@
 
   /* ---------- actions ---------- */
   /**
-   * Play the top card of `from` onto `to`. `drag` (optional) is the finished
+   * Play the card at `from` onto `to`. `drag` (optional) is the finished
    * pointer interaction whose ghost should land or snap back.
    */
   function doPlay(from, to, drag) {
     var res = Core.play(state, game, from, to);
     if (!res.ok) {
-      if (res.mistake) save();
+      if (res.cost) save();
+      if (res.lost) ui.hold = true;
       render();
       if (drag) snapBack(drag);
-      else if (res.mistake) flash(els.board.querySelector('[data-drag="' + from + '"]'), 'is-bounce');
+      else if (res.mistake) flash(els.board.querySelector('[data-drag="' + srcKey(from) + '"]'), 'is-bounce');
       if (res.mistake) {
         flash(dropEl(to), 'is-wrong');
-        flash(els.mistakes.parentNode, 'is-bump');
+        flash(els.moves.parentNode, 'is-bump');
         toast(t('toastWrong'));
       }
+      if (res.lost) endLost();
       return;
     }
     if (drag) removeGhost(drag);
     ui.sel = 'draw';
     save();
+    flash(els.moves.parentNode, 'is-tick', 300);
     if (res.completed !== undefined) {
       ui.lastPlaced = res.id;
       runCompletion(to, res);
       return;
     }
     if (to !== 'discard') ui.lastPlaced = res.id;
+    if (res.lost) ui.hold = true;
     render();
     if (to !== 'discard') flash(dropEl(to), 'is-correct');
+    if (res.lost) endLost();
+  }
+
+  /** Out of moves: show the board a moment longer, then the result panel. */
+  function endLost() {
+    ui.busy = true;
+    els.board.classList.add('is-busy');
+    recordResult();
+    setTimeout(function () {
+      ui.hold = false;
+      ui.busy = false;
+      els.board.classList.remove('is-busy');
+      render();
+      toast(t('outOfMoves'));
+    }, reducedMotion() ? 200 : LOST_DELAY_MS);
   }
 
   function doFlip() {
     if (!Core.flip(state)) return;
     ui.sel = 'draw';
+    save();
+    render();
+  }
+
+  function doTurn(f) {
+    if (!Core.turn(state, f)) return;
+    ui.sel = f; // the turned card is ready to play
     save();
     render();
   }
@@ -910,9 +1138,10 @@
         ui.busy = false;
         ui.donePop = !quick;
         els.board.classList.remove('is-busy');
-        if (res.won) recordResult();
+        if (res.won || res.lost) recordResult();
         render();
         if (res.won) toast(t('toastSolved'));
+        else if (res.lost) toast(t('outOfMoves'));
       }, flyMs);
     }, quick ? 500 : REVEAL_MS);
   }
@@ -961,37 +1190,45 @@
     if (state.recorded) return;
     state.recorded = true;
     if (!isOverride) {
-      store.set(KEY_STATS, JSON.stringify(Core.updateStats(loadStats(), day, state.mistakes)));
+      store.set(KEY_STATS, JSON.stringify(Core.updateStats(loadStats(), day, state.status === 'won', state.movesLeft)));
     }
     save();
   }
 
-  /** A tap (or Enter/Space) on a playable card, a pile, a field or a button. */
-  function tap(t) {
-    var action = t.dataset.action;
+  /**
+   * A tap (or Enter/Space) on a playable card, a pile, a field or a button.
+   * Tap a playable card = select it; tap the selected card again = discard it.
+   * Tap a field = play the selected card there. Tap Discard with a draw/field
+   * card selected = discard it (the Discard card itself is selected otherwise).
+   */
+  function tap(el) {
+    var action = el.dataset.action;
     if (action === 'done') { openModal('done-modal'); return; }
     if (ui.busy || state.status !== 'playing') return;
     if (action === 'flip') { doFlip(); return; }
+    if (action === 'turn') { doTurn(parseInt(el.dataset.field, 10)); return; }
 
     var sel = selSource();
-    var drag = t.dataset.drag;
-    if (drag === 'draw') {
-      if (sel === 'draw') doPlay('draw', 'discard'); // tap the selected draw card again = park it
-      else { ui.sel = 'draw'; render(); }
+    if (el.dataset.drag) {
+      var src = parseSrc(el.dataset.drag);
+      if (src === 'discard') {
+        if (typeof sel === 'number') doPlay(sel, 'discard');
+        else { ui.sel = sel === 'discard' ? 'draw' : 'discard'; render(); }
+        return;
+      }
+      if (sel === src) doPlay(src, 'discard');
+      else { ui.sel = src; render(); }
       return;
     }
-    if (drag === 'discard') {
-      ui.sel = sel === 'discard' ? 'draw' : 'discard';
-      render();
-      return;
-    }
-    var dest = t.dataset.drop;
+    var dest = el.dataset.drop;
     if (dest === 'discard') {
-      if (sel === 'draw') doPlay('draw', 'discard');
+      if (sel !== null && sel !== 'discard') doPlay(sel, 'discard');
       return;
     }
     if (dest === undefined || sel === null) return;
-    doPlay(sel, +dest);
+    var f = +dest;
+    if (state.fields[f] && state.fields[f].p) return; // tapped beside a pile's card
+    doPlay(sel, f);
   }
 
   /* ---------- pointer: unified tap + drag ---------- */
@@ -1009,25 +1246,25 @@
     });
     els.board.addEventListener('keydown', function (e) {
       if (e.key !== 'Enter' && e.key !== ' ') return;
-      var t = e.target.closest('[data-drag],[data-drop],[data-action]');
-      if (!t || !els.board.contains(t) || t !== e.target) return;
+      var el = e.target.closest('[data-drag],[data-drop],[data-action]');
+      if (!el || !els.board.contains(el) || el !== e.target) return;
       e.preventDefault();
-      tap(t);
+      tap(el);
     });
   }
 
   function onDown(e) {
     if (ptr || e.isPrimary === false) return;
     if (e.pointerType === 'mouse' && e.button !== 0) return;
-    var t = e.target.closest('[data-drag],[data-drop],[data-action]');
-    if (!t || !els.board.contains(t)) return;
+    var el = e.target.closest('[data-drag],[data-drop],[data-action]');
+    if (!el || !els.board.contains(el)) return;
     if (!state) return;
-    if (t.closest('.result')) return; // let the share button work normally
+    if (el.closest('.result')) return; // let the share button work normally
     e.preventDefault(); // no text selection / focus steal / emulated mouse events
     var dragEl = e.target.closest('[data-drag]');
     ptr = {
       id: e.pointerId, x0: e.clientX, y0: e.clientY,
-      target: t, dragEl: dragEl && els.board.contains(dragEl) && !ui.busy && state.status === 'playing' ? dragEl : null,
+      target: el, dragEl: dragEl && els.board.contains(dragEl) && !ui.busy && state.status === 'playing' ? dragEl : null,
       dragging: false, ghost: null, over: null
     };
   }
@@ -1050,7 +1287,7 @@
     var el = ptr.dragEl;
     var r = el.getBoundingClientRect();
     var ghost = el.cloneNode(true);
-    ['data-drag', 'data-card', 'aria-label', 'aria-pressed'].forEach(function (a) { ghost.removeAttribute(a); });
+    ['data-drag', 'data-card', 'data-fk', 'aria-label', 'aria-pressed'].forEach(function (a) { ghost.removeAttribute(a); });
     ghost.classList.remove('is-selected', 'is-new', 'is-drag-source', 'is-bounce');
     ghost.classList.add('card-ghost');
     ghost.setAttribute('aria-hidden', 'true');
@@ -1071,22 +1308,22 @@
     ptr.srcRect = r;
     ptr.ghost = ghost;
     ptr.dragging = true;
-    ptr.src = el.dataset.drag; // 'draw' | 'discard'
+    ptr.src = el.dataset.drag; // 'draw' | 'discard' | 'f3'
     el.classList.add('is-drag-source');
     document.body.classList.add('is-dragging');
   }
 
   function dropAt(x, y) {
     var hit = document.elementFromPoint(x, y);
-    var t = hit && hit.closest('[data-drop]');
-    return t && els.board.contains(t) ? t : null;
+    var el = hit && hit.closest('[data-drop]');
+    return el && els.board.contains(el) ? el : null;
   }
 
-  function setOver(t) {
-    if (t === ptr.over) return;
+  function setOver(el) {
+    if (el === ptr.over) return;
     if (ptr.over) ptr.over.classList.remove('is-drop-target');
-    if (t) t.classList.add('is-drop-target');
-    ptr.over = t;
+    if (el) el.classList.add('is-drop-target');
+    ptr.over = el;
   }
 
   /** Ends the pointer interaction; the ghost (if any) stays until removeGhost/snapBack. */
@@ -1126,8 +1363,8 @@
     if (!ptr || e.pointerId !== ptr.id) return;
     var p = endPointer();
     if (p.dragging) {
-      var t = dropAt(e.clientX, e.clientY);
-      handleDrop(p, t ? t.dataset.drop : null);
+      var el = dropAt(e.clientX, e.clientY);
+      handleDrop(p, el ? el.dataset.drop : null);
       return;
     }
     // tap: only if released over the same element it started on
@@ -1145,17 +1382,21 @@
 
   function handleDrop(p, dest) {
     if (state.status !== 'playing' || ui.busy || dest === null || dest === undefined) { snapBack(p); return; }
-    if (dest === 'discard') {
-      if (p.src === 'draw') doPlay('draw', 'discard', p);
-      else snapBack(p);
+    var from = parseSrc(p.src);
+    var to = dest === 'discard' ? 'discard' : +dest;
+    // dropped back where it came from, or onto a bottom pile: not a move
+    if (to === from || (to !== 'discard' && state.fields[to].p) || (to === 'discard' && from === 'discard')) {
+      snapBack(p);
       return;
     }
-    doPlay(p.src, +dest, p);
+    doPlay(from, to, p);
   }
 
   /* ---------- share ---------- */
   function share() {
-    var text = Core.shareText(puzzleNo, state.mistakes, streakNow(), t);
+    var text = Core.shareText(puzzleNo, {
+      won: state.status === 'won', movesLeft: state.movesLeft, done: state.done.length, total: game.cats.length
+    }, streakNow(), t);
     var coarse = false;
     try { coarse = root.matchMedia('(pointer: coarse)').matches; } catch (e) { /* ignore */ }
     if (navigator.share && coarse) {
@@ -1236,9 +1477,9 @@
     }
     list.replaceChildren.apply(list, state.done.map(function (ci) {
       var cat = game.cats[ci];
-      var words = game.cards.filter(function (c) { return c.cat === ci; }).map(wordOf);
+      var words = game.cards.filter(function (c) { return c.cat === ci && c.kind === 'word'; }).map(wordOf);
       return h('li', { class: 'done-list__item tier-' + cat.tier },
-        h('strong', { class: 'done-list__theme', text: themeOf(cat) }),
+        h('strong', { class: 'done-list__theme', text: themeOf(cat).replace(SHY, '') }),
         h('span', { class: 'done-list__words', text: words.join(' · ') }));
     }));
   }
@@ -1246,7 +1487,8 @@
   function renderStats() {
     var s = loadStats();
     var items = [
-      [s.played, t('statSolved')],
+      [s.played, t('statPlayed')],
+      [s.solved, t('statSolved')],
       [Core.currentStreak(s, realDay), t('statStreak')],
       [s.best, t('statBest')],
       [s.stars[2], t('statThreeStars')]

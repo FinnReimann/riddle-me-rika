@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="marker" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <!-- 1. wobbly hand-drawn edges -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="10" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <!-- 2. soft marker edge -->
+      <feGaussianBlur in="wobble" stdDeviation="1.6" result="soft"/>
+      <!-- 3. blotchy marker shading (dark patches) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="67" result="blotch"/>
+      <feColorMatrix in="blotch" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.25 -0.62" result="blotchA"/>
+      <feComposite in="blotchA" in2="soft" operator="in" result="shade"/>
+      <!-- 4. fine paper/fibre texture (light speckles) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="163" result="fibre"/>
+      <feColorMatrix in="fibre" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.75 -0.55" result="fibreA"/>
+      <feComposite in="fibreA" in2="soft" operator="in" result="speckle"/>
+      <feMerge><feMergeNode in="soft"/><feMergeNode in="shade"/><feMergeNode in="speckle"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#marker)">
+    <!-- ground -->
+    <path d="M44 446 Q256 420 468 446" stroke="#3f9a3a" stroke-width="16" stroke-linecap="round" fill="none"/>
+    <!-- side panel -->
+    <path d="M210 96 L382 84 L462 424 L330 440 Z" fill="#c4641c"/>
+    <path d="M300 92 L400 430" stroke="#a8541a" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <!-- front -->
+    <path d="M60 440 L210 96 L330 440 Z" fill="#e8812a"/>
+    <!-- door -->
+    <path d="M150 440 L210 250 L262 440 Z" fill="#5a3a26"/>
+    <path d="M210 250 L262 440 L300 440 Z" fill="#f2a050"/>
+    <!-- pole tip -->
+    <path d="M210 96 L206 62" stroke="#5a3a26" stroke-width="12" stroke-linecap="round" fill="none"/>
+  </g>
+</svg>

@@ -1,8 +1,51 @@
 # Riddle Me Rika
 
-A daily card puzzle: draw cards and sort them onto 4 fields until all 6 hidden
-categories are complete. Plain HTML/CSS/JS, no build step, works offline and
-can be installed on the home screen.
+A daily card puzzle: build a stack for each of 8 categories (category card +
+4 word cards) before your moves run out. Plain HTML/CSS/JS, no build step,
+works offline and can be installed on the home screen.
+
+## Rules
+
+- 40 cards per day: 8 categories × (1 category card + 4 word cards), dealt the
+  same for everyone (seeded by the day).
+- Board: Draw, Discard, Done in the top row; below 6 fields. The 3 top fields
+  start empty; each of the 3 bottom fields starts with 3 face-down cards. The
+  other 31 cards are the draw pile.
+- Tap a face-down card to turn it over (free). Only the top card of a bottom
+  field can be face up; it is playable like the draw / discard card. Nothing
+  can be placed onto a bottom field while it still has cards; once empty it is
+  a free field like the top ones.
+- An empty field only accepts a category card. Word cards go onto the stack
+  whose category card matches. Category card + 4 words = done: the name shows
+  briefly, the stack moves to Done and the field is empty again.
+- Moves count down from the budget. Every card play costs 1 move: onto a stack,
+  onto Discard, and also a wrong one (it bounces back, "Doesn't fit").
+  Turning cards, flipping the discard pile back into the empty draw pile and
+  selecting are free.
+- All 8 done = solved; stars by moves left. Moves at 0 before that = "Out of
+  moves" (the streak breaks).
+- Controls: drag a playable card, or tap it (selects) and tap a field. The draw
+  card is selected by default. Tapping the selected card again discards it.
+
+## Config (top of `game.js`)
+
+| Constant | Value | Meaning |
+|---|---|---|
+| `CATEGORIES_PER_GAME` | 8 | categories per day |
+| `CARDS_PER_CATEGORY` | 4 | word cards per category |
+| `TOP_FIELDS` / `BOTTOM_FIELDS` | 3 / 3 | empty top fields / bottom fields with face-down cards |
+| `FACE_DOWN_PER_FIELD` | 3 | face-down cards per bottom field |
+| `MOVES` | 85 | move budget |
+| `STAR3_LEFT` / `STAR2_LEFT` | 20 / 8 | moves left needed for ★★★ / ★★☆ |
+| `SYMBOL_DIR` + `SYMBOL_EXT` | `assets/symbols/`, `png` | the owner's symbols (always win) |
+| `SYMBOL_GEN_DIR` + `SYMBOL_GEN_EXT` | `assets/symbols/generated/`, `svg` | generated fallback symbols |
+
+The budget was calibrated with a greedy auto-player over 2000 daily deals: it
+needs 45–78 moves (median 58), so 85 always leaves moves to spare; ★★★ means
+finishing in 65 moves or less. If you change the field / card numbers, the
+layout in `style.css` (`--field-cols`, `--field-rows`, `--stack-n`) has to
+match, and the budget should be re-checked. Changing the rules makes old saves
+invalid; they are simply replaced by a new game.
 
 ## Put it online with GitHub Pages (once)
 
@@ -47,13 +90,13 @@ big change, bump `CACHE_VERSION` in `sw.js` so every device drops its old copy.
 |---|---|
 | Card look (colours, fonts, zones, images) | `cards.css`, guide in `CARD-DESIGN.md` |
 | Card images | `assets/card-face.png`, `assets/card-back.png` (750 × 1050) |
-| Symbols | `assets/symbols/<name>.png` (512 × 512), list in `SYMBOLS.md` |
+| Symbols | `assets/symbols/<name>.png` (512 × 512), list in `SYMBOLS.md`; generated fallbacks in `assets/symbols/generated/<name>.svg` |
 | Design templates | `assets/templates/` |
 | Affinity files, sketches (local only, not in git) | `designer/` |
 | Categories and words (English `word`/`theme`, German `wordDe`/`themeDe`) | `categories.js` |
 | All other texts (buttons, help, toasts, share text), English + German | `i18n.js` |
 | Language button icon | `assets/icons/lang.png` (96 × 96, transparent; see below) |
-| Rules (fields, categories per game, cards per category) | top of `game.js` |
+| Rules (fields, categories per game, cards per category, moves, stars) | top of `game.js` |
 | App icon / name | `assets/icons/`, `manifest.webmanifest` |
 | Layout | `style.css` |
 
@@ -73,6 +116,14 @@ game uses German if the phone is set to German, otherwise English.
   26 × 26 CSS px in a 44 px round button). The game puts a small badge with the
   current language ("EN" / "DE") on its bottom-right corner, so keep that
   corner fairly empty. Without the file the button just shows "EN" / "DE".
+
+## Symbols
+
+Each card first tries `assets/symbols/<symbol>.png`, then the generated
+`assets/symbols/generated/<symbol>.svg`, then a placeholder. To use your own
+drawing, drop your PNG into `assets/symbols/` with the same name and it
+replaces the generated SVG automatically. Category cards use
+`category-<categoryId>` (e.g. `category-fruit.png`).
 
 Testing: add `?day=5` to the address to play another day's puzzle, `?reset=1` to restart today.
 Saved games and stats live on each device (browser storage), they don't sync.

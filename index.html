@@ -5,7 +5,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="A daily card puzzle: sort 24 cards into 6 hidden categories, one field at a time.">
+<meta name="description" content="A daily card puzzle: sort 40 cards into 8 categories before your moves run out.">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -44,7 +44,7 @@
   </header>
 
   <div class="status" role="status">
-    <span class="status__item"><span data-i18n="mistakes">Mistakes</span> <b class="status__num" id="mistakes">0</b></span>
+    <span class="status__item status__moves"><span data-i18n="moves">Moves</span> <b class="status__num" id="moves">0</b></span>
   </div>
 
   <main class="board" id="board">
@@ -77,13 +77,13 @@
     </div>
     <div class="modal__body">
       <ul class="howto">
-        <li data-i18n="help1">Draw a card and put it on a field.</li>
-        <li data-i18n="help2">Each field collects one hidden category — 4 cards completes it.</li>
-        <li data-i18n="help3">Doesn’t fit? It bounces back and counts as a mistake.</li>
-        <li data-i18n="help4">Park cards on Discard; when the draw pile runs out, flip the discard pile.</li>
-        <li data-i18n="help5">Finish all 6 categories.</li>
+        <li data-i18n="help1">Finish all 8 categories with 85 moves.</li>
+        <li data-i18n="help2">Put a category card on an empty field, then stack its 4 word cards on it.</li>
+        <li data-i18n="help3">Every card you play costs a move – a wrong one too (it bounces back).</li>
+        <li data-i18n="help4">Tap face-down cards to turn them over (free). An emptied bottom field is a free field.</li>
+        <li data-i18n="help5">Park cards on Discard. Draw pile empty? Flip the discard pile (free).</li>
       </ul>
-      <p class="muted" data-i18n="helpTip">Drag a card, or tap a field to play the highlighted card. Tap the Discard card to pick it instead; tap the draw card again to park it.</p>
+      <p class="muted" data-i18n="helpTip">Drag a card, or tap it and then tap where it goes. Tap a card twice to discard it.</p>
       <p class="muted" data-i18n="helpDaily">A new puzzle every day at midnight.</p>
       <button type="button" class="btn btn--primary btn--block" data-close data-i18n="play">Play</button>
     </div>

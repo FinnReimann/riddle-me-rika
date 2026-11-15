@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="marker" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <!-- 1. wobbly hand-drawn edges -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="10" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <!-- 2. soft marker edge -->
+      <feGaussianBlur in="wobble" stdDeviation="1.6" result="soft"/>
+      <!-- 3. blotchy marker shading (dark patches) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="16" result="blotch"/>
+      <feColorMatrix in="blotch" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.25 -0.62" result="blotchA"/>
+      <feComposite in="blotchA" in2="soft" operator="in" result="shade"/>
+      <!-- 4. fine paper/fibre texture (light speckles) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="44" result="fibre"/>
+      <feColorMatrix in="fibre" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.75 -0.55" result="fibreA"/>
+      <feComposite in="fibreA" in2="soft" operator="in" result="speckle"/>
+      <feMerge><feMergeNode in="soft"/><feMergeNode in="shade"/><feMergeNode in="speckle"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#marker)">
+    <!-- glass -->
+    <path d="M140 150 L372 150 L344 430 Q340 456 314 456 L198 456 Q172 456 168 430 Z" fill="#b7bdc5"/>
+    <!-- tea -->
+    <path d="M152 208 L360 208 L336 422 Q333 440 314 440 L198 440 Q179 440 176 422 Z" fill="#c97a1c"/>
+    <ellipse cx="256" cy="208" rx="104" ry="18" fill="#e3a447"/>
+    <!-- tea bag inside -->
+    <path d="M222 292 L290 292 L296 378 Q256 392 216 378 Z" fill="#8a4e22"/>
+    <!-- glass highlight -->
+    <path d="M168 176 L190 410" stroke="#e8e6e2" stroke-width="12" stroke-linecap="round" fill="none" opacity="0.8"/>
+    <!-- string over the rim -->
+    <path d="M256 294 Q262 180 346 150 Q392 150 398 236" stroke="#f4efe6" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <!-- tag -->
+    <path d="M366 232 L432 226 L438 304 L372 310 Z" fill="#3f9a3a"/>
+    <path d="M384 256 L420 252" stroke="#7fc276" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <!-- rim -->
+    <ellipse cx="256" cy="150" rx="116" ry="20" fill="#d9dde2"/>
+    <ellipse cx="256" cy="150" rx="98" ry="12" fill="#b7bdc5"/>
+  </g>
+</svg>

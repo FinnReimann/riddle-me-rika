@@ -1,11 +1,16 @@
 # Riddle Me Rika — Symbols to draw
 
-Checklist of every card symbol in `categories.js`: **24 categories × 6 cards = 144 symbols.**
+Checklist of every card symbol in `categories.js`: **24 categories × 6 cards = 144 symbols**, plus
+**24 category-card symbols** (see "Category cards" at the end).
 
 - **Folder:** `assets/symbols/`
 - **Filename:** must match exactly, lowercase, e.g. `ice-cream.png`
 - **Format:** square PNG (or SVG), transparent background, e.g. 256×256 px
 - **Style:** simple, bold shapes and thick outlines. Each symbol has to be readable at about 60 px on the card.
+
+Your PNG always wins: until a file exists here, the game uses a generated
+`assets/symbols/generated/<name>.svg` (if present) or a placeholder. Drop your PNG into
+`assets/symbols/` with the same name and it replaces the generated SVG automatically.
 
 Tick a box (`[x]`) once a symbol is drawn.
 
@@ -200,3 +205,33 @@ Tick a box (`[x]`) once a symbol is drawn.
 - [ ] heart.png — Heart / Herz
 - [ ] pentagon.png — Pentagon / Fünfeck
 - [ ] hexagon.png — Hexagon / Sechseck
+
+## Category cards
+
+Each category has one category card (always the bottom card of a stack). It shows the
+category name and this symbol: `category-<categoryId>.png`, same folder and format as above.
+
+- [ ] category-fruit.png — Fruit / Obst
+- [ ] category-vegetables.png — Vegetables / Gemüse
+- [ ] category-farm-animals.png — Farm Animals / Bauernhoftiere
+- [ ] category-sea-creatures.png — Sea Creatures / Meerestiere
+- [ ] category-insects.png — Insects / Insekten
+- [ ] category-birds.png — Birds / Vögel
+- [ ] category-safari-animals.png — Safari Animals / Safaritiere
+- [ ] category-tools.png — Tools / Werkzeug
+- [ ] category-instruments.png — Musical Instruments / Musikinstrumente
+- [ ] category-vehicles.png — Vehicles / Fahrzeuge
+- [ ] category-clothing.png — Clothing / Kleidung
+- [ ] category-jewelry.png — Jewelry / Schmuck
+- [ ] category-kitchen-utensils.png — Kitchen Utensils / Küchenutensilien
+- [ ] category-weather.png — Weather / Wetter
+- [ ] category-space.png — Space / Weltraum
+- [ ] category-furniture.png — Furniture / Möbel
+- [ ] category-desserts.png — Desserts / Nachtisch
+- [ ] category-fast-food.png — Fast Food / Fast Food
+- [ ] category-drinks.png — Drinks / Getränke
+- [ ] category-sports-equipment.png — Sports Equipment / Sportgeräte
+- [ ] category-bathroom.png — Bathroom / Badezimmer
+- [ ] category-camping.png — Camping / Camping
+- [ ] category-office-supplies.png — Office Supplies / Bürobedarf
+- [ ] category-shapes.png — Shapes / Formen

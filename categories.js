@@ -1,4 +1,5 @@
-// Category pool. Each daily game picks 6 categories and 4 cards from each.
+// Category pool. Each daily game picks 8 categories and 4 cards from each (plus one
+// category card per category, showing theme / themeDe and symbol category-<id>).
 // symbol = file name (without extension) in assets/symbols/, e.g. assets/symbols/apple.png
 // tier: 1 = easy (all for now); harder categories can be added later with tier 2/3.
 // theme / word     = English category name / card word.
@@ -6,7 +7,7 @@
 //   Symbols are shared between languages, so a card has one symbol for both words.
 //
 // Pool rules: every word (per language) and symbol id is unique across the whole pool,
-// and no card may plausibly belong to another category in either language (any 6
+// and no card may plausibly belong to another category in either language (any 8
 // categories can appear together). Keep card words short (max ~14 characters).
 // This file is UTF-8 (German umlauts are stored as real characters).
 window.CATEGORIES = [

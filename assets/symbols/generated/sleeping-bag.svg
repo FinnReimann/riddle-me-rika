@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="marker" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <!-- 1. wobbly hand-drawn edges -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="10" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <!-- 2. soft marker edge -->
+      <feGaussianBlur in="wobble" stdDeviation="1.6" result="soft"/>
+      <!-- 3. blotchy marker shading (dark patches) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="76" result="blotch"/>
+      <feColorMatrix in="blotch" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.25 -0.62" result="blotchA"/>
+      <feComposite in="blotchA" in2="soft" operator="in" result="shade"/>
+      <!-- 4. fine paper/fibre texture (light speckles) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="184" result="fibre"/>
+      <feColorMatrix in="fibre" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.75 -0.55" result="fibreA"/>
+      <feComposite in="fibreA" in2="soft" operator="in" result="speckle"/>
+      <feMerge><feMergeNode in="soft"/><feMergeNode in="shade"/><feMergeNode in="speckle"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#marker)">
+    <g transform="rotate(-12 256 256)">
+      <!-- bag -->
+      <rect x="146" y="56" width="220" height="410" rx="60" fill="#3f9a3a"/>
+      <path d="M170 250 L342 250 M170 318 L342 318 M170 386 L342 386" stroke="#2f6f2c" stroke-width="12" stroke-linecap="round" fill="none"/>
+      <!-- open lining -->
+      <path d="M160 116 Q164 70 216 66 L300 66 Q350 70 354 116 L354 194 L160 194 Z" fill="#e8812a"/>
+      <!-- pillow -->
+      <rect x="196" y="84" width="122" height="64" rx="26" fill="#f4efe6"/>
+      <path d="M296 92 Q318 100 316 138" stroke="#b7bdc5" stroke-width="10" stroke-linecap="round" fill="none"/>
+      <!-- folded flap -->
+      <path d="M146 180 L366 180 L366 226 Q256 244 146 226 Z" fill="#2f6f2c"/>
+      <!-- zipper -->
+      <path d="M352 240 L352 440" stroke="#b7bdc5" stroke-width="10" stroke-dasharray="14 10" fill="none"/>
+    </g>
+  </g>
+</svg>

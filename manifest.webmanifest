@@ -1,7 +1,7 @@
 {
   "name": "Riddle Me Rika",
   "short_name": "Rika",
-  "description": "A daily card puzzle: sort 24 cards into 6 hidden categories.",
+  "description": "A daily card puzzle: sort 40 cards into 8 categories.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="marker" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <!-- 1. wobbly hand-drawn edges -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="10" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <!-- 2. soft marker edge -->
+      <feGaussianBlur in="wobble" stdDeviation="1.6" result="soft"/>
+      <!-- 3. blotchy marker shading (dark patches) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="44" result="blotch"/>
+      <feColorMatrix in="blotch" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.25 -0.62" result="blotchA"/>
+      <feComposite in="blotchA" in2="soft" operator="in" result="shade"/>
+      <!-- 4. fine paper/fibre texture (light speckles) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="64" result="fibre"/>
+      <feColorMatrix in="fibre" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.75 -0.55" result="fibreA"/>
+      <feComposite in="fibreA" in2="soft" operator="in" result="speckle"/>
+      <feMerge><feMergeNode in="soft"/><feMergeNode in="shade"/><feMergeNode in="speckle"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#marker)">
+    <g transform="rotate(-12 256 256)">
+      <rect x="74" y="198" width="364" height="96" rx="48" fill="#d08a3a"/>
+      <rect x="44" y="226" width="424" height="60" rx="30" fill="#b5482a"/>
+      <path d="M70 244 L200 240" stroke="#d86a4a" stroke-width="10" stroke-linecap="round"/>
+      <path d="M90 254 Q108 230 126 254 Q144 278 162 254 Q180 230 198 254 Q216 278 234 254 Q252 230 270 254 Q288 278 306 254 Q324 230 342 254 Q360 278 378 254 Q396 230 414 254" stroke="#f2c230" stroke-width="13" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M72 272 Q72 340 136 344 L376 344 Q440 340 440 272 Z" fill="#e8a04a"/>
+      <path d="M110 316 Q200 330 300 326" stroke="#f6c47a" stroke-width="12" fill="none" stroke-linecap="round"/>
+    </g>
+  </g>
+</svg>

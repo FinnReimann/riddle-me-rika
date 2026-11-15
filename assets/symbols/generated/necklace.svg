@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="marker" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <!-- 1. wobbly hand-drawn edges -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="10" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <!-- 2. soft marker edge -->
+      <feGaussianBlur in="wobble" stdDeviation="1.6" result="soft"/>
+      <!-- 3. blotchy marker shading (dark patches) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="48" result="blotch"/>
+      <feColorMatrix in="blotch" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.25 -0.62" result="blotchA"/>
+      <feComposite in="blotchA" in2="soft" operator="in" result="shade"/>
+      <!-- 4. fine paper/fibre texture (light speckles) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="68" result="fibre"/>
+      <feColorMatrix in="fibre" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.75 -0.55" result="fibreA"/>
+      <feComposite in="fibreA" in2="soft" operator="in" result="speckle"/>
+      <feMerge><feMergeNode in="soft"/><feMergeNode in="shade"/><feMergeNode in="speckle"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#marker)">
+    <circle cx="421" cy="64" r="22" fill="#f2c230"/>
+    <circle cx="418" cy="107" r="17" fill="#e8812a"/>
+    <circle cx="411" cy="150" r="22" fill="#f2c230"/>
+    <circle cx="399" cy="189" r="17" fill="#e8812a"/>
+    <circle cx="382" cy="225" r="22" fill="#f2c230"/>
+    <circle cx="362" cy="256" r="17" fill="#e8812a"/>
+    <circle cx="339" cy="281" r="22" fill="#f2c230"/>
+    <circle cx="312" cy="299" r="17" fill="#e8812a"/>
+    <circle cx="285" cy="310" r="22" fill="#f2c230"/>
+    <circle cx="256" cy="314" r="17" fill="#e8812a"/>
+    <circle cx="227" cy="310" r="22" fill="#f2c230"/>
+    <circle cx="200" cy="299" r="17" fill="#e8812a"/>
+    <circle cx="174" cy="281" r="22" fill="#f2c230"/>
+    <circle cx="150" cy="256" r="17" fill="#e8812a"/>
+    <circle cx="130" cy="225" r="22" fill="#f2c230"/>
+    <circle cx="113" cy="189" r="17" fill="#e8812a"/>
+    <circle cx="101" cy="150" r="22" fill="#f2c230"/>
+    <circle cx="94" cy="107" r="17" fill="#e8812a"/>
+    <circle cx="91" cy="64" r="22" fill="#f2c230"/>
+    <circle cx="256" cy="336" r="16" fill="#f2c230"/>
+    <path d="M256 462 Q160 400 184 360 Q212 326 256 364 Q300 326 328 360 Q352 400 256 462 Z" fill="#c8432c"/>
+    <path d="M206 372 Q210 356 228 356" stroke="#e57fae" stroke-width="12" stroke-linecap="round" fill="none"/>
+  </g>
+</svg>

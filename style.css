@@ -28,38 +28,43 @@
   /* ---- Layout + card sizing ------------------------------------------- */
   --gutter-l: max(16px, env(safe-area-inset-left, 0px));
   --gutter-r: max(16px, env(safe-area-inset-right, 0px));
-  /* Field grid: cols x rows must equal FIELDS in game.js.
-     Landscape / wide: 4 x 1. Portrait phones: 2 x 2 (see media query below). */
-  --field-cols: 4;
+  --app-max: 520px;        /* max app width (wider in landscape, see below) */
+  /* Field grid: cols x rows must equal TOP_FIELDS + BOTTOM_FIELDS in game.js.
+     Landscape / wide: 6 x 1. Portrait phones: 3 x 2 (top fields, then bottom fields). */
+  --field-cols: 6;
   --field-rows: 1;
+  --stack-n: 4;            /* covered cards in a full stack = CARDS_PER_CATEGORY (category card + 4) */
   --col-gap: 8px;          /* gap between columns and between field rows */
   --field-pad: 3px;        /* inner padding of a field */
   --label-h: 16px;         /* pile labels under the top row */
-  --chrome-h: 132px;       /* header + status + labels + gaps + paddings (non-card height) */
+  --chrome-h: 138px;       /* header + status + labels + gaps + paddings (non-card height) */
   --vh: 100vh;
-  --avail-w: calc(min(100vw, 520px) - var(--gutter-l) - var(--gutter-r));
+  --avail-w: calc(min(100vw, var(--app-max)) - var(--gutter-l) - var(--gutter-r));
   --avail-h: calc(var(--vh) - var(--chrome-h) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
-  /* Card width: fits all field columns AND (top-row card + every field row of
-     4 stacked cards) vertically.
+  /* Card width: fits all field columns AND (top-row card + every field row
+     holding a full stack of 1 + --stack-n cards) vertically.
      --card-ratio, --stack-ratio and --card-max-w come from cards.css. */
   --card-w: min(
     calc((var(--avail-w) - (var(--field-cols) - 1) * var(--col-gap) - 2 * var(--field-cols) * var(--field-pad)) / var(--field-cols)),
     calc((var(--avail-h) - (var(--field-rows) - 1) * var(--col-gap) - 2 * var(--field-rows) * var(--field-pad))
-         / (var(--card-ratio) * (1 + var(--field-rows) * (1 + 3 * var(--stack-ratio))))),
+         / (var(--card-ratio) * (1 + var(--field-rows) * (1 + var(--stack-n) * var(--stack-ratio))))),
     var(--card-max-w)
   );
   --card-h: calc(var(--card-w) * var(--card-ratio));
-  --field-h: calc(var(--card-h) + 3 * var(--stack-offset) + 2 * var(--field-pad));
+  --field-h: calc(var(--card-h) + var(--stack-n) * var(--stack-offset) + 2 * var(--field-pad));
 }
 
 @supports (height: 1dvh) {
   :root { --vh: 100dvh; }
 }
 
-/* Tall portrait screens: fields as a 2 x 2 grid so the cards can be bigger.
-   Short screens (e.g. iPhone SE with Safari bars) keep 4 x 1, where cards end up larger. */
-@media (orientation: portrait) and (max-aspect-ratio: 10/16) {
-  :root { --field-cols: 2; --field-rows: 2; }
+/* Portrait (and square-ish) screens: fields as 3 x 2, top fields above bottom fields. */
+@media (max-aspect-ratio: 1/1) {
+  :root { --field-cols: 3; --field-rows: 2; }
+}
+/* Landscape: one row of 6 fields, the app may get wider. */
+@media (min-aspect-ratio: 1001/1000) {
+  :root { --app-max: 920px; }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -155,7 +160,7 @@ button {
   position: fixed;
   inset: 0;
   width: 100%;
-  max-width: 520px;
+  max-width: var(--app-max);
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -248,7 +253,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 20px;
+  height: 26px;
   font-size: 13px;
   color: var(--muted);
 }
@@ -259,6 +264,19 @@ button {
   font-variant-numeric: tabular-nums;
   display: inline-block;
 }
+/* Move counter: counts down, the main number on screen */
+.status__moves {
+  padding: 1px 14px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-size: 14px;
+  font-weight: 650;
+}
+.status__moves .status__num { font-size: 19px; min-width: 2ch; text-align: center; line-height: 22px; }
+.status__moves.is-low .status__num { color: var(--danger); }
+.is-tick > .status__num { animation: rr-tick 0.3s ease; }
+@keyframes rr-tick { 40% { transform: translateY(-2px) scale(1.12); } }
 .is-bump > .status__num { animation: rr-bump 0.45s ease; color: var(--danger); }
 @keyframes rr-bump { 30% { transform: scale(1.45); } }
 
@@ -274,12 +292,13 @@ button {
 }
 .board.is-busy { pointer-events: none; }
 
-/* Top row: Draw, Discard, Done */
+/* Top row: Draw, Discard, Done (above the 3 field columns; above the top fields in landscape) */
 .toprow {
   flex: 0 0 auto;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   column-gap: var(--col-gap);
+  width: calc(100% * 3 / var(--field-cols) - var(--col-gap) * (var(--field-cols) - 3) / var(--field-cols));
 }
 .slot {
   display: flex;
@@ -317,7 +336,9 @@ button {
   margin: 0;
 }
 
-/* Fields: --field-cols x --field-rows grid, each field tall enough for 4 stacked cards */
+/* Fields: --field-cols x --field-rows grid, each field tall enough for a full
+   stack (category card + --stack-n word cards). Fields 1-3 = top row,
+   4-6 = bottom row (start with face-down cards). */
 .fields {
   flex: 1 1 auto;
   min-height: calc(var(--field-rows) * var(--field-h) + (var(--field-rows) - 1) * var(--col-gap));
@@ -344,12 +365,17 @@ button {
   width: var(--card-w);
   height: var(--card-h);
 }
+/* Bottom field still holding its dealt cards: tighter offsets (--down-offset, cards.css) */
+.field--pile > .card {
+  top: calc(var(--field-pad) + var(--i, 0) * var(--down-offset));
+}
 .field__hint {
   position: absolute;
-  left: 0;
-  right: 0;
-  top: calc(var(--field-pad) + var(--card-h) / 2 - 0.7em);
+  left: 4px;
+  right: 4px;
+  top: calc(var(--field-pad) + var(--card-h) / 2 - 1.3em);
   text-align: center;
+  line-height: 1.25;
 }
 .field__reveal {
   position: absolute;
@@ -359,7 +385,7 @@ button {
   z-index: 5;
 }
 
-/* Result panel replaces the fields when the game is solved */
+/* Result panel replaces the fields when the game is over (solved or out of moves) */
 .fields.is-result {
   display: flex;
   align-items: center;
@@ -377,6 +403,7 @@ button {
 .result__title { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; }
 .result__stars { font-size: 34px; line-height: 1; letter-spacing: 0.08em; color: #e0a400; }
 .result__meta { font-size: 15px; color: var(--muted); }
+.result__lost { font-size: 17px; font-weight: 700; }
 .result__next { font-size: 13px; color: var(--muted); }
 .result__timer { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--ink); }
 
@@ -471,12 +498,12 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; }
 .done-list__item { display: flex; flex-direction: column; gap: 2px; }
 .done-list__empty { color: var(--muted); }
 
-.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 4px 0 8px; }
+.stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; padding: 4px 0 8px; }
 .stat { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; }
 .stat__num { font-size: 30px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; }
 .stat__label { font-size: 12px; color: var(--muted); line-height: 1.2; }
 
 @media (prefers-reduced-motion: reduce) {
-  .modal__panel, .is-bump > .status__num { animation: none; }
+  .modal__panel, .is-bump > .status__num, .is-tick > .status__num { animation: none; }
   .toast { transition: none; }
 }

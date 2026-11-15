@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="marker" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <!-- 1. wobbly hand-drawn edges -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="10" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <!-- 2. soft marker edge -->
+      <feGaussianBlur in="wobble" stdDeviation="1.6" result="soft"/>
+      <!-- 3. blotchy marker shading (dark patches) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="32" result="blotch"/>
+      <feColorMatrix in="blotch" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.25 -0.62" result="blotchA"/>
+      <feComposite in="blotchA" in2="soft" operator="in" result="shade"/>
+      <!-- 4. fine paper/fibre texture (light speckles) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="52" result="fibre"/>
+      <feColorMatrix in="fibre" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.75 -0.55" result="fibreA"/>
+      <feComposite in="fibreA" in2="soft" operator="in" result="speckle"/>
+      <feMerge><feMergeNode in="soft"/><feMergeNode in="shade"/><feMergeNode in="speckle"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#marker)">
+    <rect x="56" y="120" width="44" height="326" rx="16" fill="#9a5b2e"/>
+    <rect x="412" y="240" width="44" height="206" rx="16" fill="#9a5b2e"/>
+    <rect x="96" y="330" width="320" height="50" rx="8" fill="#5a3a26"/>
+    <rect x="96" y="276" width="320" height="60" rx="16" fill="#e4ded2"/>
+    <path d="M100 330 L414 330" stroke="#b7bdc5" stroke-width="14"/>
+    <ellipse cx="160" cy="262" rx="62" ry="34" fill="#f4efe6"/>
+    <path d="M110 276 Q160 298 214 278" stroke="#b7bdc5" stroke-width="12" fill="none" stroke-linecap="round"/>
+    <path d="M206 250 Q300 226 416 244 L416 352 L210 352 Q190 300 206 250 Z" fill="#3f8fd0"/>
+    <path d="M230 264 Q310 246 400 258" stroke="#8fc0ea" stroke-width="12" fill="none" stroke-linecap="round"/>
+    <path d="M220 336 L410 336" stroke="#2c4f8f" stroke-width="14" stroke-linecap="round"/>
+    <path d="M70 140 L70 420" stroke="#c07a42" stroke-width="10" stroke-linecap="round"/>
+  </g>
+</svg>

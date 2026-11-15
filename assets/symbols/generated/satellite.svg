@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="marker" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <!-- 1. wobbly hand-drawn edges -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="10" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <!-- 2. soft marker edge -->
+      <feGaussianBlur in="wobble" stdDeviation="1.6" result="soft"/>
+      <!-- 3. blotchy marker shading (dark patches) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="26" result="blotch"/>
+      <feColorMatrix in="blotch" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.25 -0.62" result="blotchA"/>
+      <feComposite in="blotchA" in2="soft" operator="in" result="shade"/>
+      <!-- 4. fine paper/fibre texture (light speckles) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="46" result="fibre"/>
+      <feColorMatrix in="fibre" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.75 -0.55" result="fibreA"/>
+      <feComposite in="fibreA" in2="soft" operator="in" result="speckle"/>
+      <feMerge><feMergeNode in="soft"/><feMergeNode in="shade"/><feMergeNode in="speckle"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#marker)">
+    <g transform="rotate(-22 256 256)">
+      <path d="M186 256 L326 256" stroke="#717a86" stroke-width="14"/>
+      <path d="M50 256 L462 256" stroke="#717a86" stroke-width="14"/>
+      <rect x="50" y="206" width="128" height="100" rx="8" fill="#2c4f8f"/>
+      <path d="M93 210 L93 302 M136 210 L136 302 M54 256 L174 256" stroke="#3f8fd0" stroke-width="10"/>
+      <rect x="334" y="206" width="128" height="100" rx="8" fill="#2c4f8f"/>
+      <path d="M377 210 L377 302 M420 210 L420 302 M338 256 L458 256" stroke="#3f8fd0" stroke-width="10"/>
+      <rect x="196" y="196" width="120" height="124" rx="14" fill="#f2c230"/>
+      <path d="M210 212 L210 304" stroke="#ffe27a" stroke-width="12" stroke-linecap="round"/>
+      <path d="M216 316 L296 316" stroke="#d9a01e" stroke-width="14" stroke-linecap="round"/>
+      <path d="M256 196 L256 160" stroke="#717a86" stroke-width="14"/>
+      <path d="M200 160 Q256 196 312 160 Z" fill="#b7bdc5"/>
+      <path d="M256 150 L256 92" stroke="#717a86" stroke-width="10" stroke-linecap="round"/>
+      <circle cx="256" cy="86" r="16" fill="#c8432c"/>
+    </g>
+  </g>
+</svg>

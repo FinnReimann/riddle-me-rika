@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="marker" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <!-- 1. wobbly hand-drawn edges -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="10" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <!-- 2. soft marker edge -->
+      <feGaussianBlur in="wobble" stdDeviation="1.6" result="soft"/>
+      <!-- 3. blotchy marker shading (dark patches) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="14" result="blotch"/>
+      <feColorMatrix in="blotch" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.25 -0.62" result="blotchA"/>
+      <feComposite in="blotchA" in2="soft" operator="in" result="shade"/>
+      <!-- 4. fine paper/fibre texture (light speckles) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="34" result="fibre"/>
+      <feColorMatrix in="fibre" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.75 -0.55" result="fibreA"/>
+      <feComposite in="fibreA" in2="soft" operator="in" result="speckle"/>
+      <feMerge><feMergeNode in="soft"/><feMergeNode in="shade"/><feMergeNode in="speckle"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#marker)">
+    <path d="M196 160 Q196 64 256 64 Q316 64 316 160" stroke="#2c4f8f" stroke-width="30" fill="none" stroke-linecap="round"/>
+    <path d="M160 150 L352 150 L392 456 L120 456 Z" fill="#b7bdc5"/>
+    <path d="M330 150 L352 150 L392 456 L360 456 Z" fill="#8d95a0"/>
+    <rect x="152" y="140" width="208" height="26" rx="10" fill="#717a86"/>
+    <g fill="#5a616b">
+      <ellipse cx="196" cy="206" rx="16" ry="10"/><ellipse cx="250" cy="206" rx="16" ry="10"/><ellipse cx="304" cy="206" rx="16" ry="10"/>
+      <ellipse cx="190" cy="262" rx="16" ry="10"/><ellipse cx="248" cy="262" rx="16" ry="10"/><ellipse cx="308" cy="262" rx="16" ry="10"/>
+      <ellipse cx="184" cy="318" rx="16" ry="10"/><ellipse cx="246" cy="318" rx="16" ry="10"/><ellipse cx="312" cy="318" rx="16" ry="10"/>
+      <ellipse cx="178" cy="374" rx="16" ry="10"/><ellipse cx="244" cy="374" rx="16" ry="10"/><ellipse cx="316" cy="374" rx="16" ry="10"/>
+      <ellipse cx="172" cy="424" rx="16" ry="10"/><ellipse cx="242" cy="424" rx="16" ry="10"/><ellipse cx="320" cy="424" rx="16" ry="10"/>
+    </g>
+  </g>
+</svg>

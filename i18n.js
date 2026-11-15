@@ -6,7 +6,7 @@
      keep both languages in sync: every key must exist in en AND de.
    - {name} is a placeholder that the game fills in, e.g. {n} = a number.
      Keep the placeholders, you may move them around in the sentence.
-   - Keys ending in One / Other are singular / plural ("1 mistake", "2 mistakes").
+   - Keys ending in One / Other are singular / plural ("1 move left", "2 moves left").
    - The game title "Riddle Me Rika" is not translated (index.html).
    - Card words and category names are NOT here: they live in categories.js
      (word / wordDe, theme / themeDe).
@@ -30,12 +30,12 @@
       close: 'Close',                    // aria-label of the X in modals
 
       // Status row + pile labels
-      mistakes: 'Mistakes',
+      moves: 'Moves',                    // move counter ("Moves 38"), counts down
       labelDraw: 'Draw · {n}',
       labelDiscard: 'Discard · {n}',
       labelDone: 'Done · {k}/{total}',
       parkHere: 'Park here',             // empty discard pile
-      empty: 'Empty',                    // empty field
+      fieldHint: 'Category card here',   // empty field
       flipDiscard: 'Flip discard',       // button on the empty draw pile
 
       // Toasts
@@ -45,6 +45,7 @@
       toastCopyFailed: 'Could not copy',
 
       // Screen-reader labels (aria-label)
+      ariaCategoryCard: 'category card {name}',
       ariaDraw: 'Draw pile: {word}',
       ariaDrawSelected: 'Draw pile: {word} (selected, tap again to discard)',
       ariaDiscardCard: 'Discard pile: {word}',
@@ -53,36 +54,45 @@
       ariaDiscardOther: 'Discard pile, {n} cards',
       ariaFlip: 'Flip discard pile into draw pile',
       ariaDone: 'Done pile, {k} of {total} categories. Show completed categories',
-      ariaFieldEmpty: 'Field {f}, empty',
-      ariaField: 'Field {f}, {k} of {max}: {words}',
+      ariaFieldEmpty: 'Field {f}, empty. Category card here',
+      ariaField: 'Field {f}: {cat}, {k} of {max} cards: {words}',
+      ariaPile: 'Field {f}, {n} dealt cards',
+      ariaTurn: 'Field {f}: turn the top card over ({n} face down)',
+      ariaPileCard: 'Field {f}: {word}',
+      ariaPileCardSelected: 'Field {f}: {word} (selected, tap again to discard)',
       ariaStars: '{n} of 3 stars',
 
-      // Result panel (replaces the fields when solved)
+      // Result panel (replaces the fields when the game is over)
       solved: 'Solved!',
-      mistakeCountOne: '{n} mistake',
-      mistakeCountOther: '{n} mistakes',
-      resultMeta: '{mistakes} · Streak {streak}',
+      outOfMoves: 'Out of moves',
+      movesLeftOne: '{n} move left',
+      movesLeftOther: '{n} moves left',
+      resultMeta: '{moves} · Streak {streak}',
+      resultLost: '{k} of {total} categories done',
+      resultMetaLost: 'Streak {streak}',
       share: 'Share',
       nextPuzzle: 'Next puzzle in ',
 
-      // Share text (one line each)
+      // Share text (one line each; no spoilers)
+      shareLost: 'Out of moves · {k}/{total}',
       shareStreak: 'Streak: {n}',
 
-      // How-to modal
+      // How-to modal ({moves}, {cats}, {cards} come from the top of game.js)
       helpTitle: 'How to play',
-      help1: 'Draw a card and put it on a field.',
-      help2: 'Each field collects one hidden category — {cards} cards completes it.',
-      help3: 'Doesn’t fit? It bounces back and counts as a mistake.',
-      help4: 'Park cards on Discard; when the draw pile runs out, flip the discard pile.',
-      help5: 'Finish all {cats} categories.',
-      helpTip: 'Drag a card, or tap a field to play the highlighted card. Tap the Discard card to pick it instead; tap the draw card again to park it.',
+      help1: 'Finish all {cats} categories with {moves} moves.',
+      help2: 'Put a category card on an empty field, then stack its {cards} word cards on it.',
+      help3: 'Every card you play costs a move – a wrong one too (it bounces back).',
+      help4: 'Tap face-down cards to turn them over (free). An emptied bottom field is a free field.',
+      help5: 'Park cards on Discard. Draw pile empty? Flip the discard pile (free).',
+      helpTip: 'Drag a card, or tap it and then tap where it goes. Tap a card twice to discard it.',
       helpDaily: 'A new puzzle every day at midnight.',
       play: 'Play',
 
       // Statistics modal
       statsTitle: 'Statistics',
+      statPlayed: 'Played',
       statSolved: 'Solved',
-      statStreak: 'Current streak',
+      statStreak: 'Streak',
       statBest: 'Best streak',
       statThreeStars: '★★★ games',
 
@@ -106,12 +116,12 @@
       statsBtn: 'Statistik',
       close: 'Schließen',
 
-      mistakes: 'Fehler',
+      moves: 'Züge',
       labelDraw: 'Nachziehen · {n}',
       labelDiscard: 'Ablage · {n}',
       labelDone: 'Fertig · {k}/{total}',
       parkHere: 'Hier parken',
-      empty: 'Leer',
+      fieldHint: 'Kategorie-Karte hierher',
       flipDiscard: 'Ablage umdrehen',
 
       toastWrong: 'Passt nicht',
@@ -119,6 +129,7 @@
       toastCopied: 'Kopiert',
       toastCopyFailed: 'Kopieren ging nicht',
 
+      ariaCategoryCard: 'Kategorie-Karte {name}',
       ariaDraw: 'Nachziehstapel: {word}',
       ariaDrawSelected: 'Nachziehstapel: {word} (ausgewählt, nochmal tippen zum Ablegen)',
       ariaDiscardCard: 'Ablage: {word}',
@@ -127,32 +138,41 @@
       ariaDiscardOther: 'Ablage, {n} Karten',
       ariaFlip: 'Ablage umdrehen und zum Nachziehstapel machen',
       ariaDone: 'Fertig-Stapel, {k} von {total} Kategorien. Fertige Kategorien zeigen',
-      ariaFieldEmpty: 'Feld {f}, leer',
-      ariaField: 'Feld {f}, {k} von {max}: {words}',
+      ariaFieldEmpty: 'Feld {f}, leer. Kategorie-Karte hierher',
+      ariaField: 'Feld {f}: {cat}, {k} von {max} Karten: {words}',
+      ariaPile: 'Feld {f}, {n} ausgeteilte Karten',
+      ariaTurn: 'Feld {f}: oberste Karte umdrehen ({n} verdeckt)',
+      ariaPileCard: 'Feld {f}: {word}',
+      ariaPileCardSelected: 'Feld {f}: {word} (ausgewählt, nochmal tippen zum Ablegen)',
       ariaStars: '{n} von 3 Sternen',
 
       solved: 'Gelöst!',
-      mistakeCountOne: '{n} Fehler',
-      mistakeCountOther: '{n} Fehler',
-      resultMeta: '{mistakes} · Serie {streak}',
+      outOfMoves: 'Keine Züge mehr',
+      movesLeftOne: '{n} Zug übrig',
+      movesLeftOther: '{n} Züge übrig',
+      resultMeta: '{moves} · Serie {streak}',
+      resultLost: '{k} von {total} Kategorien geschafft',
+      resultMetaLost: 'Serie {streak}',
       share: 'Teilen',
       nextPuzzle: 'Nächstes Rätsel in ',
 
+      shareLost: 'Keine Züge mehr · {k}/{total}',
       shareStreak: 'Serie: {n}',
 
       helpTitle: 'So geht’s',
-      help1: 'Zieh eine Karte und leg sie auf ein Feld.',
-      help2: 'Jedes Feld sammelt eine geheime Kategorie – mit {cards} Karten ist sie komplett.',
-      help3: 'Passt nicht? Dann springt sie zurück und zählt als Fehler.',
-      help4: 'Park Karten auf der Ablage. Ist der Nachziehstapel leer, dreh die Ablage um.',
-      help5: 'Schaff alle {cats} Kategorien.',
-      helpTip: 'Zieh eine Karte aufs Feld oder tipp ein Feld an, um die markierte Karte zu spielen. Tipp die Ablage an, um ihre Karte zu nehmen; tipp die Nachziehkarte nochmal an, um sie zu parken.',
+      help1: 'Schaff alle {cats} Kategorien mit {moves} Zügen.',
+      help2: 'Leg eine Kategorie-Karte auf ein leeres Feld und stapel ihre {cards} Wort-Karten drauf.',
+      help3: 'Jede Karte, die du spielst, kostet einen Zug – auch eine falsche (die springt zurück).',
+      help4: 'Tipp verdeckte Karten an, um sie umzudrehen (gratis). Ein leer geräumtes unteres Feld ist frei.',
+      help5: 'Park Karten auf der Ablage. Nachziehstapel leer? Dreh die Ablage um (gratis).',
+      helpTip: 'Zieh eine Karte oder tipp sie an und dann dahin, wo sie hin soll. Zweimal antippen legt sie ab.',
       helpDaily: 'Jeden Tag um Mitternacht gibt’s ein neues Rätsel.',
       play: 'Los geht’s',
 
       statsTitle: 'Statistik',
+      statPlayed: 'Gespielt',
       statSolved: 'Gelöst',
-      statStreak: 'Aktuelle Serie',
+      statStreak: 'Serie',
       statBest: 'Beste Serie',
       statThreeStars: '★★★-Spiele',
 
