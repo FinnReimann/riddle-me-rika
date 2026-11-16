@@ -12,7 +12,7 @@ works offline and can be installed on the home screen.
   same for everyone (seeded by the day).
 - Board: Draw, Discard, Done in the top row; below 8 fields (4 × 2 on a phone,
   one row of 8 in landscape). The 4 top fields start empty; each of the 4
-  bottom fields starts with 8 face-down cards. The other cards (8–32) are
+  bottom fields starts with 6 face-down cards. The other cards (16–40) are
   the draw pile; at least half of the category cards (4) are always in it.
 - Tap a face-down card to turn it over (free) once nothing on that field is
   face up.
@@ -43,14 +43,25 @@ works offline and can be installed on the home screen.
   them stay put. Bottom-field cards and loose runs snap back with "Can't go to
   Discard" (free).
 - Moves count down from the day's budget (cards + 20, e.g. 52 cards = 72
-  moves). Every play costs 1 move: a card or a whole
-  run onto a field, stack or run, a card onto Discard (also a taken-back category
-  card), and also a wrong one (it bounces back, "Doesn't fit"). Turning
+  moves). Every play costs 1 move: a card or a whole run onto a field, stack
+  or run, a card onto Discard (also a taken-back category card). A wrong one
+  is free: it bounces back ("Doesn't fit") and breaks the combo. Turning
   cards, flipping the discard pile back into the empty draw pile, selecting
-  and refused moves onto Discard are free.
-- All 8 done = solved; stars by moves used: ★★★ for at most cards + 5,
-  ★★☆ for at most cards + 13, else ★☆☆. Moves at 0 before that = "Out of
+  and refused moves onto Discard are free too.
+- All 8 done = solved; stars by moves used: ★★★ for at most cards + 7,
+  ★★☆ for at most cards + 14, else ★☆☆. Moves at 0 before that = "Out of
   moves" (the streak breaks).
+- **Restart** (↻ in the header): starts today's puzzle over from scratch (same
+  cards, all moves back) after a confirmation. Only the first finished result
+  of a day counts for the statistics and streak; a replay after that is a
+  practice round ("Practice round – doesn't count").
+- **Feedback:** correct plays pop and sparkle, runs land one after another,
+  turned cards flip, wrong ones wobble, a completed category gets a confetti
+  burst, correct plays in a row show "Combo ×3!" and up, and a win rains
+  confetti. Small synthesized sounds go with it; switch them off in the
+  how-to sheet ("Sound" / "Ton", saved on the device). With "reduce motion"
+  on the phone, particles and shaking are left out. Tuning: `fx.js` (FX
+  block) and the "Feedback" variables in `cards.css`.
 - Controls: drag a playable card or run, or tap it (picks it; a run as a
   whole) and tap a field. The draw card is selected by default, so tapping a
   field plays it; tapping the draw card twice discards it. After picking a
@@ -68,10 +79,10 @@ works offline and can be installed on the home screen.
 | `CATEGORIES_PER_GAME` | 8 | categories per day |
 | `MIN_CARDS_PER_CATEGORY` / `MAX_CARDS_PER_CATEGORY` | 4 / 7 | word cards per category: a seeded random N in this range per day and category (clamped to the category's pool, which must have at least 4) |
 | `TOP_FIELDS` / `BOTTOM_FIELDS` | 4 / 4 | empty top fields / bottom fields with face-down cards |
-| `FACE_DOWN_PER_FIELD` | 8 | face-down cards per bottom field (32 in all; the rest, 8–32, is the draw pile) |
+| `FACE_DOWN_PER_FIELD` | 6 | face-down cards per bottom field (24 in all; the rest, 16–40, is the draw pile) |
 | `MIN_CATEGORY_CARDS_IN_DRAW` | 4 (half of 8) | category cards always dealt into the draw pile |
 | `MOVES_PER_CARD` / `MOVES_BASE` | 1 / 20 | day's move budget = cards × 1 + 20 (40 cards: 60, 64 cards: 84) |
-| `STAR3_EXTRA` / `STAR2_EXTRA` | 5 / 13 | ★★★ / ★★☆ when finished in at most cards + this many moves (= 15 / 7 moves left) |
+| `STAR3_EXTRA` / `STAR2_EXTRA` | 7 / 14 | ★★★ / ★★☆ when finished in at most cards + this many moves (= 13 / 6 moves left) |
 | `DEAL_SPARE` | 10 | a deal is only used if the solver finishes it with at least this many of the day's moves to spare |
 | `DEAL_ATTEMPTS` | 200 | reshuffles tried per day before giving up (never needed more than 4) |
 | `DEAL_HELP` | 0.75 | how often a dealt face-down card is one the solver can use right away (higher = friendlier deals) |
@@ -94,15 +105,17 @@ deal; it takes about 0.1 ms (at most ~2 ms) on a laptop.
 
 The budget was calibrated with the solver over 2000 daily deals (days
 0–1999, 41–63 cards a day, median 52): the solver needs its card count
-−2 to +10 moves on the deals it accepts (median +3, 90% within +7), almost
+−1 to +10 moves on the deals it accepts (median +5, 90% within +8; with 6
+face-down cards the draw pile is bigger, so there is more cycling), almost
 the same for small and big days, so the budget is cards + 20 and the stars
-count moves above the card count. 337 days needed a reshuffle (at most 4).
-The solver always has at least 10 moves to spare and gets ★★★ on 82% of days,
-★★☆ on the rest; other careful styles get ★★★ on about half of the days.
-Heads-up: the game is still not easy. Other sensible play styles (using
-the take-back when stuck) finish about 83–88% of days within the budget when
-they put down useful category cards first, 82% when they pick category cards
-at random, and only 15% when they ignore runs. When they get stuck, every
+count moves above the card count. 211 days needed a reshuffle (at most 3).
+The solver always has at least 10 moves to spare and gets ★★★ on 83% of days,
+★★☆ on the rest; other careful styles get ★★★ on about 60% of the days.
+Wrong moves are free, which doesn't change these numbers (the solver never
+makes one). Other sensible play styles (using the take-back when stuck)
+finish about 92–96% of days within the budget when they put down useful
+category cards first, 92% when they pick category cards at random, and 23%
+when they ignore runs. When they get stuck, every
 field holds a stack that already has word cards, or a field is free but no
 category card can be reached. (With 3 + 3 fields this was 42–60% without the
 moves limit, which is why there are 4 + 4.)

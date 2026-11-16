@@ -27,6 +27,15 @@
       sub: '#{no} · {date}',             // subtitle: puzzle number · date
       helpBtn: 'How to play',            // aria-label
       statsBtn: 'Statistics',            // aria-label
+      restartBtn: 'Restart',             // aria-label of the ↻ button
+      restartTitle: 'Start today’s puzzle over?',
+      restartText: 'Same cards, all moves back.',
+      restartOk: 'Restart',
+      cancel: 'Cancel',
+      toastRestarted: 'Fresh start!',
+      practiceNote: 'Practice round – doesn’t count',
+      combo: 'Combo ×{n}!',              // floating badge for correct plays in a row
+      sound: 'Sound',                    // sound on/off switch (how-to sheet)
       close: 'Close',                    // aria-label of the X in modals
 
       // Status row + pile labels
@@ -90,7 +99,7 @@
       helpTitle: 'How to play',
       help1: 'Finish all {cats} categories with {moves} moves.',
       help2: 'Put a category card on an empty field, then stack its word cards on it. The number on the category card says how many. Empty fields also take word cards – move them onto their category card later.',
-      help3: 'Every card you play costs a move – a wrong one too (it bounces back).',
+      help3: 'Every card you play costs a move. Doesn’t fit? It bounces back – no move lost.',
       help4: 'Tap face-down cards to turn them over (free). An emptied bottom field is a free field.',
       helpRuns: 'On a bottom field you can pile word cards onto a face-up card of their category – a word card or the category card itself (it completes right there). Such a run moves as a whole, for one move; with its category card only onto a free field.',
       help5: 'Park draw cards on Discard. A category card still alone on its field can go back there too (1 move). Draw pile empty? Flip the discard pile (free).',
@@ -124,6 +133,15 @@
       sub: '#{no} · {date}',
       helpBtn: 'Anleitung',
       statsBtn: 'Statistik',
+      restartBtn: 'Neu starten',
+      restartTitle: 'Heutiges Rätsel neu starten?',
+      restartText: 'Gleiche Karten, alle Züge zurück.',
+      restartOk: 'Neu starten',
+      cancel: 'Abbrechen',
+      toastRestarted: 'Neuer Anlauf!',
+      practiceNote: 'Übungsrunde – zählt nicht',
+      combo: 'Kombo ×{n}!',
+      sound: 'Ton',
       close: 'Schließen',
 
       moves: 'Züge',
@@ -181,7 +199,7 @@
       helpTitle: 'So geht’s',
       help1: 'Schaff alle {cats} Kategorien mit {moves} Zügen.',
       help2: 'Leg eine Kategorie-Karte auf ein leeres Feld und stapel ihre Wort-Karten drauf. Die Zahl auf der Kategorie-Karte sagt, wie viele. Leere Felder nehmen auch Wort-Karten – leg sie später auf ihre Kategorie-Karte.',
-      help3: 'Jede Karte, die du spielst, kostet einen Zug – auch eine falsche (die springt zurück).',
+      help3: 'Jede Karte, die du spielst, kostet einen Zug. Passt nicht? Sie springt zurück – kostet keinen Zug.',
       help4: 'Tipp verdeckte Karten an, um sie umzudrehen (gratis). Ein leer geräumtes unteres Feld ist frei.',
       helpRuns: 'Auf einem unteren Feld kannst du Wort-Karten auf eine offene Karte ihrer Kategorie legen – eine Wort-Karte oder die Kategorie-Karte selbst (dann wird sie dort fertig). So eine Reihe bewegst du als Ganzes für einen Zug, mit Kategorie-Karte nur auf ein freies Feld.',
       help5: 'Auf die Ablage dürfen Karten vom Nachziehstapel – und eine Kategorie-Karte, die noch allein auf ihrem Feld liegt (1 Zug). Nachziehstapel leer? Dreh die Ablage um (gratis).',

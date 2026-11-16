@@ -51,6 +51,19 @@ Every colour is defined three times: light (`:root`), dark when the system is
 dark, and dark when forced with `<html data-theme="dark">`. Edit **both** dark
 blocks.
 
+## Feedback ("bling")
+
+- CSS animations live in `cards.css`: the "Feedback" variables in `:root`
+  (`--fx-pop-ms`, `--fx-stagger`, `--fx-glow`, `--fx-flip-ms`,
+  `--fx-nope-ms`, `--fx-celebrate-glow`, `--fx-theme-scale`,
+  `--fx-combo-*`, `--fx-star-*`) and the "Feedback" section below them
+  (`.is-new` pop + squash with stagger, `.is-flip` 3D flip, `.is-nope`
+  wobble, `.is-glow`, `.is-celebrate`, `.combo` badge, result stars).
+- Particles, confetti and sounds: the `FX` block at the top of `fx.js`
+  (colours, counts, speeds, gravity, volume, combo pitch).
+- `prefers-reduced-motion`: no particles, confetti, shaking or flips; simple
+  fades only. Sounds still play (switch in the how-to sheet).
+
 ## Category cards
 
 Every category has one **category card** (8 per game). It is always the

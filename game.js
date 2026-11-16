@@ -18,14 +18,14 @@
   var MAX_CARDS_PER_CATEGORY = 7; // seeded random number N in this range (shown on its category card)
   var TOP_FIELDS = 4;           // fields in the upper row, start empty
   var BOTTOM_FIELDS = 4;        // fields in the lower row, start with face-down cards
-  var FACE_DOWN_PER_FIELD = 8;  // face-down cards per bottom field (4 x 8 = 32; the other 8-32 cards are the draw pile)
+  var FACE_DOWN_PER_FIELD = 6;  // face-down cards per bottom field (4 x 6 = 24; the other 16-40 cards are the draw pile)
   var MIN_CATEGORY_CARDS_IN_DRAW = Math.ceil(CATEGORIES_PER_GAME / 2); // category cards dealt into the draw pile
   // Move budget per day = round(cards x MOVES_PER_CARD) + MOVES_BASE (cards = 8 + all N),
   // calibrated with the built-in solver over 2000 daily deals (see README "Config").
   var MOVES_PER_CARD = 1;       // budget per card of the day (every play costs 1 move, also a wrong one)
   var MOVES_BASE = 20;          // + this many (40 cards = 60 moves, 64 cards = 84)
-  var STAR3_EXTRA = 5;          // ★★★: finished in at most (cards + this) moves
-  var STAR2_EXTRA = 13;         // ★★☆: at most (cards + this) moves (more = ★☆☆)
+  var STAR3_EXTRA = 7;          // ★★★: finished in at most (cards + this) moves
+  var STAR2_EXTRA = 14;         // ★★☆: at most (cards + this) moves (more = ★☆☆)
   var DEAL_SPARE = 10;          // a deal is only used if the solver finishes it with this many moves to spare
   var DEAL_ATTEMPTS = 200;      // reshuffles tried per day before giving up
   var DEAL_HELP = 0.75;         // chance that a turned card is picked among the immediately usable ones (see dealOrder)
@@ -41,7 +41,7 @@
      1. CORE
      ======================================================================= */
   var Core = (function () {
-    var SAVE_VERSION = 9;
+    var SAVE_VERSION = 10;
     var STATS_VERSION = 3;
     var EPOCH_UTC = Date.UTC(2026, 10, 14); // 2026-11-14 = puzzle #1
     var DAY_MS = 86400000;
@@ -191,7 +191,7 @@
      *   its category can be added on top.
      *   Once empty it becomes p = false, a free field like the top ones.
      */
-    function newGame(game, day) {
+    function newGame(game, day, practice) {
       var fields = [], k = 0;
       for (var f = 0; f < FIELDS; f++) {
         if (f < TOP_FIELDS) { fields.push({ c: [], d: 0, p: false }); continue; }
@@ -211,7 +211,8 @@
         moves: 0,                   // moves spent
         wrong: 0,                   // wrong placements (part of moves)
         status: 'playing',          // 'playing' | 'won' | 'lost'
-        recorded: false             // stats already updated?
+        recorded: false,            // stats already updated?
+        practice: !!practice        // a restart after the day was already finished: not counted
       };
     }
 
@@ -226,6 +227,7 @@
         if (!isInt(obj.movesLeft) || obj.movesLeft < 0 || obj.movesLeft > game.moves) return null;
         if (!isInt(obj.moves) || obj.moves < 0 || !isInt(obj.wrong) || obj.wrong < 0) return null;
         if (['playing', 'won', 'lost'].indexOf(obj.status) < 0) return null;
+        if (obj.practice !== undefined && typeof obj.practice !== 'boolean') return null;
         var nCards = game.cards.length;
         var seen = {};
         function take(id) {
@@ -425,13 +427,13 @@
      * ('discard' | field index). From a bottom pile the whole face-up run moves
      * (one move). Only the draw card may go onto Discard - and a category card
      * that lies alone on its field (taken back, 1 move). Mutates state.
-     * Every attempt that reaches a real target costs 1 move (also a wrong one).
+     * Every successful play costs 1 move; a wrong one is free (it bounces back).
      * Returns { ok:true, id, ids, to, cost, completed?, completedCards?, won?, lost? }
      *       | { ok:false, reason, cost?, mistake?, id?, ids?, lost? }
      *   id = the lowest card of the moved unit, ids = all of its cards.
      *   reason (no cost): 'over' | 'invalid' | 'empty' | 'same' | 'locked' | 'drawOnly'
      *     | 'fixed' (a lone category card may only go back to Discard)
-     *   reason (costs a move): 'occupied' | 'mismatch'
+     *   reason (wrong move, mistake: true, free): 'occupied' | 'mismatch'
      */
     function play(state, game, from, to) {
       if (state.status !== 'playing') return { ok: false, reason: 'over' };
@@ -453,8 +455,8 @@
       var reason = placeReject(state, game, id, to);
       if (reason === 'locked') return { ok: false, reason: reason };
       if (reason) {
-        state.wrong += 1;
-        return spend(state, { ok: false, reason: reason, mistake: true, id: id, ids: unit });
+        state.wrong += 1; // counted, but free: the card just bounces back
+        return { ok: false, reason: reason, mistake: true, id: id, ids: unit };
       }
       takeFrom(state, from);
       var target = state.fields[to];
@@ -837,7 +839,20 @@
   var FLY_MS = 420;        // cards flying to the Done pile
   var FEEDBACK_MS = 480;   // red / green field flash
   var LOST_DELAY_MS = 700; // let the last move show before the result panel
-  var LOW_MOVES = 5;       // move counter turns red at or below this
+  var LOW_MOVES = 5;       // move counter turns red (and pulses) at or below this
+  var COMBO_MIN = 3;       // "Combo ×3!" from this many correct plays in a row
+  var FAN_MS = 170;        // completed cards fan up before flying to Done
+  var FLY_STAGGER = 70;    // ms between the flying cards
+  var FXo = root.RikaFX || null; // fx.js (particles, confetti, sounds); optional
+
+  /** Call an fx.js effect if fx.js is loaded: fx('sparkle', x, y) / fx('sound.place', 3). */
+  function fx(name) {
+    if (!FXo) return;
+    var args = Array.prototype.slice.call(arguments, 1);
+    var parts = name.split('.'), obj = FXo, fn = FXo[parts[0]];
+    if (parts.length === 2) { obj = FXo[parts[0]]; fn = obj && obj[parts[1]]; }
+    if (typeof fn === 'function') { try { fn.apply(obj, args); } catch (e) { /* effects never break the game */ } }
+  }
 
   /* ---------- storage (never throws) ---------- */
   var store = {
@@ -957,7 +972,10 @@
     lastPlaced: null,   // card ids that just landed in a field
     donePop: false,
     lastFocus: null,
-    picked: false       // the selection was tapped by the player (not the default / a just turned card)
+    picked: false,      // the selection was tapped by the player (not the default / a just turned card)
+    combo: 0,           // correct plays in a row (a wrong one resets it)
+    flipField: null,    // bottom field whose card was just turned (3D flip)
+    gen: 0              // bumped on restart: pending animations of the old game stop
   };
   var ptr = null;       // active pointer interaction
   var toastTimer = 0;
@@ -998,6 +1016,8 @@
     els.moves = document.getElementById('moves');
     els.sub = document.getElementById('sub');
     els.toast = document.getElementById('toast');
+    els.combo = h('div', { class: 'combo', 'aria-hidden': 'true' });
+    els.board.appendChild(els.combo);
     els.langBtn = document.getElementById('lang-btn');
     els.langImg = els.langBtn.querySelector('.lang-btn__icon');
     els.langText = els.langBtn.querySelector('.lang-btn__text');
@@ -1191,6 +1211,7 @@
 
     ui.lastPlaced = null;
     ui.donePop = false;
+    ui.flipField = null;
 
     if (fk) {
       var n = els.board.querySelector('[data-fk="' + fk + '"]');
@@ -1284,6 +1305,8 @@
   }
 
   function isNew(id) { return !!ui.lastPlaced && ui.lastPlaced.indexOf(id) >= 0; }
+  /** --k = position in the unit that just landed (staggered pop). */
+  function newK(id) { var k = ui.lastPlaced ? ui.lastPlaced.indexOf(id) : -1; return k > 0 ? ';--k:' + k : ''; }
 
   /** Elements of a playable unit ('draw' | 'discard' | 'f3'): a run has several cards. */
   function srcEls(key) {
@@ -1318,8 +1341,9 @@
     run.forEach(function (id, r) {
       var c = game.cards[id], isTop = r === run.length - 1;
       var attrs = {
-        cls: 'card--run' + (isTop ? ' card--down-top' : '') + ' is-top' + (selected ? ' is-selected' : '') + (isNew(id) ? ' is-new' : ''),
-        style: '--i:' + d + ';--r:' + r,
+        cls: 'card--run' + (isTop ? ' card--down-top' : '') + ' is-top' + (selected ? ' is-selected' : '') + (isNew(id) ? ' is-new' : '') +
+          (isTop && ui.flipField === f && !reveal ? ' is-flip' : ''),
+        style: '--i:' + d + ';--r:' + r + newK(id),
         'data-drag': reveal ? null : 'f' + f,
         'data-fly': reveal ? '1' : null
       };
@@ -1342,7 +1366,7 @@
     if (reveal) {
       var rcat = game.cats[reveal.cat];
       kids.push(h('div', { class: 'field__reveal tier-' + rcat.tier },
-        h('span', { class: 'field__theme', 'data-len': themeLen(themeOf(rcat)), text: themeOf(rcat) })));
+        h('span', { class: 'field__theme', 'data-len': themeLen(themeOf(rcat)), text: themeOf(rcat) + ' ✓' })));
       props.role = 'group';
       props['aria-label'] = themeOf(rcat).replace(SHY, '');
     } else if (run.length) {
@@ -1374,7 +1398,7 @@
         var isTop = i === ids.length - 1, picked = sel === f;
         var la = {
           cls: 'card--field card--loose is-top' + (picked ? ' is-selected' : '') + (isNew(id) ? ' is-new' : ''),
-          style: '--i:' + i, 'data-drag': 'f' + f
+          style: '--i:' + i + newK(id), 'data-drag': 'f' + f
         };
         if (isTop) {
           la['data-fk'] = 'f' + f;
@@ -1396,14 +1420,14 @@
       }
       return cardEl(game.cards[id], 'div', {
         cls: 'card--field' + (isNew(id) ? ' is-new' : ''),
-        style: '--i:' + i, 'aria-hidden': 'true', 'data-fly': reveal ? '1' : null
+        style: '--i:' + i + newK(id), 'aria-hidden': 'true', 'data-fly': reveal ? '1' : null
       });
     });
     var label;
     if (reveal) {
       var cat = game.cats[reveal.cat];
       kids.push(h('div', { class: 'field__reveal tier-' + cat.tier },
-        h('span', { class: 'field__theme', 'data-len': themeLen(themeOf(cat)), text: themeOf(cat) })));
+        h('span', { class: 'field__theme', 'data-len': themeLen(themeOf(cat)), text: themeOf(cat) + ' ✓' })));
       label = themeOf(cat).replace(SHY, '');
     } else if (!ids.length) {
       kids = [h('span', { class: 'field__hint', text: t('fieldHint') })];
@@ -1431,12 +1455,17 @@
     shareBtn.addEventListener('click', share);
     var parts = [h('h2', { class: 'result__title', text: t(won ? 'solved' : 'outOfMoves') })];
     if (won) {
-      parts.push(h('p', { class: 'result__stars', 'aria-label': t('ariaStars', { n: Core.stars(left, game) }), text: Core.starString(Core.stars(left, game)) }));
+      var starStr = Core.starString(Core.stars(left, game));
+      parts.push(h('p', { class: 'result__stars', 'aria-label': t('ariaStars', { n: Core.stars(left, game) }) },
+        starStr.split('').map(function (ch, i) {
+          return h('span', { class: 'result__star' + (ch === '★' ? ' is-on' : ''), style: '--k:' + i, 'aria-hidden': 'true', text: ch });
+        })));
       parts.push(h('p', { class: 'result__meta', text: t('resultMeta', { moves: tn('movesLeft', left), streak: streakNow() }) }));
     } else {
       parts.push(h('p', { class: 'result__lost', text: t('resultLost', { k: state.done.length, total: game.cats.length }) }));
       parts.push(h('p', { class: 'result__meta', text: t('resultMetaLost', { streak: streakNow() }) }));
     }
+    if (state.practice) parts.push(h('p', { class: 'result__practice', text: t('practiceNote') }));
     parts.push(shareBtn);
     parts.push(h('p', { class: 'result__next' }, t('nextPuzzle'),
       h('span', { class: 'result__timer', id: 'timer', text: Core.formatCountdown(Core.msUntilMidnight(new Date())) })));
@@ -1473,7 +1502,7 @@
   function doPlay(from, to, drag) {
     var res = Core.play(state, game, from, to);
     if (!res.ok) {
-      if (res.cost) save();
+      if (res.cost || res.mistake) save();
       if (res.lost) ui.hold = true;
       if (res.reason === 'drawOnly') { ui.sel = 'draw'; ui.picked = false; }
       render();
@@ -1482,8 +1511,10 @@
       if (res.reason === 'drawOnly') toast(t('toastDrawOnly')); // bottom cards never go to Discard (free)
       if (res.reason === 'fixed') toast(t('toastLone'));         // a lone category card only goes back to Discard (free)
       if (res.mistake) {
+        ui.combo = 0;
         flash(dropEl(to), 'is-wrong');
-        flash(els.moves.parentNode, 'is-bump');
+        srcEls(srcKey(from)).forEach(function (el) { flash(el, 'is-nope', 520); });
+        fx('sound.wrong');
         toast(t('toastWrong'));
       }
       if (res.lost) endLost();
@@ -1494,16 +1525,47 @@
     ui.picked = false;
     save();
     flash(els.moves.parentNode, 'is-tick', 300);
+    if (to === 'discard') fx('sound.discard');
+    else {
+      ui.combo += 1;
+      fx('sound.place', ui.combo);
+    }
     if (res.completed !== undefined) {
       ui.lastPlaced = res.ids;
       runCompletion(to, res);
+      showCombo();
       return;
     }
     if (to !== 'discard') ui.lastPlaced = res.ids;
     if (res.lost) ui.hold = true;
     render();
-    if (to !== 'discard') flash(dropEl(to), 'is-correct');
+    if (to !== 'discard') {
+      flash(dropEl(to), 'is-correct');
+      flash(dropEl(to), 'is-glow', 700);
+      sparkleAt(res.ids[res.ids.length - 1], to);
+      showCombo();
+    }
     if (res.lost) endLost();
+  }
+
+  /** Sparkle where card `id` landed (or over field f). */
+  function sparkleAt(id, f) {
+    var el = els.board.querySelector('[data-card="' + id + '"]') || dropEl(f);
+    if (!el) return;
+    var r = el.getBoundingClientRect();
+    fx('sparkle', r.left + r.width / 2, r.top + Math.min(r.height / 2, 24));
+  }
+
+  /** Floating "Combo ×n!" badge from COMBO_MIN correct plays in a row; grows with the streak. */
+  function showCombo() {
+    var n = ui.combo;
+    if (n < COMBO_MIN) return;
+    var b = els.combo;
+    b.textContent = t('combo', { n: n });
+    b.style.setProperty('--combo-scale', String(Math.min(1.7, 1 + (n - COMBO_MIN) * 0.1)));
+    b.classList.remove('is-show');
+    void b.offsetWidth;
+    b.classList.add('is-show');
   }
 
   /** Out of moves: show the board a moment longer, then the result panel. */
@@ -1511,7 +1573,10 @@
     ui.busy = true;
     els.board.classList.add('is-busy');
     recordResult();
+    fx('sound.lose');
+    var gen = ui.gen;
     setTimeout(function () {
+      if (gen !== ui.gen) return; // restarted meanwhile
       ui.hold = false;
       ui.busy = false;
       els.board.classList.remove('is-busy');
@@ -1532,7 +1597,9 @@
     if (!Core.turn(state, f)) return;
     ui.sel = f; // the turned card is ready to play
     ui.picked = false;
+    ui.flipField = f;
     save();
+    fx('sound.flip');
     render();
   }
 
@@ -1542,18 +1609,36 @@
     ui.reveal = { field: f, cards: res.completedCards, cat: res.completed };
     render();
     flash(dropEl(f), 'is-correct');
+    var fieldNode = dropEl(f);
+    if (fieldNode) {
+      fieldNode.classList.add('is-celebrate');
+      var lab = fieldNode.querySelector('.field__reveal');
+      var tierCol = lab ? getComputedStyle(lab).getPropertyValue('--tier-bg').trim() : '';
+      fx('celebrate', fieldNode.getBoundingClientRect(), tierCol ? [tierCol] : []);
+    }
+    fx('sound.complete');
     var quick = reducedMotion();
+    var gen = ui.gen;
     setTimeout(function () {
+      if (gen !== ui.gen) return;
       var flyMs = quick ? 0 : flyToDone(f);
       setTimeout(function () {
+        if (gen !== ui.gen) return; // restarted meanwhile
         ui.reveal = null;
         ui.busy = false;
         ui.donePop = !quick;
         els.board.classList.remove('is-busy');
         if (res.won || res.lost) recordResult();
         render();
-        if (res.won) toast(t('toastSolved'));
-        else if (res.lost) toast(t('outOfMoves'));
+        flash(els.doneLabel, 'is-bump', 450);
+        if (res.won) {
+          toast(t('toastSolved'));
+          fx('rain');
+          fx('sound.win');
+        } else if (res.lost) {
+          toast(t('outOfMoves'));
+          fx('sound.lose');
+        }
       }, flyMs);
     }, quick ? 500 : REVEAL_MS);
   }
@@ -1586,12 +1671,22 @@
     var label = field.querySelector('.field__reveal');
     if (label) label.classList.add('is-leaving');
     void document.body.offsetWidth;
+    var mid = (clones.length - 1) / 2;
     clones.forEach(function (c) {
-      c.g.style.transition = 'transform ' + FLY_MS + 'ms cubic-bezier(.5,0,.3,1) ' + (c.i * 50) + 'ms, opacity ' + FLY_MS + 'ms ease ' + (c.i * 50) + 'ms';
-      c.g.style.transformOrigin = '0 0';
-      c.g.style.transform = 'translate(' + c.dx + 'px,' + c.dy + 'px) scale(' + c.s + ')';
+      // 1. fan up (each card a little rotated), 2. fly to Done one after another
+      c.g.style.transformOrigin = '50% 100%';
+      c.g.style.transition = 'transform ' + FAN_MS + 'ms cubic-bezier(.3,1.5,.5,1)';
+      c.g.style.transform = 'translateY(-12px) rotate(' + ((c.i - mid) * 7) + 'deg)';
     });
-    var total = FLY_MS + clones.length * 50;
+    setTimeout(function () {
+      clones.forEach(function (c) {
+        var delay = c.i * FLY_STAGGER;
+        c.g.style.transformOrigin = '0 0';
+        c.g.style.transition = 'transform ' + FLY_MS + 'ms cubic-bezier(.5,0,.3,1) ' + delay + 'ms, opacity ' + FLY_MS + 'ms ease ' + delay + 'ms';
+        c.g.style.transform = 'translate(' + c.dx + 'px,' + c.dy + 'px) scale(' + c.s + ') rotate(12deg)';
+      });
+    }, FAN_MS);
+    var total = FAN_MS + FLY_MS + clones.length * FLY_STAGGER;
     setTimeout(function () {
       clones.forEach(function (c) { if (c.g.parentNode) c.g.parentNode.removeChild(c.g); });
     }, total + 20);
@@ -1601,7 +1696,7 @@
   function recordResult() {
     if (state.recorded) return;
     state.recorded = true;
-    if (!isOverride) {
+    if (!isOverride && !state.practice) { // a replay after the day was finished doesn't count
       store.set(KEY_STATS, JSON.stringify(Core.updateStats(loadStats(), day, state.status === 'won', state.movesLeft, game)));
     }
     save();
@@ -1906,6 +2001,18 @@
   function bindModals() {
     document.getElementById('help-btn').addEventListener('click', function () { openModal('help-modal'); });
     document.getElementById('stats-btn').addEventListener('click', function () { openModal('stats-modal'); });
+    document.getElementById('restart-btn').addEventListener('click', function () { if (game) openModal('restart-modal'); });
+    document.getElementById('restart-ok').addEventListener('click', function () {
+      closeModal(document.getElementById('restart-modal'));
+      restart();
+    });
+    var snd = document.getElementById('sound-toggle');
+    snd.addEventListener('click', function () {
+      if (FXo) FXo.setSound(!FXo.soundOn());
+      renderSoundToggle();
+      if (FXo && FXo.soundOn()) fx('sound.place', 1);
+    });
+    renderSoundToggle();
     document.querySelectorAll('.modal').forEach(function (m) {
       m.addEventListener('click', function (e) {
         if (e.target === m || e.target.closest('[data-close]')) closeModal(m);
@@ -1916,6 +2023,41 @@
       var open = document.querySelector('.modal:not([hidden])');
       if (open) closeModal(open);
     });
+  }
+
+  /** Sound switch in the how-to sheet (fx.js keeps the setting). */
+  function renderSoundToggle() {
+    var b = document.getElementById('sound-toggle');
+    if (!b) return;
+    var on = FXo ? FXo.soundOn() : false;
+    b.setAttribute('aria-checked', on ? 'true' : 'false');
+    b.classList.toggle('is-on', on);
+    b.hidden = !FXo;
+  }
+
+  /**
+   * Start today's puzzle over: same deal, full moves. If today's result was
+   * already recorded, the new round is a practice round (doesn't count).
+   */
+  function restart() {
+    if (!game) return;
+    if (ptr) onCancel();
+    var practice = !isOverride && (state.recorded || state.practice || loadStats().lastPlayedDay === day);
+    ui.gen += 1;
+    ui.busy = false;
+    ui.hold = false;
+    ui.reveal = null;
+    ui.sel = 'draw';
+    ui.picked = false;
+    ui.combo = 0;
+    ui.lastPlaced = null;
+    els.board.classList.remove('is-busy');
+    document.querySelectorAll('.card-flying,.card-ghost,.card-ghost-run').forEach(function (n) { if (n.parentNode) n.parentNode.removeChild(n); });
+    fx('clear');
+    state = Core.newGame(game, day, practice);
+    save();
+    render();
+    toast(t('toastRestarted'));
   }
 
   function openModal(id) {
