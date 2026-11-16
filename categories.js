@@ -1,5 +1,6 @@
-// Category pool. Each daily game picks 8 categories and 4 cards from each (plus one
-// category card per category, showing theme / themeDe and symbol category-<id>).
+// Category pool. Each daily game picks 8 categories (plus one category card per
+// category, showing theme / themeDe and symbol category-<id>).
+// 8 cards per category; each game uses 4–7 of them.
 // symbol = file name (without extension) in assets/symbols/, e.g. assets/symbols/apple.png
 // tier: 1 = easy (all for now); harder categories can be added later with tier 2/3.
 // theme / word     = English category name / card word.
@@ -17,7 +18,9 @@ window.CATEGORIES = [
       { word: "Pear", wordDe: "Birne", symbol: "pear" },
       { word: "Grapes", wordDe: "Weintrauben", symbol: "grapes" },
       { word: "Pineapple", wordDe: "Ananas", symbol: "pineapple" },
-      { word: "Cherry", wordDe: "Kirsche", symbol: "cherry" }
+      { word: "Cherry", wordDe: "Kirsche", symbol: "cherry" },
+      { word: "Strawberry", wordDe: "Erdbeere", symbol: "strawberry" },
+      { word: "Watermelon", wordDe: "Wassermelone", symbol: "watermelon" }
   ]},
   { id: "vegetables", theme: "Vegetables", themeDe: "Gemüse", tier: 1, cards: [
       { word: "Carrot", wordDe: "Karotte", symbol: "carrot" },
@@ -25,7 +28,9 @@ window.CATEGORIES = [
       { word: "Onion", wordDe: "Zwiebel", symbol: "onion" },
       { word: "Potato", wordDe: "Kartoffel", symbol: "potato" },
       { word: "Garlic", wordDe: "Knoblauch", symbol: "garlic" },
-      { word: "Eggplant", wordDe: "Aubergine", symbol: "eggplant" }
+      { word: "Eggplant", wordDe: "Aubergine", symbol: "eggplant" },
+      { word: "Corn", wordDe: "Maiskolben", symbol: "corn" },
+      { word: "Cucumber", wordDe: "Gurke", symbol: "cucumber" }
   ]},
   { id: "farm-animals", theme: "Farm Animals", themeDe: "Bauernhof­tiere", tier: 1, cards: [
       { word: "Cow", wordDe: "Kuh", symbol: "cow" },
@@ -33,7 +38,9 @@ window.CATEGORIES = [
       { word: "Sheep", wordDe: "Schaf", symbol: "sheep" },
       { word: "Horse", wordDe: "Pferd", symbol: "horse" },
       { word: "Goat", wordDe: "Ziege", symbol: "goat" },
-      { word: "Donkey", wordDe: "Esel", symbol: "donkey" }
+      { word: "Donkey", wordDe: "Esel", symbol: "donkey" },
+      { word: "Rabbit", wordDe: "Kaninchen", symbol: "rabbit" },
+      { word: "Cat", wordDe: "Katze", symbol: "cat" }
   ]},
   { id: "sea-creatures", theme: "Sea Creatures", themeDe: "Meerestiere", tier: 1, cards: [
       { word: "Octopus", wordDe: "Krake", symbol: "octopus" },
@@ -41,7 +48,9 @@ window.CATEGORIES = [
       { word: "Jellyfish", wordDe: "Qualle", symbol: "jellyfish" },
       { word: "Starfish", wordDe: "Seestern", symbol: "starfish" },
       { word: "Shark", wordDe: "Hai", symbol: "shark" },
-      { word: "Seahorse", wordDe: "Seepferdchen", symbol: "seahorse" }
+      { word: "Seahorse", wordDe: "Seepferdchen", symbol: "seahorse" },
+      { word: "Crab", wordDe: "Krabbe", symbol: "crab" },
+      { word: "Dolphin", wordDe: "Delfin", symbol: "dolphin" }
   ]},
   { id: "insects", theme: "Insects", themeDe: "Insekten", tier: 1, cards: [
       { word: "Bee", wordDe: "Biene", symbol: "bee" },
@@ -49,7 +58,9 @@ window.CATEGORIES = [
       { word: "Butterfly", wordDe: "Schmetterling", symbol: "butterfly" },
       { word: "Ladybug", wordDe: "Marienkäfer", symbol: "ladybug" },
       { word: "Grasshopper", wordDe: "Heuschrecke", symbol: "grasshopper" },
-      { word: "Dragonfly", wordDe: "Libelle", symbol: "dragonfly" }
+      { word: "Dragonfly", wordDe: "Libelle", symbol: "dragonfly" },
+      { word: "Mosquito", wordDe: "Mücke", symbol: "mosquito" },
+      { word: "Firefly", wordDe: "Glühwürmchen", symbol: "firefly" }
   ]},
   { id: "birds", theme: "Birds", themeDe: "Vögel", tier: 1, cards: [
       { word: "Owl", wordDe: "Eule", symbol: "owl" },
@@ -57,7 +68,9 @@ window.CATEGORIES = [
       { word: "Eagle", wordDe: "Adler", symbol: "eagle" },
       { word: "Flamingo", wordDe: "Flamingo", symbol: "flamingo" },
       { word: "Swan", wordDe: "Schwan", symbol: "swan" },
-      { word: "Peacock", wordDe: "Pfau", symbol: "peacock" }
+      { word: "Peacock", wordDe: "Pfau", symbol: "peacock" },
+      { word: "Toucan", wordDe: "Tukan", symbol: "toucan" },
+      { word: "Woodpecker", wordDe: "Specht", symbol: "woodpecker" }
   ]},
   { id: "safari-animals", theme: "Safari Animals", themeDe: "Safaritiere", tier: 1, cards: [
       { word: "Lion", wordDe: "Löwe", symbol: "lion" },
@@ -65,7 +78,9 @@ window.CATEGORIES = [
       { word: "Giraffe", wordDe: "Giraffe", symbol: "giraffe" },
       { word: "Zebra", wordDe: "Zebra", symbol: "zebra" },
       { word: "Rhino", wordDe: "Nashorn", symbol: "rhino" },
-      { word: "Hippo", wordDe: "Nilpferd", symbol: "hippo" }
+      { word: "Hippo", wordDe: "Nilpferd", symbol: "hippo" },
+      { word: "Cheetah", wordDe: "Gepard", symbol: "cheetah" },
+      { word: "Gorilla", wordDe: "Gorilla", symbol: "gorilla" }
   ]},
   { id: "tools", theme: "Tools", themeDe: "Werkzeug", tier: 1, cards: [
       { word: "Hammer", wordDe: "Hammer", symbol: "hammer" },
@@ -73,7 +88,9 @@ window.CATEGORIES = [
       { word: "Screwdriver", wordDe: "Schraubendreher", symbol: "screwdriver" },
       { word: "Wrench", wordDe: "Maulschlüssel", symbol: "wrench" },
       { word: "Pliers", wordDe: "Zange", symbol: "pliers" },
-      { word: "Drill", wordDe: "Bohrmaschine", symbol: "drill" }
+      { word: "Drill", wordDe: "Bohrmaschine", symbol: "drill" },
+      { word: "Tape Measure", wordDe: "Maßband", symbol: "tape-measure" },
+      { word: "Paint Roller", wordDe: "Farbroller", symbol: "paint-roller" }
   ]},
   { id: "instruments", theme: "Musical Instruments", themeDe: "Musik­instrumente", tier: 1, cards: [
       { word: "Guitar", wordDe: "Gitarre", symbol: "guitar" },
@@ -81,7 +98,9 @@ window.CATEGORIES = [
       { word: "Trumpet", wordDe: "Trompete", symbol: "trumpet" },
       { word: "Violin", wordDe: "Geige", symbol: "violin" },
       { word: "Piano", wordDe: "Klavier", symbol: "piano" },
-      { word: "Harp", wordDe: "Harfe", symbol: "harp" }
+      { word: "Harp", wordDe: "Harfe", symbol: "harp" },
+      { word: "Xylophone", wordDe: "Xylofon", symbol: "xylophone" },
+      { word: "Saxophone", wordDe: "Saxofon", symbol: "saxophone" }
   ]},
   { id: "vehicles", theme: "Vehicles", themeDe: "Fahrzeuge", tier: 1, cards: [
       { word: "Car", wordDe: "Auto", symbol: "car" },
@@ -89,7 +108,9 @@ window.CATEGORIES = [
       { word: "Truck", wordDe: "Lastwagen", symbol: "truck" },
       { word: "Train", wordDe: "Zug", symbol: "train" },
       { word: "Helicopter", wordDe: "Hubschrauber", symbol: "helicopter" },
-      { word: "Motorcycle", wordDe: "Motorrad", symbol: "motorcycle" }
+      { word: "Motorcycle", wordDe: "Motorrad", symbol: "motorcycle" },
+      { word: "Airplane", wordDe: "Flugzeug", symbol: "airplane" },
+      { word: "Tractor", wordDe: "Traktor", symbol: "tractor" }
   ]},
   { id: "clothing", theme: "Clothing", themeDe: "Kleidung", tier: 1, cards: [
       { word: "Shirt", wordDe: "Hemd", symbol: "shirt" },
@@ -97,7 +118,9 @@ window.CATEGORIES = [
       { word: "Jeans", wordDe: "Jeans", symbol: "jeans" },
       { word: "Skirt", wordDe: "Rock", symbol: "skirt" },
       { word: "Shorts", wordDe: "Shorts", symbol: "shorts" },
-      { word: "Socks", wordDe: "Socken", symbol: "socks" }
+      { word: "Socks", wordDe: "Socken", symbol: "socks" },
+      { word: "Tie", wordDe: "Krawatte", symbol: "tie" },
+      { word: "Hoodie", wordDe: "Kapuzenpulli", symbol: "hoodie" }
   ]},
   { id: "jewelry", theme: "Jewelry", themeDe: "Schmuck", tier: 1, cards: [
       { word: "Ring", wordDe: "Ring", symbol: "ring" },
@@ -105,7 +128,9 @@ window.CATEGORIES = [
       { word: "Earrings", wordDe: "Ohrringe", symbol: "earrings" },
       { word: "Bracelet", wordDe: "Armband", symbol: "bracelet" },
       { word: "Brooch", wordDe: "Brosche", symbol: "brooch" },
-      { word: "Tiara", wordDe: "Diadem", symbol: "tiara" }
+      { word: "Tiara", wordDe: "Diadem", symbol: "tiara" },
+      { word: "Crown", wordDe: "Krone", symbol: "crown" },
+      { word: "Gemstone", wordDe: "Edelstein", symbol: "gemstone" }
   ]},
   { id: "kitchen-utensils", theme: "Kitchen Utensils", themeDe: "Küchen­utensilien", tier: 1, cards: [
       { word: "Whisk", wordDe: "Schneebesen", symbol: "whisk" },
@@ -113,7 +138,9 @@ window.CATEGORIES = [
       { word: "Spatula", wordDe: "Pfannenwender", symbol: "spatula" },
       { word: "Grater", wordDe: "Reibe", symbol: "grater" },
       { word: "Frying Pan", wordDe: "Bratpfanne", symbol: "frying-pan" },
-      { word: "Colander", wordDe: "Nudelsieb", symbol: "colander" }
+      { word: "Colander", wordDe: "Nudelsieb", symbol: "colander" },
+      { word: "Rolling Pin", wordDe: "Nudelholz", symbol: "rolling-pin" },
+      { word: "Cooking Pot", wordDe: "Kochtopf", symbol: "cooking-pot" }
   ]},
   { id: "weather", theme: "Weather", themeDe: "Wetter", tier: 1, cards: [
       { word: "Cloud", wordDe: "Wolke", symbol: "cloud" },
@@ -121,7 +148,9 @@ window.CATEGORIES = [
       { word: "Rainbow", wordDe: "Regenbogen", symbol: "rainbow" },
       { word: "Tornado", wordDe: "Tornado", symbol: "tornado" },
       { word: "Raindrop", wordDe: "Regentropfen", symbol: "raindrop" },
-      { word: "Snowflake", wordDe: "Schneeflocke", symbol: "snowflake" }
+      { word: "Snowflake", wordDe: "Schneeflocke", symbol: "snowflake" },
+      { word: "Umbrella", wordDe: "Regenschirm", symbol: "umbrella" },
+      { word: "Wind", wordDe: "Wind", symbol: "wind" }
   ]},
   { id: "space", theme: "Space", themeDe: "Weltraum", tier: 1, cards: [
       { word: "Planet", wordDe: "Planet", symbol: "planet" },
@@ -129,7 +158,9 @@ window.CATEGORIES = [
       { word: "Comet", wordDe: "Komet", symbol: "comet" },
       { word: "Satellite", wordDe: "Satellit", symbol: "satellite" },
       { word: "Astronaut", wordDe: "Astronaut", symbol: "astronaut" },
-      { word: "Telescope", wordDe: "Teleskop", symbol: "telescope" }
+      { word: "Telescope", wordDe: "Teleskop", symbol: "telescope" },
+      { word: "Asteroid", wordDe: "Asteroid", symbol: "asteroid" },
+      { word: "Alien", wordDe: "Außerirdischer", symbol: "alien" }
   ]},
   { id: "furniture", theme: "Furniture", themeDe: "Möbel", tier: 1, cards: [
       { word: "Chair", wordDe: "Stuhl", symbol: "chair" },
@@ -137,7 +168,9 @@ window.CATEGORIES = [
       { word: "Sofa", wordDe: "Sofa", symbol: "sofa" },
       { word: "Bed", wordDe: "Bett", symbol: "bed" },
       { word: "Wardrobe", wordDe: "Schrank", symbol: "wardrobe" },
-      { word: "Bookshelf", wordDe: "Bücherregal", symbol: "bookshelf" }
+      { word: "Bookshelf", wordDe: "Bücherregal", symbol: "bookshelf" },
+      { word: "Dresser", wordDe: "Kommode", symbol: "dresser" },
+      { word: "Stool", wordDe: "Hocker", symbol: "stool" }
   ]},
   { id: "desserts", theme: "Desserts", themeDe: "Nachtisch", tier: 1, cards: [
       { word: "Ice Cream", wordDe: "Eistüte", symbol: "ice-cream" },
@@ -145,7 +178,9 @@ window.CATEGORIES = [
       { word: "Donut", wordDe: "Donut", symbol: "donut" },
       { word: "Cake", wordDe: "Torte", symbol: "cake" },
       { word: "Pudding", wordDe: "Pudding", symbol: "pudding" },
-      { word: "Popsicle", wordDe: "Stieleis", symbol: "popsicle" }
+      { word: "Popsicle", wordDe: "Stieleis", symbol: "popsicle" },
+      { word: "Cookie", wordDe: "Keks", symbol: "cookie" },
+      { word: "Waffle", wordDe: "Waffel", symbol: "waffle" }
   ]},
   { id: "fast-food", theme: "Fast Food", themeDe: "Fast Food", tier: 1, cards: [
       { word: "Pizza", wordDe: "Pizza", symbol: "pizza" },
@@ -153,7 +188,9 @@ window.CATEGORIES = [
       { word: "Fries", wordDe: "Pommes", symbol: "fries" },
       { word: "Hot Dog", wordDe: "Hotdog", symbol: "hot-dog" },
       { word: "Taco", wordDe: "Taco", symbol: "taco" },
-      { word: "Sandwich", wordDe: "Sandwich", symbol: "sandwich" }
+      { word: "Sandwich", wordDe: "Sandwich", symbol: "sandwich" },
+      { word: "Kebab", wordDe: "Döner", symbol: "kebab" },
+      { word: "Nuggets", wordDe: "Nuggets", symbol: "nuggets" }
   ]},
   { id: "drinks", theme: "Drinks", themeDe: "Getränke", tier: 1, cards: [
       { word: "Coffee", wordDe: "Kaffee", symbol: "coffee" },
@@ -161,7 +198,9 @@ window.CATEGORIES = [
       { word: "Milk", wordDe: "Milch", symbol: "milk" },
       { word: "Juice", wordDe: "Saft", symbol: "juice" },
       { word: "Lemonade", wordDe: "Limonade", symbol: "lemonade" },
-      { word: "Smoothie", wordDe: "Smoothie", symbol: "smoothie" }
+      { word: "Smoothie", wordDe: "Smoothie", symbol: "smoothie" },
+      { word: "Water", wordDe: "Wasser", symbol: "water" },
+      { word: "Cocoa", wordDe: "Kakao", symbol: "cocoa" }
   ]},
   { id: "sports-equipment", theme: "Sports Equipment", themeDe: "Sportgeräte", tier: 1, cards: [
       { word: "Basketball", wordDe: "Basketball", symbol: "basketball" },
@@ -169,7 +208,9 @@ window.CATEGORIES = [
       { word: "Dumbbell", wordDe: "Hantel", symbol: "dumbbell" },
       { word: "Hockey Stick", wordDe: "Hockeyschläger", symbol: "hockey-stick" },
       { word: "Boxing Glove", wordDe: "Boxhandschuh", symbol: "boxing-glove" },
-      { word: "Bowling Pin", wordDe: "Bowlingkegel", symbol: "bowling-pin" }
+      { word: "Bowling Pin", wordDe: "Bowlingkegel", symbol: "bowling-pin" },
+      { word: "Soccer Ball", wordDe: "Fußball", symbol: "soccer-ball" },
+      { word: "Jump Rope", wordDe: "Springseil", symbol: "jump-rope" }
   ]},
   { id: "bathroom", theme: "Bathroom", themeDe: "Badezimmer", tier: 1, cards: [
       { word: "Toothbrush", wordDe: "Zahnbürste", symbol: "toothbrush" },
@@ -177,7 +218,9 @@ window.CATEGORIES = [
       { word: "Toilet", wordDe: "Toilette", symbol: "toilet" },
       { word: "Bathtub", wordDe: "Badewanne", symbol: "bathtub" },
       { word: "Soap", wordDe: "Seife", symbol: "soap" },
-      { word: "Shower", wordDe: "Dusche", symbol: "shower" }
+      { word: "Shower", wordDe: "Dusche", symbol: "shower" },
+      { word: "Comb", wordDe: "Kamm", symbol: "comb" },
+      { word: "Hair Dryer", wordDe: "Föhn", symbol: "hair-dryer" }
   ]},
   { id: "camping", theme: "Camping", themeDe: "Camping", tier: 1, cards: [
       { word: "Tent", wordDe: "Zelt", symbol: "tent" },
@@ -185,7 +228,9 @@ window.CATEGORIES = [
       { word: "Lantern", wordDe: "Laterne", symbol: "lantern" },
       { word: "Sleeping Bag", wordDe: "Schlafsack", symbol: "sleeping-bag" },
       { word: "Compass", wordDe: "Kompass", symbol: "compass" },
-      { word: "Binoculars", wordDe: "Fernglas", symbol: "binoculars" }
+      { word: "Binoculars", wordDe: "Fernglas", symbol: "binoculars" },
+      { word: "Backpack", wordDe: "Rucksack", symbol: "backpack" },
+      { word: "Flashlight", wordDe: "Taschenlampe", symbol: "flashlight" }
   ]},
   { id: "office-supplies", theme: "Office Supplies", themeDe: "Bürobedarf", tier: 1, cards: [
       { word: "Stapler", wordDe: "Tacker", symbol: "stapler" },
@@ -193,7 +238,9 @@ window.CATEGORIES = [
       { word: "Pencil", wordDe: "Bleistift", symbol: "pencil" },
       { word: "Eraser", wordDe: "Radiergummi", symbol: "eraser" },
       { word: "Calculator", wordDe: "Taschenrechner", symbol: "calculator" },
-      { word: "Pushpin", wordDe: "Reißzwecke", symbol: "pushpin" }
+      { word: "Pushpin", wordDe: "Reißzwecke", symbol: "pushpin" },
+      { word: "Glue Stick", wordDe: "Klebestift", symbol: "glue-stick" },
+      { word: "Envelope", wordDe: "Briefumschlag", symbol: "envelope" }
   ]},
   { id: "shapes", theme: "Shapes", themeDe: "Formen", tier: 1, cards: [
       { word: "Circle", wordDe: "Kreis", symbol: "circle" },
@@ -201,6 +248,8 @@ window.CATEGORIES = [
       { word: "Triangle", wordDe: "Dreieck", symbol: "triangle" },
       { word: "Heart", wordDe: "Herz", symbol: "heart" },
       { word: "Pentagon", wordDe: "Fünfeck", symbol: "pentagon" },
-      { word: "Hexagon", wordDe: "Sechseck", symbol: "hexagon" }
+      { word: "Hexagon", wordDe: "Sechseck", symbol: "hexagon" },
+      { word: "Rectangle", wordDe: "Rechteck", symbol: "rectangle" },
+      { word: "Oval", wordDe: "Oval", symbol: "oval" }
   ]}
 ];

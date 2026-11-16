@@ -1,51 +1,103 @@
 # Riddle Me Rika
 
 A daily card puzzle: build a stack for each of 8 categories (category card +
-4 word cards) before your moves run out. Plain HTML/CSS/JS, no build step,
+its 4–7 word cards) before your moves run out. Plain HTML/CSS/JS, no build step,
 works offline and can be installed on the home screen.
 
 ## Rules
 
-- 40 cards per day: 8 categories × (1 category card + 4 word cards), dealt the
+- 8 categories per day. Each gets a number N from 4 to 7 (random per day and
+  category): it has 1 category card + N word cards, and the category card
+  shows N in a badge. So a day has 40–64 cards (usually around 52), dealt the
   same for everyone (seeded by the day).
-- Board: Draw, Discard, Done in the top row; below 6 fields. The 3 top fields
-  start empty; each of the 3 bottom fields starts with 10 face-down cards (a
-  quarter of the deck each). The last 10 cards are the draw pile.
-- Tap a face-down card to turn it over (free). Only the top card of a bottom
-  field can be face up; it is playable like the draw / discard card. Nothing
-  can be placed onto a bottom field while it still has cards; once empty it is
-  a free field like the top ones.
-- An empty field only accepts a category card. Word cards go onto the stack
-  whose category card matches. Category card + 4 words = done: the name shows
-  briefly, the stack moves to Done and the field is empty again.
-- Moves count down from the budget. Every card play costs 1 move: onto a stack,
-  onto Discard, and also a wrong one (it bounces back, "Doesn't fit").
-  Turning cards, flipping the discard pile back into the empty draw pile and
-  selecting are free.
-- All 8 done = solved; stars by moves left. Moves at 0 before that = "Out of
+- Board: Draw, Discard, Done in the top row; below 8 fields (4 × 2 on a phone,
+  one row of 8 in landscape). The 4 top fields start empty; each of the 4
+  bottom fields starts with 8 face-down cards. The other cards (8–32) are
+  the draw pile; at least half of the category cards (4) are always in it.
+- Tap a face-down card to turn it over (free) once nothing on that field is
+  face up.
+- **Runs:** onto a face-up *word* card on a bottom field you can put word cards
+  of the same category (from Draw, Discard or another bottom field). The
+  face-up cards there form a run that always moves as a whole, for 1 move:
+  onto its category stack or onto another bottom field's face-up word card of
+  the same category. Category cards never go onto a run. Once the run is gone,
+  the next face-down card can be turned. A bottom field becomes a free field
+  only when it is completely empty.
+- An empty field only accepts a category card. Word cards (and runs) go onto
+  the stack whose category card matches. Category card + all its N words = done: the
+  name shows briefly, the stack moves to Done and the field is empty again.
+- **Discard:** the draw card can be parked there. A category card that lies
+  alone on a field (no word cards on it yet) can be taken back onto Discard
+  too (1 move; it can't move to another field). Category cards with words on
+  them stay put. A card or run from a bottom field snaps back with "Bottom
+  cards can't go to Discard" (free).
+- Moves count down from the day's budget (cards + 25, e.g. 52 cards = 77
+  moves). Every play costs 1 move: a card or a whole
+  run onto a stack or run, a card onto Discard (also a taken-back category
+  card), and also a wrong one (it bounces back, "Doesn't fit"). Turning
+  cards, flipping the discard pile back into the empty draw pile, selecting
+  and refused moves onto Discard are free.
+- All 8 done = solved; stars by moves used: ★★★ for at most cards + 7,
+  ★★☆ for at most cards + 17, else ★☆☆. Moves at 0 before that = "Out of
   moves" (the streak breaks).
-- Controls: drag a playable card, or tap it (selects) and tap a field. The draw
-  card is selected by default. Tapping the selected card again discards it.
+- Controls: drag a playable card or run, or tap it (picks it; a run as a
+  whole) and tap a field. The draw card is selected by default, so tapping a
+  field plays it; tapping the draw card twice discards it. After picking a
+  card, tapping a run of its category plays the card there; without a picked
+  card, tapping a run picks that run. A lone category card: tap it (picks it,
+  unless the selected card fits onto it - then that card is played there),
+  then tap Discard or the card again to take it back; dragging it onto
+  Discard works too.
+- Every daily deal can be finished: see "Fair deals" below.
 
 ## Config (top of `game.js`)
 
 | Constant | Value | Meaning |
 |---|---|---|
 | `CATEGORIES_PER_GAME` | 8 | categories per day |
-| `CARDS_PER_CATEGORY` | 4 | word cards per category |
-| `TOP_FIELDS` / `BOTTOM_FIELDS` | 3 / 3 | empty top fields / bottom fields with face-down cards |
-| `FACE_DOWN_PER_FIELD` | 10 | face-down cards per bottom field |
-| `MOVES` | 85 | move budget |
-| `STAR3_LEFT` / `STAR2_LEFT` | 20 / 8 | moves left needed for ★★★ / ★★☆ |
+| `MIN_CARDS_PER_CATEGORY` / `MAX_CARDS_PER_CATEGORY` | 4 / 7 | word cards per category: a seeded random N in this range per day and category (clamped to the category's pool, which must have at least 4) |
+| `TOP_FIELDS` / `BOTTOM_FIELDS` | 4 / 4 | empty top fields / bottom fields with face-down cards |
+| `FACE_DOWN_PER_FIELD` | 8 | face-down cards per bottom field (32 in all; the rest, 8–32, is the draw pile) |
+| `MIN_CATEGORY_CARDS_IN_DRAW` | 4 (half of 8) | category cards always dealt into the draw pile |
+| `MOVES_PER_CARD` / `MOVES_BASE` | 1 / 25 | day's move budget = cards × 1 + 25 (40 cards: 65, 64 cards: 89) |
+| `STAR3_EXTRA` / `STAR2_EXTRA` | 7 / 17 | ★★★ / ★★☆ when finished in at most cards + this many moves (= 18 / 8 moves left) |
+| `DEAL_SPARE` | 10 | a deal is only used if the solver finishes it with at least this many of the day's moves to spare |
+| `DEAL_ATTEMPTS` | 200 | reshuffles tried per day before giving up (never needed more than 4) |
+| `DEAL_HELP` | 0.75 | how often a dealt face-down card is one the solver can use right away (higher = friendlier deals) |
 | `SYMBOL_DIR` + `SYMBOL_EXT` | `assets/symbols/`, `png` | the owner's symbols (always win) |
 | `SYMBOL_GEN_DIR` + `SYMBOL_GEN_EXT` | `assets/symbols/generated/`, `svg` | generated fallback symbols |
 
-The budget was calibrated with a greedy auto-player over 2000 daily deals: it
-needs 45–78 moves (median 58), so 85 always leaves moves to spare; ★★★ means
-finishing in 65 moves or less. If you change the field / card numbers, the
-layout in `style.css` (`--field-cols`, `--field-rows`, `--stack-n`) has to
-match, and the budget should be re-checked. Changing the rules makes old saves
-invalid; they are simply replaced by a new game.
+### Fair deals
+
+Because bottom cards can't be discarded, most random shuffles can't be
+finished (a word card can sit above its own category card with nowhere to
+go). So `game.js` has a solver: a greedy player that only looks at face-up
+cards and the draw / discard pile, never at face-down cards. The deal
+(`dealOrder`) fixes the draw pile first (with at least 4 category cards), then
+lets the solver play and decides each face-down card only when the solver
+turns it (with chance `DEAL_HELP` among the cards it can use right away).
+Because the solver never peeks, replaying it on the finished deal gives the
+same game; `buildGame` checks exactly that within the budget minus `DEAL_SPARE` and
+otherwise deals again with a seed derived from the day. Everyone gets the same
+deal; it takes about 0.1 ms (at most ~2 ms) on a laptop.
+
+The budget was calibrated with the solver over 2000 daily deals (days
+0–1999, 41–63 cards a day, median 52): the solver needs its card count plus
+0–15 moves (median +4, 90% within +10), almost the same for small and big
+days, so the budget is cards + 25 and the stars count moves above the card
+count. 335 days needed a reshuffle (at most 4). The solver always has at least
+10 moves to spare and gets ★★★ on 81% of days, ★★☆ on the rest.
+Heads-up: the game is still unforgiving. Other sensible play styles (using
+the take-back when stuck) finish about 77–83% of days within the budget when
+they put down useful category cards first, 61% when they pick category cards
+at random, and only 12% when they ignore runs. When they get stuck, every
+field holds a stack that already has word cards, or a field is free but no
+category card can be reached. (With 3 + 3 fields this was 42–60% without the
+moves limit, which is why there are 4 + 4.)
+If you change the field / card numbers, the layout in `style.css`
+(`--field-cols`, `--field-rows`, `--stack-n`) has to match (long stacks and runs get thinner strips automatically), and the budget
+should be re-checked. Changing the rules makes old saves invalid; they are
+simply replaced by a new game.
 
 ## Put it online with GitHub Pages (once)
 

@@ -10,22 +10,23 @@ screen; `game.js` never sets visual styles. `cards.css` loads last, so it wins.
 - `?day=5` shows puzzle #6 (does not count towards stats); `?reset=1` restarts
   the shown day (`?day=5&reset=1`).
 - Test at iPhone SE (375 x 667 and 375 x 548), iPhone 15 (393 x 852) and a
-  Pro Max (430 x 932), light and dark. A field must hold a full stack of 5
-  cards (category card + 4 words); on screens under 600 px tall
-  `--stack-ratio` drops to 0.19 so it still fits without scrolling.
+  Pro Max (430 x 932), light and dark. A field must hold a full stack of up
+  to 8 cards (category card + 7 words); the room is `--stack-n` strips, and
+  longer stacks / runs get thinner strips automatically (`style.css`). On
+  screens under 600 px tall `--stack-ratio` drops to 0.19.
 
 ## Variables (top of `cards.css`)
 
 | Group | Variables |
 | --- | --- |
 | Size & shape | `--card-ratio` (height / width, 1.4 = 5:7), `--card-max-w`, `--card-radius`, `--card-border`, `--card-shadow` |
-| Field stacking | `--stack-ratio` (visible strip of a covered card, fraction of card height; 0.19 on short screens), `--stack-offset` (derived), `--down-offset` (step between face-down cards on a bottom field), `--pile-offset` (peek of cards under a pile) |
+| Field stacking | `--stack-ratio` (visible strip of a covered card, fraction of card height; 0.19 on short screens), `--stack-offset` (derived; also the offset of run cards on a bottom field), `--down-offset` (step between face-down cards on a bottom field; squeezed automatically under a long run so a run of 4 on 7 face-down cards still fits), `--pile-offset` (peek of cards under a pile) |
 | Face | `--card-bg`, `--card-face-image`, `--card-face-image-size` |
 | Word (top) | `--word-font`, `--word-size`, `--word-weight`, `--word-color`, `--word-tracking`, `--word-transform`, `--word-top`, `--word-inset` |
 | Symbol (lower part) | `--symbol-top`, `--symbol-bottom`, `--symbol-inset` |
 | Placeholder | `--placeholder-size`, `-bg`, `-border`, `-radius`, `-color`, `-font`, `-font-size` |
 | Back (draw pile) | `--card-back-bg`, `--card-back-pattern`, `--card-back-image`, `--card-back-border` |
-| Category card | `--category-card-bg`, `--category-card-image`, `--category-card-ink`, `--category-card-border-w`, `--category-band-h`, `--category-name-font`, `--category-name-size`, `--category-name-weight`, `--category-name-transform`, `--category-name-tracking` |
+| Category card | `--count-size`, `--count-font-size`, `--count-font-weight`, `--count-bg`, `--count-ink`, `--count-ring`, `--count-right`, `--count-bottom` (badge with today's number of word cards), `--category-card-bg`, `--category-card-image`, `--category-card-ink`, `--category-card-border-w`, `--category-band-h`, `--category-name-font`, `--category-name-size`, `--category-name-weight`, `--category-name-transform`, `--category-name-tracking` |
 | Face-down cards (bottom fields) | `--turn-ring`, `--turn-badge-bg`, `--turn-badge-ink` (ring + ↻ badge on the card you can turn) |
 | Empty piles / flip | `--slot-*`, `--flip-*` |
 | Fields | `--field-bg`, `--field-border`, `--field-radius`, `--field-hint` |
@@ -93,12 +94,14 @@ background colour; aim for a 5:7 image).
 | `.card--done` + `.tier-N`, `.done__theme`, `.done__count` | Done pile top |
 | `.card--empty`, `.card__hint` | Empty pile |
 | `.card--field` | Card in a field stack (`--i` = stack position 0..4, 0 = category card) |
-| `.card--category` + `.tier-N`, `.card__catname` | Category card and its name |
-| `.card--down` (`.is-turnable`), `.card--down-top` | Face-down cards on a bottom field (the top one can be turned), face-up top card there |
-| `.card.is-top`, `.is-selected`, `.is-new`, `.is-bounce`, `.is-drag-source` | Playable / selected / just placed / rejected tap / being dragged |
-| `.card-ghost` (`.is-returning`), `.card-flying` | Dragged copy, copies flying to Done |
+| `.card--lone` | A category card alone on its field (also `.card--field.is-top`): playable, it can be taken back onto Discard |
+| `.card--category` + `.tier-N`, `.card__catname`, `.card__count` | Category card, its name and the badge with today's number of word cards (4–7) |
+| `.card--down` (`.is-turnable`) | Face-down cards on a bottom field (`--i` = depth; the top one can be turned while nothing is face up) |
+| `.card--run`, `.card--down-top` | Face-up run on a bottom field (`--r` = position in the run; one card, or up to 4 word cards of one category that move together); `.card--down-top` = its topmost card |
+| `.card.is-top`, `.is-selected`, `.is-new`, `.is-bounce`, `.is-drag-source` | Playable / selected / just placed / rejected tap / being dragged (all cards of a run get these together) |
+| `.card-ghost` (`.is-returning`), `.card-ghost-run` + `.card-ghost-run__card`, `.card-flying` | Dragged copy of one card, of a whole run, copies flying to Done |
 | `.pile--draw`, `.pile--discard`, `.pile--done`, `.pile__flip` | Top-row piles, "Flip discard" button |
-| `.field` (`.field--top`, `.field--bottom`, `.field--pile`, `.is-empty`, `.is-complete`, `.is-wrong`, `.is-correct`, `.is-drop-target`) | Fields (`.field--pile` = bottom field still holding dealt cards) and their states |
+| `.field` (`.field--top`, `.field--bottom`, `.field--pile`, `.has-run`, `.is-empty`, `.is-complete`, `.is-wrong`, `.is-correct`, `.is-drop-target`) | Fields (`.field--pile` = bottom field still holding cards, `.has-run` = with 2+ face-up cards) and their states |
 | `.field__hint`, `.field__reveal`, `.field__theme` | Field texts; theme label on completion |
 | `.done-list__item` | Row in the Completed sheet |
 

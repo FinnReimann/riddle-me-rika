@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="marker" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <!-- 1. wobbly hand-drawn edges -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="10" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <!-- 2. soft marker edge -->
+      <feGaussianBlur in="wobble" stdDeviation="1.6" result="soft"/>
+      <!-- 3. blotchy marker shading (dark patches) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="65" result="blotch"/>
+      <feColorMatrix in="blotch" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.25 -0.62" result="blotchA"/>
+      <feComposite in="blotchA" in2="soft" operator="in" result="shade"/>
+      <!-- 4. fine paper/fibre texture (light speckles) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="85" result="fibre"/>
+      <feColorMatrix in="fibre" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.75 -0.55" result="fibreA"/>
+      <feComposite in="fibreA" in2="soft" operator="in" result="speckle"/>
+      <feMerge><feMergeNode in="soft"/><feMergeNode in="shade"/><feMergeNode in="speckle"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#marker)">
+    <g transform="translate(-16 4)">
+    <path d="M150 252 L64 290 M160 322 L74 360 M200 390 L114 428" stroke="#b7bdc5" stroke-width="22" stroke-linecap="round" fill="none"/>
+    <path d="M176 196 Q200 120 284 120 Q352 104 404 158 Q452 214 424 296 Q414 378 334 400 Q254 428 196 382 Q136 334 156 270 Q146 228 176 196 Z" fill="#717a86"/>
+    <path d="M424 296 Q414 378 334 400 Q254 428 196 382 Q262 396 330 368 Q392 336 404 256 Q420 270 424 296 Z" fill="#59616c"/>
+    <path d="M196 200 Q226 148 288 142" stroke="#a7aeb7" stroke-width="14" stroke-linecap="round" fill="none"/>
+    <ellipse cx="336" cy="212" rx="40" ry="32" fill="#a7aeb7"/>
+    <ellipse cx="330" cy="206" rx="38" ry="30" fill="#4d545e"/>
+    <ellipse cx="256" cy="306" rx="48" ry="38" fill="#a7aeb7"/>
+    <ellipse cx="250" cy="300" rx="46" ry="36" fill="#4d545e"/>
+    <ellipse cx="376" cy="318" rx="26" ry="22" fill="#a7aeb7"/>
+    <ellipse cx="372" cy="314" rx="24" ry="20" fill="#4d545e"/>
+    <ellipse cx="226" cy="222" rx="18" ry="15" fill="#4d545e"/>
+    </g>
+  </g>
+</svg>

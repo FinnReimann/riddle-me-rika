@@ -40,12 +40,14 @@
 
       // Toasts
       toastWrong: 'Doesn’t fit',
+      toastDrawOnly: 'Bottom cards can’t go to Discard', // a bottom card / run dropped on Discard (free)
+      toastLone: 'Only back to Discard',  // a lone category card dropped on another field (free)
       toastSolved: 'Solved!',
       toastCopied: 'Copied',
       toastCopyFailed: 'Could not copy',
 
       // Screen-reader labels (aria-label)
-      ariaCategoryCard: 'category card {name}',
+      ariaCategoryCard: 'category card {name}, {n} cards',
       ariaDraw: 'Draw pile: {word}',
       ariaDrawSelected: 'Draw pile: {word} (selected, tap again to discard)',
       ariaDiscardCard: 'Discard pile: {word}',
@@ -58,8 +60,13 @@
       ariaField: 'Field {f}: {cat}, {k} of {max} cards: {words}',
       ariaPile: 'Field {f}, {n} dealt cards',
       ariaTurn: 'Field {f}: turn the top card over ({n} face down)',
+      ariaPileRun: 'Field {f}, {n} face down, face up: {words}',
       ariaPileCard: 'Field {f}: {word}',
-      ariaPileCardSelected: 'Field {f}: {word} (selected, tap again to discard)',
+      ariaPileCardSelected: 'Field {f}: {word} (selected)',
+      ariaRun: 'Field {f}: run of {k} cards: {words}',
+      ariaLone: 'Field {f}: category card {name}, no word cards yet',
+      ariaLoneSelected: 'Field {f}: category card {name} (selected, tap Discard to take it back)',
+      ariaRunSelected: 'Field {f}: run of {k} cards: {words} (selected)',
       ariaStars: '{n} of 3 stars',
 
       // Result panel (replaces the fields when the game is over)
@@ -77,14 +84,15 @@
       shareLost: 'Out of moves · {k}/{total}',
       shareStreak: 'Streak: {n}',
 
-      // How-to modal ({moves}, {cats}, {cards} come from the top of game.js)
+      // How-to modal ({cats} from the top of game.js, {moves} = today's move budget)
       helpTitle: 'How to play',
       help1: 'Finish all {cats} categories with {moves} moves.',
-      help2: 'Put a category card on an empty field, then stack its {cards} word cards on it.',
+      help2: 'Put a category card on an empty field, then stack its word cards on it. The number on the category card says how many.',
       help3: 'Every card you play costs a move – a wrong one too (it bounces back).',
       help4: 'Tap face-down cards to turn them over (free). An emptied bottom field is a free field.',
-      help5: 'Park cards on Discard. Draw pile empty? Flip the discard pile (free).',
-      helpTip: 'Drag a card, or tap it and then tap where it goes. Tap a card twice to discard it.',
+      helpRuns: 'On a bottom field you can pile word cards of the same category onto the face-up word card. This run moves as a whole – for one move.',
+      help5: 'Park draw cards on Discard. A category card still alone on its field can go back there too (1 move). Draw pile empty? Flip the discard pile (free).',
+      helpTip: 'Drag a card or run, or tap it and then tap where it goes. Tap the draw card twice to discard it.',
       helpDaily: 'A new puzzle every day at midnight.',
       play: 'Play',
 
@@ -125,11 +133,13 @@
       flipDiscard: 'Ablage umdrehen',
 
       toastWrong: 'Passt nicht',
+      toastDrawOnly: 'Von unten nicht auf die Ablage',
+      toastLone: 'Nur zurück auf die Ablage',
       toastSolved: 'Gelöst!',
       toastCopied: 'Kopiert',
       toastCopyFailed: 'Kopieren ging nicht',
 
-      ariaCategoryCard: 'Kategorie-Karte {name}',
+      ariaCategoryCard: 'Kategorie-Karte {name}, {n} Karten',
       ariaDraw: 'Nachziehstapel: {word}',
       ariaDrawSelected: 'Nachziehstapel: {word} (ausgewählt, nochmal tippen zum Ablegen)',
       ariaDiscardCard: 'Ablage: {word}',
@@ -142,8 +152,13 @@
       ariaField: 'Feld {f}: {cat}, {k} von {max} Karten: {words}',
       ariaPile: 'Feld {f}, {n} ausgeteilte Karten',
       ariaTurn: 'Feld {f}: oberste Karte umdrehen ({n} verdeckt)',
+      ariaPileRun: 'Feld {f}, {n} verdeckt, offen: {words}',
       ariaPileCard: 'Feld {f}: {word}',
-      ariaPileCardSelected: 'Feld {f}: {word} (ausgewählt, nochmal tippen zum Ablegen)',
+      ariaPileCardSelected: 'Feld {f}: {word} (ausgewählt)',
+      ariaRun: 'Feld {f}: Reihe aus {k} Karten: {words}',
+      ariaLone: 'Feld {f}: Kategorie-Karte {name}, noch ohne Wort-Karten',
+      ariaLoneSelected: 'Feld {f}: Kategorie-Karte {name} (ausgewählt, Ablage antippen zum Zurücknehmen)',
+      ariaRunSelected: 'Feld {f}: Reihe aus {k} Karten: {words} (ausgewählt)',
       ariaStars: '{n} von 3 Sternen',
 
       solved: 'Gelöst!',
@@ -161,11 +176,12 @@
 
       helpTitle: 'So geht’s',
       help1: 'Schaff alle {cats} Kategorien mit {moves} Zügen.',
-      help2: 'Leg eine Kategorie-Karte auf ein leeres Feld und stapel ihre {cards} Wort-Karten drauf.',
+      help2: 'Leg eine Kategorie-Karte auf ein leeres Feld und stapel ihre Wort-Karten drauf. Die Zahl auf der Kategorie-Karte sagt, wie viele.',
       help3: 'Jede Karte, die du spielst, kostet einen Zug – auch eine falsche (die springt zurück).',
       help4: 'Tipp verdeckte Karten an, um sie umzudrehen (gratis). Ein leer geräumtes unteres Feld ist frei.',
-      help5: 'Park Karten auf der Ablage. Nachziehstapel leer? Dreh die Ablage um (gratis).',
-      helpTip: 'Zieh eine Karte oder tipp sie an und dann dahin, wo sie hin soll. Zweimal antippen legt sie ab.',
+      helpRuns: 'Auf einem unteren Feld kannst du Wort-Karten derselben Kategorie auf die offene Wort-Karte legen. Diese Reihe bewegst du als Ganzes – für einen Zug.',
+      help5: 'Auf die Ablage dürfen Karten vom Nachziehstapel – und eine Kategorie-Karte, die noch allein auf ihrem Feld liegt (1 Zug). Nachziehstapel leer? Dreh die Ablage um (gratis).',
+      helpTip: 'Zieh eine Karte oder Reihe oder tipp sie an und dann dahin, wo sie hin soll. Die Nachziehkarte zweimal antippen legt sie ab.',
       helpDaily: 'Jeden Tag um Mitternacht gibt’s ein neues Rätsel.',
       play: 'Los geht’s',
 

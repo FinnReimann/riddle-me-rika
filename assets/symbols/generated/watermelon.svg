@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="marker" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <!-- 1. wobbly hand-drawn edges -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="10" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <!-- 2. soft marker edge -->
+      <feGaussianBlur in="wobble" stdDeviation="1.6" result="soft"/>
+      <!-- 3. blotchy marker shading (dark patches) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="126" result="blotch"/>
+      <feColorMatrix in="blotch" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.25 -0.62" result="blotchA"/>
+      <feComposite in="blotchA" in2="soft" operator="in" result="shade"/>
+      <!-- 4. fine paper/fibre texture (light speckles) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="250" result="fibre"/>
+      <feColorMatrix in="fibre" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.75 -0.55" result="fibreA"/>
+      <feComposite in="fibreA" in2="soft" operator="in" result="speckle"/>
+      <feMerge><feMergeNode in="soft"/><feMergeNode in="shade"/><feMergeNode in="speckle"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#marker)">
+    <path d="M44 170 A212 212 0 0 0 468 170 Z" fill="#2f6f2c"/>
+    <path d="M100 250 Q120 300 116 320 M170 330 Q180 360 172 370 M342 330 Q332 360 340 370 M412 250 Q392 300 396 320" stroke="#3f9a3a" stroke-width="14" stroke-linecap="round" fill="none"/>
+    <path d="M72 170 A184 184 0 0 0 440 170 Z" fill="#b8dc8a"/>
+    <path d="M90 170 A166 166 0 0 0 422 170 Z" fill="#e0454a"/>
+    <path d="M96 176 L416 176" stroke="#ef7a7a" stroke-width="12" stroke-linecap="round" fill="none"/>
+    <g fill="#33302e"><ellipse cx="170" cy="222" rx="9" ry="14" transform="rotate(-30 170 222)"/><ellipse cx="256" cy="214" rx="9" ry="14"/><ellipse cx="342" cy="222" rx="9" ry="14" transform="rotate(30 342 222)"/><ellipse cx="210" cy="276" rx="9" ry="14" transform="rotate(-20 210 276)"/><ellipse cx="302" cy="276" rx="9" ry="14" transform="rotate(20 302 276)"/><ellipse cx="256" cy="316" rx="9" ry="14"/></g>
+  </g>
+</svg>

@@ -1,6 +1,6 @@
 # Riddle Me Rika — Symbols to draw
 
-Checklist of every card symbol in `categories.js`: **24 categories × 6 cards = 144 symbols**, plus
+Checklist of every card symbol in `categories.js`: **24 categories × 8 cards = 192 symbols**, plus
 **24 category-card symbols** (see "Category cards" at the end).
 
 - **Folder:** `assets/symbols/`
@@ -21,6 +21,8 @@ Tick a box (`[x]`) once a symbol is drawn.
 - [ ] grapes.png — Grapes / Weintrauben
 - [ ] pineapple.png — Pineapple / Ananas
 - [ ] cherry.png — Cherry / Kirsche
+- [ ] strawberry.png — Strawberry / Erdbeere
+- [ ] watermelon.png — Watermelon / Wassermelone
 
 ## Vegetables
 - [ ] carrot.png — Carrot / Karotte
@@ -29,6 +31,8 @@ Tick a box (`[x]`) once a symbol is drawn.
 - [ ] potato.png — Potato / Kartoffel
 - [ ] garlic.png — Garlic / Knoblauch
 - [ ] eggplant.png — Eggplant / Aubergine
+- [ ] corn.png — Corn / Maiskolben
+- [ ] cucumber.png — Cucumber / Gurke
 
 ## Farm Animals
 - [ ] cow.png — Cow / Kuh
@@ -37,6 +41,8 @@ Tick a box (`[x]`) once a symbol is drawn.
 - [ ] horse.png — Horse / Pferd
 - [ ] goat.png — Goat / Ziege
 - [ ] donkey.png — Donkey / Esel
+- [ ] rabbit.png — Rabbit / Kaninchen
+- [ ] cat.png — Cat / Katze
 
 ## Sea Creatures
 - [ ] octopus.png — Octopus / Krake
@@ -45,6 +51,8 @@ Tick a box (`[x]`) once a symbol is drawn.
 - [ ] starfish.png — Starfish / Seestern
 - [ ] shark.png — Shark / Hai
 - [ ] seahorse.png — Seahorse / Seepferdchen
+- [ ] crab.png — Crab / Krabbe
+- [ ] dolphin.png — Dolphin / Delfin
 
 ## Insects
 - [ ] bee.png — Bee / Biene
@@ -53,6 +61,8 @@ Tick a box (`[x]`) once a symbol is drawn.
 - [ ] ladybug.png — Ladybug / Marienkäfer
 - [ ] grasshopper.png — Grasshopper / Heuschrecke
 - [ ] dragonfly.png — Dragonfly / Libelle
+- [ ] mosquito.png — Mosquito / Mücke
+- [ ] firefly.png — Firefly / Glühwürmchen
 
 ## Birds
 - [ ] owl.png — Owl / Eule
@@ -61,6 +71,8 @@ Tick a box (`[x]`) once a symbol is drawn.
 - [ ] flamingo.png — Flamingo / Flamingo
 - [ ] swan.png — Swan / Schwan
 - [ ] peacock.png — Peacock / Pfau
+- [ ] toucan.png — Toucan / Tukan
+- [ ] woodpecker.png — Woodpecker / Specht
 
 ## Safari Animals
 - [ ] lion.png — Lion / Löwe
@@ -69,6 +81,8 @@ Tick a box (`[x]`) once a symbol is drawn.
 - [ ] zebra.png — Zebra / Zebra
 - [ ] rhino.png — Rhino / Nashorn
 - [ ] hippo.png — Hippo / Nilpferd
+- [ ] cheetah.png — Cheetah / Gepard
+- [ ] gorilla.png — Gorilla / Gorilla
 
 ## Tools
 - [ ] hammer.png — Hammer / Hammer
@@ -77,6 +91,8 @@ Tick a box (`[x]`) once a symbol is drawn.
 - [ ] wrench.png — Wrench / Maulschlüssel
 - [ ] pliers.png — Pliers / Zange
 - [ ] drill.png — Drill / Bohrmaschine
+- [ ] tape-measure.png — Tape Measure / Maßband
+- [ ] paint-roller.png — Paint Roller / Farbroller
 
 ## Musical Instruments
 - [ ] guitar.png — Guitar / Gitarre
@@ -85,6 +101,8 @@ Tick a box (`[x]`) once a symbol is drawn.
 - [ ] violin.png — Violin / Geige
 - [ ] piano.png — Piano / Klavier
 - [ ] harp.png — Harp / Harfe
+- [ ] xylophone.png — Xylophone / Xylofon
+- [ ] saxophone.png — Saxophone / Saxofon
 
 ## Vehicles
 - [ ] car.png — Car / Auto
@@ -93,6 +111,8 @@ Tick a box (`[x]`) once a symbol is drawn.
 - [ ] train.png — Train / Zug
 - [ ] helicopter.png — Helicopter / Hubschrauber
 - [ ] motorcycle.png — Motorcycle / Motorrad
+- [ ] airplane.png — Airplane / Flugzeug
+- [ ] tractor.png — Tractor / Traktor
 
 ## Clothing
 - [ ] shirt.png — Shirt / Hemd
@@ -101,6 +121,8 @@ Tick a box (`[x]`) once a symbol is drawn.
 - [ ] skirt.png — Skirt / Rock
 - [ ] shorts.png — Shorts / Shorts
 - [ ] socks.png — Socks / Socken
+- [ ] tie.png — Tie / Krawatte
+- [ ] hoodie.png — Hoodie / Kapuzenpulli
 
 ## Jewelry
 - [ ] ring.png — Ring / Ring
@@ -109,6 +131,8 @@ Tick a box (`[x]`) once a symbol is drawn.
 - [ ] bracelet.png — Bracelet / Armband
 - [ ] brooch.png — Brooch / Brosche
 - [ ] tiara.png — Tiara / Diadem
+- [ ] crown.png — Crown / Krone
+- [ ] gemstone.png — Gemstone / Edelstein
 
 ## Kitchen Utensils
 - [ ] whisk.png — Whisk / Schneebesen
@@ -117,6 +141,8 @@ Tick a box (`[x]`) once a symbol is drawn.
 - [ ] grater.png — Grater / Reibe
 - [ ] frying-pan.png — Frying Pan / Bratpfanne
 - [ ] colander.png — Colander / Nudelsieb
+- [ ] rolling-pin.png — Rolling Pin / Nudelholz
+- [ ] cooking-pot.png — Cooking Pot / Kochtopf
 
 ## Weather
 - [ ] cloud.png — Cloud / Wolke
@@ -125,6 +151,8 @@ Tick a box (`[x]`) once a symbol is drawn.
 - [ ] tornado.png — Tornado / Tornado
 - [ ] raindrop.png — Raindrop / Regentropfen
 - [ ] snowflake.png — Snowflake / Schneeflocke
+- [ ] umbrella.png — Umbrella / Regenschirm
+- [ ] wind.png — Wind / Wind
 
 ## Space
 - [ ] planet.png — Planet / Planet
@@ -133,6 +161,8 @@ Tick a box (`[x]`) once a symbol is drawn.
 - [ ] satellite.png — Satellite / Satellit
 - [ ] astronaut.png — Astronaut / Astronaut
 - [ ] telescope.png — Telescope / Teleskop
+- [ ] asteroid.png — Asteroid / Asteroid
+- [ ] alien.png — Alien / Außerirdischer
 
 ## Furniture
 - [ ] chair.png — Chair / Stuhl
@@ -141,6 +171,8 @@ Tick a box (`[x]`) once a symbol is drawn.
 - [ ] bed.png — Bed / Bett
 - [ ] wardrobe.png — Wardrobe / Schrank
 - [ ] bookshelf.png — Bookshelf / Bücherregal
+- [ ] dresser.png — Dresser / Kommode
+- [ ] stool.png — Stool / Hocker
 
 ## Desserts
 - [ ] ice-cream.png — Ice Cream / Eistüte
@@ -149,6 +181,8 @@ Tick a box (`[x]`) once a symbol is drawn.
 - [ ] cake.png — Cake / Torte
 - [ ] pudding.png — Pudding / Pudding
 - [ ] popsicle.png — Popsicle / Stieleis
+- [ ] cookie.png — Cookie / Keks
+- [ ] waffle.png — Waffle / Waffel
 
 ## Fast Food
 - [ ] pizza.png — Pizza / Pizza
@@ -157,6 +191,8 @@ Tick a box (`[x]`) once a symbol is drawn.
 - [ ] hot-dog.png — Hot Dog / Hotdog
 - [ ] taco.png — Taco / Taco
 - [ ] sandwich.png — Sandwich / Sandwich
+- [ ] kebab.png — Kebab / Döner
+- [ ] nuggets.png — Nuggets / Nuggets
 
 ## Drinks
 - [ ] coffee.png — Coffee / Kaffee
@@ -165,6 +201,8 @@ Tick a box (`[x]`) once a symbol is drawn.
 - [ ] juice.png — Juice / Saft
 - [ ] lemonade.png — Lemonade / Limonade
 - [ ] smoothie.png — Smoothie / Smoothie
+- [ ] water.png — Water / Wasser
+- [ ] cocoa.png — Cocoa / Kakao
 
 ## Sports Equipment
 - [ ] basketball.png — Basketball / Basketball
@@ -173,6 +211,8 @@ Tick a box (`[x]`) once a symbol is drawn.
 - [ ] hockey-stick.png — Hockey Stick / Hockeyschläger
 - [ ] boxing-glove.png — Boxing Glove / Boxhandschuh
 - [ ] bowling-pin.png — Bowling Pin / Bowlingkegel
+- [ ] soccer-ball.png — Soccer Ball / Fußball
+- [ ] jump-rope.png — Jump Rope / Springseil
 
 ## Bathroom
 - [ ] toothbrush.png — Toothbrush / Zahnbürste
@@ -181,6 +221,8 @@ Tick a box (`[x]`) once a symbol is drawn.
 - [ ] bathtub.png — Bathtub / Badewanne
 - [ ] soap.png — Soap / Seife
 - [ ] shower.png — Shower / Dusche
+- [ ] comb.png — Comb / Kamm
+- [ ] hair-dryer.png — Hair Dryer / Föhn
 
 ## Camping
 - [ ] tent.png — Tent / Zelt
@@ -189,6 +231,8 @@ Tick a box (`[x]`) once a symbol is drawn.
 - [ ] sleeping-bag.png — Sleeping Bag / Schlafsack
 - [ ] compass.png — Compass / Kompass
 - [ ] binoculars.png — Binoculars / Fernglas
+- [ ] backpack.png — Backpack / Rucksack
+- [ ] flashlight.png — Flashlight / Taschenlampe
 
 ## Office Supplies
 - [ ] stapler.png — Stapler / Tacker
@@ -197,6 +241,8 @@ Tick a box (`[x]`) once a symbol is drawn.
 - [ ] eraser.png — Eraser / Radiergummi
 - [ ] calculator.png — Calculator / Taschenrechner
 - [ ] pushpin.png — Pushpin / Reißzwecke
+- [ ] glue-stick.png — Glue Stick / Klebestift
+- [ ] envelope.png — Envelope / Briefumschlag
 
 ## Shapes
 - [ ] circle.png — Circle / Kreis
@@ -205,6 +251,8 @@ Tick a box (`[x]`) once a symbol is drawn.
 - [ ] heart.png — Heart / Herz
 - [ ] pentagon.png — Pentagon / Fünfeck
 - [ ] hexagon.png — Hexagon / Sechseck
+- [ ] rectangle.png — Rectangle / Rechteck
+- [ ] oval.png — Oval / Oval
 
 ## Category cards
 

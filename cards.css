@@ -23,6 +23,7 @@
      .card.card--category.tier-N   a CATEGORY card (see "Category card" below)
        .card__catname          category name in a tier-coloured band at the top
        .card__art              symbol category-<categoryId>
+       .card__count            badge: today's number of word cards (4-7)
 
    CLASS MAP (stable names, used by game.js)
    .pile--draw / .pile--discard / .pile--done   the three top-row piles
@@ -32,18 +33,24 @@
    .card--empty              empty pile placeholder (+ .card__hint text)
    .card--field              a card inside a field stack (--i = 0..4, stack position;
                              0 = the category card)
+   .card--lone               a category card alone on its field (also .card--field.is-top):
+                             playable, can be taken back onto Discard
    .card--down               face-down card on a bottom field (--i = depth, 0 = lowest)
    .card--down.is-turnable   the top face-down card: tap to turn it over
-   .card--down-top           face-up top card of a bottom field (playable)
+   .card--run                face-up card of a bottom field's run (--r = 0.. position in the run;
+                             a run = one card or several word cards of one category, moved together)
+   .card--down-top           topmost face-up card of a bottom field (also .card--run)
    .card.is-top              a playable card (top of draw / discard / bottom field)
    .card.is-selected         the card a tap on a field will play
    .card.is-new              just landed in a field
    .card.is-bounce           tapped onto a field where it didn't fit
    .card.is-drag-source      original card while being dragged
    .card-ghost               floating copy that follows the finger (+ .is-returning)
+   .card-ghost-run           floating copy of a whole run (+ .is-returning), cards inside:
+     .card-ghost-run__card
    .card-flying              copies flying to the Done pile
    .pile__flip               "Flip discard" button on the empty draw pile
-   .field (.field--top, .field--bottom, .field--pile, .is-empty, .is-complete,
+   .field (.field--top, .field--bottom, .field--pile, .has-run, .is-empty, .is-complete,
            .is-wrong, .is-correct, .is-drop-target)
    .field__hint / .field__reveal / .field__theme
    .tier-1 ... .tier-4       sets --tier-bg / --tier-ink
@@ -57,7 +64,8 @@
   --stack-ratio: 0.23;             /* visible strip of a covered card in a field, as a fraction of card height
                                       (smaller on short screens, see "Short screens" below) */
   --stack-offset: calc(var(--card-h) * var(--stack-ratio));
-  --down-offset: calc(var(--card-h) * 0.03);  /* step between face-down cards on a bottom field (10 cards = 27% of a card) */
+  --down-offset: calc(var(--card-h) * 0.03);  /* step between face-down cards on a bottom field (8 cards = 21% of a card);
+                                                 shrinks automatically under a long face-up run (style.css) */
   --pile-offset: 2.5px;            /* how far cards under a pile's top card peek out */
   --card-radius: calc(var(--card-w) * 0.09);
   --card-border: 1px solid #e2d6bd;
@@ -120,6 +128,15 @@
   --category-name-weight: 800;
   --category-name-transform: uppercase;
   --category-name-tracking: 0.01em;
+  /* Count badge: how many word cards this category has today (4-7) */
+  --count-size: calc(var(--card-w) * 0.36);      /* badge diameter */
+  --count-font-size: calc(var(--card-w) * 0.24);
+  --count-font-weight: 800;
+  --count-bg: #3b2f2a;                           /* dark chip, readable on every tier colour */
+  --count-ink: #fff8ec;
+  --count-ring: 2px solid #fffaf0;               /* separates the badge from the symbol */
+  --count-right: 5%;                             /* position: bottom-right corner of the card */
+  --count-bottom: 4%;
 
   /* ---- Face-down cards on bottom fields --------------------------------------- */
   --turn-ring: #e07b3c;            /* ring around the top face-down card (tap to turn) */
@@ -351,6 +368,13 @@
   animation: none !important;
 }
 .card-ghost.is-returning { transform: none; }
+/* Dragging a run: a container holding copies of all its cards */
+.card-ghost-run {
+  transform: rotate(var(--ghost-rotate)) scale(var(--ghost-scale));
+  transform-origin: 50% 0;
+}
+.card-ghost-run.is-returning { transform: none; }
+.card-ghost-run__card { box-shadow: var(--ghost-shadow) !important; transform: none !important; animation: none !important; }
 .card-flying { box-shadow: var(--card-shadow); }
 
 /* =========================================================================
@@ -362,6 +386,7 @@
    long words cleanly). Symbol: category-<categoryId>.png (SYMBOLS.md).
    ========================================================================= */
 .card--category {
+  isolation: isolate;               /* keeps the band / badge z-index inside the card (covered cards stay covered) */
   background: var(--category-card-image) center / cover no-repeat, var(--category-card-bg);
   border: var(--category-card-border-w) solid var(--tier-bg);
   color: var(--category-card-ink);
@@ -402,6 +427,28 @@
 .card__catname[data-len="l"]  { font-size: calc(var(--category-name-size) * 0.8); letter-spacing: -0.01em; }
 .card__catname[data-len="xl"] { font-size: calc(var(--category-name-size) * 0.7); letter-spacing: -0.02em; }
 .card--category .card__art { top: calc(var(--category-band-h) + 6%); }
+/* Count badge (today's number of word cards of this category) */
+.card__count {
+  position: absolute;
+  z-index: 2;
+  right: var(--count-right);
+  bottom: var(--count-bottom);
+  width: var(--count-size);
+  height: var(--count-size);
+  border-radius: 50%;
+  border: var(--count-ring);
+  box-sizing: border-box;
+  background: var(--count-bg);
+  color: var(--count-ink);
+  font-family: var(--word-font);
+  font-size: var(--count-font-size);
+  font-weight: var(--count-font-weight);
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-variant-numeric: tabular-nums;
+}
 
 /* =========================================================================
    Face-down cards on the bottom fields
@@ -574,6 +621,6 @@
 @media (prefers-reduced-motion: reduce) {
   .card, .field { transition: none; }
   .card.is-new, .card.is-bounce, .card--done.is-pop, .field.is-wrong, .field__reveal { animation: none; }
-  .card-ghost { transform: none; }
+  .card-ghost, .card-ghost-run { transform: none; }
   .card--down.is-turnable::after { animation: none; }
 }

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="marker" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <!-- 1. wobbly hand-drawn edges -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="10" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <!-- 2. soft marker edge -->
+      <feGaussianBlur in="wobble" stdDeviation="1.6" result="soft"/>
+      <!-- 3. blotchy marker shading (dark patches) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="96" result="blotch"/>
+      <feColorMatrix in="blotch" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.25 -0.62" result="blotchA"/>
+      <feComposite in="blotchA" in2="soft" operator="in" result="shade"/>
+      <!-- 4. fine paper/fibre texture (light speckles) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="200" result="fibre"/>
+      <feColorMatrix in="fibre" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.75 -0.55" result="fibreA"/>
+      <feComposite in="fibreA" in2="soft" operator="in" result="speckle"/>
+      <feMerge><feMergeNode in="soft"/><feMergeNode in="shade"/><feMergeNode in="speckle"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#marker)">
+    <path d="M170 140 Q160 56 256 50 Q352 56 342 140 Z" fill="#5a3f8f"/>
+    <path d="M170 112 L118 134 L60 380 L110 396 L150 236 L150 452 L362 452 L362 236 L402 396 L452 380 L394 134 L342 112 Q256 170 170 112 Z" fill="#6d4fa8"/>
+    <path d="M196 120 Q200 76 256 72 Q312 76 316 120 Q256 160 196 120 Z" fill="#3f2c66"/>
+    <path d="M64 368 L110 382 M402 382 L448 368 M154 440 L358 440" stroke="#4f3a80" stroke-width="20" stroke-linecap="round" fill="none"/>
+    <path d="M190 320 L322 320 L346 404 L166 404 Z" fill="#5a3f8f"/>
+    <path d="M232 146 L226 250 M280 146 L286 250" stroke="#f4efe6" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <circle cx="226" cy="254" r="9" fill="#f4efe6"/>
+    <circle cx="286" cy="254" r="9" fill="#f4efe6"/>
+  </g>
+</svg>

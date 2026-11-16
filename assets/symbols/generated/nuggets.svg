@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="marker" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <!-- 1. wobbly hand-drawn edges -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="10" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <!-- 2. soft marker edge -->
+      <feGaussianBlur in="wobble" stdDeviation="1.6" result="soft"/>
+      <!-- 3. blotchy marker shading (dark patches) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="72" result="blotch"/>
+      <feColorMatrix in="blotch" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.25 -0.62" result="blotchA"/>
+      <feComposite in="blotchA" in2="soft" operator="in" result="shade"/>
+      <!-- 4. fine paper/fibre texture (light speckles) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="92" result="fibre"/>
+      <feColorMatrix in="fibre" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.75 -0.55" result="fibreA"/>
+      <feComposite in="fibreA" in2="soft" operator="in" result="speckle"/>
+      <feMerge><feMergeNode in="soft"/><feMergeNode in="shade"/><feMergeNode in="speckle"/></feMerge>
+    </filter>
+    <g id="ng">
+      <path d="M-62 -8 Q-60 -46 -18 -46 Q20 -56 50 -38 Q70 -16 62 16 Q54 48 12 46 Q-30 52 -54 32 Q-70 14 -62 -8 Z" fill="#e8a33a"/>
+      <path d="M-40 -22 Q-30 -36 -6 -36" stroke="#f7cf7a" stroke-width="10" stroke-linecap="round" fill="none"/>
+      <path d="M-30 30 Q10 38 44 14" stroke="#c47c1c" stroke-width="10" stroke-linecap="round" fill="none"/>
+      <circle cx="-20" cy="2" r="7" fill="#c47c1c"/><circle cx="26" cy="-14" r="7" fill="#c47c1c"/>
+    </g>
+  </defs>
+  <g filter="url(#marker)">
+    <g transform="translate(-8 -50)">
+      <ellipse cx="256" cy="440" rx="206" ry="50" fill="#3f8fd0"/>
+      <ellipse cx="256" cy="432" rx="166" ry="30" fill="#6fb0e0"/>
+      <path d="M352 226 L448 226 L434 292 Q400 306 366 292 Z" fill="#b7bdc5"/>
+      <ellipse cx="400" cy="226" rx="48" ry="16" fill="#c8432c"/>
+      <use href="#ng" transform="translate(152 392) rotate(-10)"/>
+      <use href="#ng" transform="translate(262 404) rotate(8)"/>
+      <use href="#ng" transform="translate(364 390) rotate(-4)"/>
+      <use href="#ng" transform="translate(206 318) rotate(14)"/>
+      <use href="#ng" transform="translate(314 322) rotate(-14)"/>
+      <use href="#ng" transform="translate(258 246) rotate(4)"/>
+    </g>
+  </g>
+</svg>

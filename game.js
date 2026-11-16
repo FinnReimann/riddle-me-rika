@@ -14,15 +14,21 @@
 
   /* ---- CONFIG ---------------------------------------------------------- */
   var CATEGORIES_PER_GAME = 8;  // categories in one daily game (each has 1 category card)
-  var CARDS_PER_CATEGORY = 4;   // word cards per category (category card + these = full stack)
-  var TOP_FIELDS = 3;           // fields in the upper row, start empty
-  var BOTTOM_FIELDS = 3;        // fields in the lower row, start with face-down cards
-  var FACE_DOWN_PER_FIELD = 10; // face-down cards per bottom field (3 x 10 = 3/4 of the 40 cards, 1/4 = 10 to draw)
-  // Move budget, calibrated with a greedy auto-player over 2000 daily deals
-  // (40 cards = at least 40 moves; greedy needs 45-78, median 58).
-  var MOVES = 85;               // move budget (every card play costs 1, also a wrong one)
-  var STAR3_LEFT = 20;          // moves left for ★★★ (= finished in 65 moves or less)
-  var STAR2_LEFT = 8;           // moves left for ★★☆ (less = ★☆☆)
+  var MIN_CARDS_PER_CATEGORY = 4; // word cards per category: each day every category gets a
+  var MAX_CARDS_PER_CATEGORY = 7; // seeded random number N in this range (shown on its category card)
+  var TOP_FIELDS = 4;           // fields in the upper row, start empty
+  var BOTTOM_FIELDS = 4;        // fields in the lower row, start with face-down cards
+  var FACE_DOWN_PER_FIELD = 8;  // face-down cards per bottom field (4 x 8 = 32; the other 8-32 cards are the draw pile)
+  var MIN_CATEGORY_CARDS_IN_DRAW = Math.ceil(CATEGORIES_PER_GAME / 2); // category cards dealt into the draw pile
+  // Move budget per day = round(cards x MOVES_PER_CARD) + MOVES_BASE (cards = 8 + all N),
+  // calibrated with the built-in solver over 2000 daily deals (see README "Config").
+  var MOVES_PER_CARD = 1;       // budget per card of the day (every play costs 1 move, also a wrong one)
+  var MOVES_BASE = 25;          // + this many (40 cards = 65 moves, 64 cards = 89)
+  var STAR3_EXTRA = 7;          // ★★★: finished in at most (cards + this) moves
+  var STAR2_EXTRA = 17;         // ★★☆: at most (cards + this) moves (more = ★☆☆)
+  var DEAL_SPARE = 10;          // a deal is only used if the solver finishes it with this many moves to spare
+  var DEAL_ATTEMPTS = 200;      // reshuffles tried per day before giving up
+  var DEAL_HELP = 0.75;         // chance that a turned card is picked among the immediately usable ones (see dealOrder)
   var MAX_TIER = 1;             // only categories with tier <= MAX_TIER are used
   var SYMBOL_DIR = 'assets/symbols/';            // the owner's drawings: <symbol>.png (always win)
   var SYMBOL_EXT = 'png';
@@ -35,7 +41,7 @@
      1. CORE
      ======================================================================= */
   var Core = (function () {
-    var SAVE_VERSION = 4;
+    var SAVE_VERSION = 7;
     var STATS_VERSION = 3;
     var EPOCH_UTC = Date.UTC(2026, 10, 14); // 2026-11-14 = puzzle #1
     var DAY_MS = 86400000;
@@ -106,45 +112,81 @@
       return list.filter(function (c) {
         return c && typeof c.id === 'string' && typeof c.theme === 'string' &&
           tierOf(c) <= MAX_TIER && Array.isArray(c.cards) &&
-          c.cards.filter(validCard).length >= CARDS_PER_CATEGORY;
+          c.cards.filter(validCard).length >= MIN_CARDS_PER_CATEGORY;
       }).sort(function (a, b) { return a.id < b.id ? -1 : a.id > b.id ? 1 : 0; });
     }
 
     /**
+     * Move budget and star thresholds for a day with `total` cards:
+     * { moves, star3Left, star2Left } (star thresholds = moves left needed).
+     */
+    function budgetFor(total) {
+      var moves = Math.round(total * MOVES_PER_CARD) + MOVES_BASE;
+      return { moves: moves, star3Left: moves - total - STAR3_EXTRA, star2Left: moves - total - STAR2_EXTRA };
+    }
+
+    /**
      * The daily game: same for everyone on a given day.
-     * Returns { cats:[{id,theme,themeDe,tier}], cards:[card], order:[ids], sig } or null.
+     * Returns { cats:[{id,theme,themeDe,tier,n}], cards:[card], order:[ids], sig, moves, ... } or null.
      * card = { id, kind:'cat'|'word', cat, word, wordDe, symbol }.
      *   Category cards: word/wordDe = theme/themeDe, symbol = category-<categoryId>.
      * order = the shuffled deal: the first BOTTOM_FIELDS * FACE_DOWN_PER_FIELD
      * cards go face down onto the bottom fields, the rest is the draw pile.
+     * attempt = how many reshuffles were needed to get a solvable deal (0 = none).
      * sig only uses English texts, so a save survives a language switch.
+     * moves / star3Left / star2Left = the day's move budget and star thresholds (budgetFor).
+     * cats[i].n = number of word cards of category i today.
+     * opts (optional, for calibration): { maxMoves, help } replace the solver's limit
+     * (moves - DEAL_SPARE) / DEAL_HELP.
      */
-    function buildGame(list, day) {
+    function buildGame(list, day, opts) {
+      var o = opts || {};
+      var limit = 0; // set below, from the day's card count
+      var help = typeof o.help === 'number' ? o.help : DEAL_HELP;
       var pool = eligibleCategories(list);
       if (pool.length < CATEGORIES_PER_GAME) return null;
       var rng = mulberry32(seedForDay(day));
       var picked = shuffleWith(pool, rng).slice(0, CATEGORIES_PER_GAME);
       var cats = [], cards = [];
       picked.forEach(function (c, ci) {
-        cats.push({ id: c.id, theme: c.theme, themeDe: optText(c.themeDe), tier: tierOf(c) });
+        // N word cards for this category today (clamped to the pool, see eligibleCategories)
+        var pool2 = c.cards.filter(validCard);
+        var n = Math.min(pool2.length, MIN_CARDS_PER_CATEGORY + Math.floor(rng() * (MAX_CARDS_PER_CATEGORY - MIN_CARDS_PER_CATEGORY + 1)));
+        cats.push({ id: c.id, theme: c.theme, themeDe: optText(c.themeDe), tier: tierOf(c), n: n });
         cards.push({ id: cards.length, kind: 'cat', cat: ci, word: c.theme, wordDe: optText(c.themeDe),
           symbol: CATEGORY_SYMBOL_PREFIX + c.id });
-        shuffleWith(c.cards.filter(validCard), rng).slice(0, CARDS_PER_CATEGORY).forEach(function (cd) {
+        shuffleWith(pool2, rng).slice(0, n).forEach(function (cd) {
           cards.push({ id: cards.length, kind: 'word', cat: ci, word: String(cd.word), wordDe: optText(cd.wordDe),
             symbol: cd.symbol ? String(cd.symbol) : '' });
         });
       });
-      var order = shuffleWith(cards.map(function (c) { return c.id; }), rng);
-      var sig = cats.map(function (c) { return c.id; }).join(',') + '|' +
-        cards.map(function (c) { return c.word; }).join(',') + '|' + order.join(',');
-      return { cats: cats, cards: cards, order: order, sig: sig };
+      var game = { cats: cats, cards: cards, order: null, attempt: 0 };
+      var b = budgetFor(cards.length);
+      game.moves = b.moves; game.star3Left = b.star3Left; game.star2Left = b.star2Left;
+      limit = o.maxMoves || game.moves - DEAL_SPARE;
+      // Many shuffles cannot be finished (bottom cards cannot be discarded, so
+      // a word card can block its own category card). Deal (see dealOrder) and
+      // let the solver check it; if that fails, deal again with a seed derived
+      // from the day - the same result for everyone.
+      for (;;) {
+        game.order = dealOrder(game, rng, limit, help);
+        if (game.order && solve(game, limit).won) break;
+        game.attempt += 1;
+        if (game.attempt > DEAL_ATTEMPTS) throw new Error('No solvable deal for day ' + day);
+        rng = mulberry32((seedForDay(day) + Math.imul(game.attempt, 0x9E3779B9)) >>> 0);
+      }
+      game.sig = cats.map(function (c) { return c.id; }).join(',') + '|' +
+        cards.map(function (c) { return c.word; }).join(',') + '|' + game.order.join(',');
+      return game;
     }
 
     /**
      * Fresh state. fields[f] = { c:[card ids, bottom first], d:face-down count, p:pile? }
-     *   p = true while a bottom field still holds its dealt cards (nothing can be
-     *   placed on it; its face-down cards are always the lowest d cards, so only
-     *   the top card can be face up). Once empty it becomes p = false, a free field.
+     *   p = true while a bottom field still holds cards. Its face-down cards are
+     *   always the lowest d cards; the face-up cards above them (c.slice(d)) are
+     *   its RUN: one card, or several word cards of the same category. The run
+     *   is played as one unit; word cards of its category can be added on top.
+     *   Once empty it becomes p = false, a free field like the top ones.
      */
     function newGame(game, day) {
       var fields = [], k = 0;
@@ -162,7 +204,7 @@
         discard: [],                // last element is the top card
         fields: fields,
         done: [],                   // completed category indices, in order
-        movesLeft: MOVES,
+        movesLeft: game.moves,
         moves: 0,                   // moves spent
         wrong: 0,                   // wrong placements (part of moves)
         status: 'playing',          // 'playing' | 'won' | 'lost'
@@ -178,7 +220,7 @@
         if (!obj || obj.v !== SAVE_VERSION || obj.day !== day || obj.sig !== game.sig) return null;
         if (!Array.isArray(obj.draw) || !Array.isArray(obj.discard) || !Array.isArray(obj.done)) return null;
         if (!Array.isArray(obj.fields) || obj.fields.length !== FIELDS) return null;
-        if (!isInt(obj.movesLeft) || obj.movesLeft < 0 || obj.movesLeft > MOVES) return null;
+        if (!isInt(obj.movesLeft) || obj.movesLeft < 0 || obj.movesLeft > game.moves) return null;
         if (!isInt(obj.moves) || obj.moves < 0 || !isInt(obj.wrong) || obj.wrong < 0) return null;
         if (['playing', 'won', 'lost'].indexOf(obj.status) < 0) return null;
         var nCards = game.cards.length;
@@ -204,13 +246,21 @@
           var ids = fl.c;
           for (var j = 0; j < ids.length; j++) if (!take(ids[j])) return null;
           if (fl.p) {
-            if (f < TOP_FIELDS || !ids.length || ids.length > FACE_DOWN_PER_FIELD) return null;
-            if (fl.d !== ids.length && fl.d !== ids.length - 1) return null;
+            if (f < TOP_FIELDS || !ids.length || fl.d < 0 || fl.d > ids.length || fl.d > FACE_DOWN_PER_FIELD) return null;
+            var run = ids.slice(fl.d);
+            if (run.length > MAX_CARDS_PER_CATEGORY) return null;
+            if (run.length > 1) {
+              for (var r = 0; r < run.length; r++) {
+                var rc = game.cards[run[r]];
+                if (rc.kind !== 'word' || rc.cat !== game.cards[run[0]].cat) return null;
+              }
+            }
           } else {
-            if (fl.d !== 0 || ids.length > CARDS_PER_CATEGORY) return null;
+            if (fl.d !== 0) return null;
             if (ids.length) {
               var base = game.cards[ids[0]];
               if (base.kind !== 'cat' || fieldCats[base.cat] || doneSeen[base.cat]) return null;
+              if (ids.length > game.cats[base.cat].n) return null; // a full stack is done, not on a field
               fieldCats[base.cat] = true;
               for (var w = 1; w < ids.length; w++) {
                 var wc = game.cards[ids[w]];
@@ -241,7 +291,18 @@
       if (!isInt(from)) return null;
       var fl = state.fields[from];
       if (fl && fl.p && fl.c.length && fl.d < fl.c.length) return fl.c[fl.c.length - 1];
+      if (isLone(state, from)) return fl.c[0];
       return null;
+    }
+
+    /**
+     * Does field f hold a category card alone (no word cards on it yet)?
+     * Such a card may be taken back onto the Discard pile (1 move), nowhere else.
+     * (A stack always starts with its category card, so one card = category card.)
+     */
+    function isLone(state, f) {
+      var fl = isInt(f) ? state.fields[f] : null;
+      return !!fl && !fl.p && fl.c.length === 1;
     }
 
     /** All places with a playable card right now. */
@@ -278,28 +339,48 @@
       return fl && !fl.p && fl.c.length ? game.cards[fl.c[0]].cat : null;
     }
 
+    /** Face-up run of bottom pile f (card ids, bottom first); [] if none. */
+    function runOf(state, f) {
+      var fl = isInt(f) ? state.fields[f] : null;
+      return fl && fl.p ? fl.c.slice(fl.d) : [];
+    }
+
+    /** The cards a play from `from` moves: the whole run of a bottom pile, else the top card. */
+    function unitOf(state, from) {
+      if (isInt(from)) return isLone(state, from) ? state.fields[from].c.slice() : runOf(state, from);
+      var id = topCard(state, from);
+      return id === null ? [] : [id];
+    }
+
     /**
-     * Why card `id` may not go on field f:
-     *   null (fits) | 'locked' (a bottom pile, not a target at all, no move)
+     * Why card `id` (or a run starting with it) may not go on field f:
+     *   null (fits) | 'locked' (a bottom pile whose top card is face down, no move)
      *   | 'needCategory' (word card on an empty field) | 'occupied' (category card
-     *   on a non-empty field) | 'mismatch' (word card of another category).
+     *   on a stack or run) | 'mismatch' (word card of another category, or onto a
+     *   face-up category card on a bottom pile).
      */
     function placeReject(state, game, id, f) {
       var fl = state.fields[f];
-      if (fl.p) return 'locked';
       var card = game.cards[id];
+      if (fl.p) {
+        if (fl.d >= fl.c.length) return 'locked';
+        if (card.kind === 'cat') return 'occupied';
+        var top = game.cards[fl.c[fl.c.length - 1]];
+        return top.kind === 'word' && top.cat === card.cat ? null : 'mismatch';
+      }
       if (!fl.c.length) return card.kind === 'cat' ? null : 'needCategory';
       if (card.kind === 'cat') return 'occupied';
       return game.cards[fl.c[0]].cat === card.cat ? null : 'mismatch';
     }
 
+    /** Remove the unit at `from` (see unitOf). */
     function takeFrom(state, from) {
-      if (from === 'draw') return state.draw.shift();
-      if (from === 'discard') return state.discard.pop();
+      if (from === 'draw') return [state.draw.shift()];
+      if (from === 'discard') return [state.discard.pop()];
       var fl = state.fields[from];
-      var id = fl.c.pop();
+      var ids = fl.c.splice(fl.d); // a run, or a lone category card (d = 0)
       if (!fl.c.length) { fl.p = false; fl.d = 0; } // emptied bottom field = free field
-      return id;
+      return ids;
     }
 
     function spend(state, res) {
@@ -316,37 +397,46 @@
 
     /**
      * Play the card at `from` ('draw' | 'discard' | field index) onto `to`
-     * ('discard' | field index). Mutates state.
+     * ('discard' | field index). From a bottom pile the whole face-up run moves
+     * (one move). Only the draw card may go onto Discard - and a category card
+     * that lies alone on its field (taken back, 1 move). Mutates state.
      * Every attempt that reaches a real target costs 1 move (also a wrong one).
-     * Returns { ok:true, id, to, cost, completed?, completedCards?, won?, lost? }
-     *       | { ok:false, reason, cost?, mistake?, id?, lost? }
-     *   reason (no cost): 'over' | 'invalid' | 'empty' | 'same' | 'locked'
+     * Returns { ok:true, id, ids, to, cost, completed?, completedCards?, won?, lost? }
+     *       | { ok:false, reason, cost?, mistake?, id?, ids?, lost? }
+     *   id = the lowest card of the moved unit, ids = all of its cards.
+     *   reason (no cost): 'over' | 'invalid' | 'empty' | 'same' | 'locked' | 'drawOnly'
+     *     | 'fixed' (a lone category card may only go back to Discard)
      *   reason (costs a move): 'needCategory' | 'occupied' | 'mismatch'
      */
     function play(state, game, from, to) {
       if (state.status !== 'playing') return { ok: false, reason: 'over' };
       if (!validFrom(from)) return { ok: false, reason: 'invalid' };
-      var id = topCard(state, from);
-      if (id === null) return { ok: false, reason: 'empty' };
+      var unit = unitOf(state, from);
+      if (!unit.length) return { ok: false, reason: 'empty' };
+      var id = unit[0];
       if (to === 'discard') {
         if (from === 'discard') return { ok: false, reason: 'same' };
+        // only the draw card, or a lone category card taken back
+        if (from !== 'draw' && !isLone(state, from)) return { ok: false, reason: 'drawOnly', id: id, ids: unit };
         takeFrom(state, from);
         state.discard.push(id);
-        return spend(state, { ok: true, id: id, to: 'discard' });
+        return spend(state, { ok: true, id: id, ids: unit, to: 'discard' });
       }
       if (!isInt(to) || to < 0 || to >= FIELDS) return { ok: false, reason: 'invalid' };
       if (to === from) return { ok: false, reason: 'same' };
+      if (isLone(state, from)) return { ok: false, reason: 'fixed', id: id, ids: unit }; // only back to Discard
       var reason = placeReject(state, game, id, to);
       if (reason === 'locked') return { ok: false, reason: reason };
       if (reason) {
         state.wrong += 1;
-        return spend(state, { ok: false, reason: reason, mistake: true, id: id });
+        return spend(state, { ok: false, reason: reason, mistake: true, id: id, ids: unit });
       }
       takeFrom(state, from);
-      var stack = state.fields[to].c;
-      stack.push(id);
-      var res = { ok: true, id: id, to: to };
-      if (stack.length >= 1 + CARDS_PER_CATEGORY) {
+      var target = state.fields[to];
+      var stack = target.c;
+      for (var u = 0; u < unit.length; u++) stack.push(unit[u]);
+      var res = { ok: true, id: id, ids: unit, to: to };
+      if (!target.p && stack.length >= 1 + game.cats[game.cards[stack[0]].cat].n) {
         res.completed = game.cards[id].cat;
         res.completedCards = stack.slice();
         state.done.push(res.completed);
@@ -371,10 +461,185 @@
       return true;
     }
 
-    /** Stars by moves left: >= STAR3_LEFT 3, >= STAR2_LEFT 2, else 1. */
-    function stars(movesLeft) {
-      if (movesLeft >= STAR3_LEFT) return 3;
-      if (movesLeft >= STAR2_LEFT) return 2;
+    /* ---- Solver ----------------------------------------------------------
+       A greedy player that plays like a careful person: it only looks at
+       face-up cards and the draw / discard pile, NEVER at face-down cards.
+       buildGame uses it to deal only games it can finish within
+       the day's budget minus DEAL_SPARE; the budget and stars were calibrated with it.
+       Because it never peeks, the deal can be made "lazily" (dealOrder):
+       a face-down card gets its identity only when the player turns it,
+       and replaying the player on the finished deal gives the same game. */
+
+    /** Next play [from, to] for the solver, or null (then: discard / flip). */
+    function solverPick(s, game, relaxed) {
+      var cards = game.cards, f, i, j, c;
+      var stackOf = {}, free = [], runs = [];
+      for (f = 0; f < FIELDS; f++) {
+        var fl = s.fields[f];
+        if (fl.p) { if (fl.d < fl.c.length) runs.push(f); continue; }
+        if (fl.c.length) stackOf[cards[fl.c[0]].cat] = f; else free.push(f);
+      }
+      // dig where most cards are still face down
+      runs.sort(function (a, b) { return s.fields[b].d - s.fields[a].d || a - b; });
+      var srcs = runs.concat(s.discard.length ? ['discard'] : [], s.draw.length ? ['draw'] : []);
+      function first(src) { return cards[unitOf(s, src)[0]]; }
+      function runTop(f2) { var fl2 = s.fields[f2]; return cards[fl2.c[fl2.c.length - 1]]; }
+      // 1. a card / run onto its category stack
+      for (i = 0; i < srcs.length; i++) {
+        c = first(srcs[i]);
+        if (c.kind === 'word' && stackOf[c.cat] !== undefined) return [srcs[i], stackOf[c.cat]];
+      }
+      // 2. a run onto another run of the same category (uncovers a card)
+      for (i = 0; i < runs.length; i++) {
+        c = first(runs[i]);
+        if (c.kind !== 'word') continue;
+        for (j = 0; j < runs.length; j++) {
+          var tt = runTop(runs[j]);
+          if (j !== i && tt.kind === 'word' && tt.cat === c.cat) {
+            return s.fields[runs[j]].d > s.fields[runs[i]].d ? [runs[j], runs[i]] : [runs[i], runs[j]];
+          }
+        }
+      }
+      // 3. a category card onto a free field; keep one field free unless stuck
+      if (free.length && (relaxed || free.length > 1)) {
+        var best = null, bestScore = -1;
+        for (i = 0; i < srcs.length; i++) {
+          c = first(srcs[i]);
+          if (c.kind !== 'cat') continue;
+          // uncovering pays; so do visible words of this category
+          var score = isInt(srcs[i]) ? 10 : 0;
+          for (j = 0; j < runs.length; j++) {
+            var rt = runTop(runs[j]);
+            if (rt.kind === 'word' && rt.cat === c.cat) score += 3 * (s.fields[runs[j]].c.length - s.fields[runs[j]].d);
+          }
+          for (j = 0; j < s.discard.length; j++) if (cards[s.discard[j]].cat === c.cat) score += 1;
+          for (j = 0; j < s.draw.length; j++) if (cards[s.draw[j]].cat === c.cat) score += 1;
+          if (score > bestScore) { best = srcs[i]; bestScore = score; }
+        }
+        if (best !== null) return [best, free[0]];
+      }
+      // 4. discard / draw card onto a run of its category (the run moves as one later)
+      var piles = ['discard', 'draw'];
+      for (i = 0; i < piles.length; i++) {
+        if (srcs.indexOf(piles[i]) < 0) continue;
+        c = first(piles[i]);
+        if (c.kind !== 'word') continue;
+        for (j = 0; j < runs.length; j++) {
+          var t2 = runTop(runs[j]);
+          if (t2.kind === 'word' && t2.cat === c.cat) return [piles[i], runs[j]];
+        }
+      }
+      return null;
+    }
+
+    /**
+     * Let the solver play state `s` to the end (mutates it). onTurn(s, f) is
+     * called right before a face-down card of field f is turned.
+     * Returns { won, moves }.
+     */
+    function solverPlay(s, game, onTurn) {
+      var progress = true, relaxed = false, guard = 0, f;
+      while (s.status === 'playing' && guard++ < 3000) {
+        for (f = TOP_FIELDS; f < FIELDS; f++) {
+          if (!canTurn(s, f)) continue;
+          if (onTurn) onTurn(s, f);
+          turn(s, f);
+        }
+        var p = solverPick(s, game, relaxed);
+        if (p) { play(s, game, p[0], p[1]); progress = true; relaxed = false; continue; }
+        if (s.draw.length) { play(s, game, 'draw', 'discard'); continue; }
+        if (s.discard.length && progress) { progress = false; flip(s); continue; }
+        if (!relaxed) { relaxed = true; continue; } // stuck: may use the last free field
+        break;
+      }
+      return { won: s.status === 'won', moves: s.moves };
+    }
+
+    /** Can the solver finish `game` within `limit` moves? Returns { won, moves }. */
+    function solve(game, limit) {
+      var s = newGame(game, 0);
+      s.movesLeft = limit;
+      return solverPlay(s, game);
+    }
+
+    /**
+     * One deal attempt, deterministic for a given rng. Returns the order
+     * (bottom fields, each from its lowest card up, then the draw pile from
+     * its top) or null if this attempt does not work out.
+     * 1. Shuffle. While fewer than MIN_CATEGORY_CARDS_IN_DRAW category cards
+     *    are in the draw pile, a random bottom category card swaps places
+     *    with a random draw word card. The draw pile is now fixed.
+     * 2. The bottom cards are dealt lazily: the solver plays, and whenever it
+     *    turns a face-down card, that card is drawn at random from the bottom
+     *    cards not dealt yet (with chance DEAL_HELP only from those it can use
+     *    right away). If the solver gets stuck or runs out of moves: null.
+     */
+    function dealOrder(game, rng, limit, help) {
+      var cards = game.cards;
+      var order = shuffleWith(cards.map(function (c) { return c.id; }), rng);
+      var nDown = BOTTOM_FIELDS * FACE_DOWN_PER_FIELD;
+      function positions(from, to, kind) {
+        var out = [];
+        for (var i = from; i < to; i++) if (cards[order[i]].kind === kind) out.push(i);
+        return out;
+      }
+      var need = Math.min(MIN_CATEGORY_CARDS_IN_DRAW, order.length - nDown);
+      while (positions(nDown, order.length, 'cat').length < need) {
+        var down = positions(0, nDown, 'cat'), up = positions(nDown, order.length, 'word');
+        if (!down.length || !up.length) break;
+        var a = down[Math.floor(rng() * down.length)], b = up[Math.floor(rng() * up.length)];
+        var tmp = order[a]; order[a] = order[b]; order[b] = tmp;
+      }
+      var pool = order.slice(0, nDown), draw = order.slice(nDown);
+      var fields = [], dealt = [];
+      for (var f = 0; f < FIELDS; f++) {
+        var n = f < TOP_FIELDS ? 0 : FACE_DOWN_PER_FIELD, slots = [];
+        for (var k = 0; k < n; k++) slots.push(-1);
+        fields.push({ c: slots.slice(), d: n, p: n > 0 });
+        dealt.push(slots);
+      }
+      var s = { v: SAVE_VERSION, day: 0, sig: '', draw: draw.slice(), discard: [], fields: fields, done: [],
+        movesLeft: limit, moves: 0, wrong: 0, status: 'playing', recorded: false };
+      function useful(id) {
+        var c = cards[id];
+        for (var g = 0; g < FIELDS; g++) {
+          var fl = s.fields[g];
+          if (c.kind === 'cat') { if (!fl.p && !fl.c.length) return true; continue; }
+          if (!fl.p && fl.c.length && cards[fl.c[0]].cat === c.cat) return true;
+          if (fl.p && fl.d < fl.c.length) {
+            var top = cards[fl.c[fl.c.length - 1]];
+            if (top.kind === 'word' && top.cat === c.cat) return true;
+          }
+        }
+        return false;
+      }
+      var r = solverPlay(s, game, function (st, g) {
+        var cand = pool;
+        if (rng() < help) {
+          var u = pool.filter(useful);
+          if (u.length) cand = u;
+        }
+        var id = cand[Math.floor(rng() * cand.length)];
+        pool.splice(pool.indexOf(id), 1);
+        var fl = st.fields[g];
+        fl.c[fl.d - 1] = id;
+        dealt[g][fl.d - 1] = id;
+      });
+      if (!r.won) return null;
+      var out = [];
+      for (f = TOP_FIELDS; f < FIELDS; f++) out = out.concat(dealt[f]);
+      return out.concat(draw);
+    }
+
+    /**
+     * Stars by moves left: >= game.star3Left 3, >= game.star2Left 2, else 1.
+     * Without a game: the thresholds of the smallest day (all categories with
+     * MIN_CARDS_PER_CATEGORY).
+     */
+    function stars(movesLeft, game) {
+      var b = game || budgetFor(CATEGORIES_PER_GAME * (1 + MIN_CARDS_PER_CATEGORY));
+      if (movesLeft >= b.star3Left) return 3;
+      if (movesLeft >= b.star2Left) return 2;
       return 1;
     }
 
@@ -401,10 +666,11 @@
     }
 
     /**
-     * Record a finished game (won or lost). Idempotent per day.
+     * Record a finished game (won or lost). Idempotent per day. game = the
+     * day's game (for its star thresholds).
      * A loss breaks the streak. Returns a new stats object.
      */
-    function updateStats(stats, day, won, movesLeft) {
+    function updateStats(stats, day, won, movesLeft, game) {
       var s = normalizeStats(stats);
       if (s.lastPlayedDay === day) return s;
       s.played += 1;
@@ -414,7 +680,7 @@
         s.streak = s.lastWonDay === day - 1 ? s.streak + 1 : 1;
         s.best = Math.max(s.best, s.streak);
         s.lastWonDay = day;
-        s.stars[stars(movesLeft) - 1] += 1;
+        s.stars[stars(movesLeft, game) - 1] += 1;
       } else {
         s.streak = 0;
       }
@@ -436,7 +702,7 @@
     };
 
     /**
-     * Share text (no spoilers). r = { won, movesLeft, done, total }.
+     * Share text (no spoilers). r = { won, movesLeft, done, total, stars? }.
      * `tr` (optional) translates: tr(key, vars) with the i18n.js keys
      * movesLeftOne / movesLeftOther / shareLost / shareStreak. Default: English.
      */
@@ -446,7 +712,7 @@
       };
       var lines = ['Riddle Me Rika #' + puzzleNo];
       if (r.won) {
-        lines.push(starString(stars(r.movesLeft)));
+        lines.push(starString(r.stars || stars(r.movesLeft)));
         lines.push(t(r.movesLeft === 1 ? 'movesLeftOne' : 'movesLeftOther', { n: r.movesLeft }));
       } else {
         lines.push(t('shareLost', { k: r.done, total: r.total }));
@@ -458,12 +724,16 @@
     return {
       CONFIG: {
         FIELDS: FIELDS, TOP_FIELDS: TOP_FIELDS, BOTTOM_FIELDS: BOTTOM_FIELDS,
-        FACE_DOWN_PER_FIELD: FACE_DOWN_PER_FIELD, MOVES: MOVES,
-        STAR3_LEFT: STAR3_LEFT, STAR2_LEFT: STAR2_LEFT,
-        CATEGORIES_PER_GAME: CATEGORIES_PER_GAME, CARDS_PER_CATEGORY: CARDS_PER_CATEGORY,
+        FACE_DOWN_PER_FIELD: FACE_DOWN_PER_FIELD,
+        MOVES_PER_CARD: MOVES_PER_CARD, MOVES_BASE: MOVES_BASE,
+        STAR3_EXTRA: STAR3_EXTRA, STAR2_EXTRA: STAR2_EXTRA, DEAL_SPARE: DEAL_SPARE,
+        CATEGORIES_PER_GAME: CATEGORIES_PER_GAME,
+        MIN_CARDS_PER_CATEGORY: MIN_CARDS_PER_CATEGORY, MAX_CARDS_PER_CATEGORY: MAX_CARDS_PER_CATEGORY,
         MAX_TIER: MAX_TIER, SYMBOL_DIR: SYMBOL_DIR, SYMBOL_EXT: SYMBOL_EXT,
         SYMBOL_GEN_DIR: SYMBOL_GEN_DIR, SYMBOL_GEN_EXT: SYMBOL_GEN_EXT,
-        CATEGORY_SYMBOL_PREFIX: CATEGORY_SYMBOL_PREFIX, SAVE_VERSION: SAVE_VERSION
+        CATEGORY_SYMBOL_PREFIX: CATEGORY_SYMBOL_PREFIX, SAVE_VERSION: SAVE_VERSION,
+        MIN_CATEGORY_CARDS_IN_DRAW: MIN_CATEGORY_CARDS_IN_DRAW,
+        DEAL_ATTEMPTS: DEAL_ATTEMPTS, DEAL_HELP: DEAL_HELP
       },
       dayNumber: dayNumber,
       dateForDay: dateForDay,
@@ -473,10 +743,15 @@
       seedForDay: seedForDay,
       shuffleWith: shuffleWith,
       eligibleCategories: eligibleCategories,
+      dealOrder: dealOrder,
       buildGame: buildGame,
+      budgetFor: budgetFor,
       newGame: newGame,
       restoreState: restoreState,
       topCard: topCard,
+      runOf: runOf,
+      isLone: isLone,
+      unitOf: unitOf,
       playableSources: playableSources,
       canTurn: canTurn,
       turn: turn,
@@ -486,6 +761,7 @@
       play: play,
       canFlip: canFlip,
       flip: flip,
+      solve: solve,
       stars: stars,
       starString: starString,
       defaultStats: defaultStats,
@@ -505,7 +781,7 @@
      ======================================================================= */
 
   var KEY_STATS = 'rr:stats';
-  var KEY_HELP = 'rr:seenHelp3';
+  var KEY_HELP = 'rr:seenHelp4'; // bumped when the rules change, so the how-to shows again
   var KEY_GAME_PREFIX = 'rr:game:';
   var DRAG_THRESHOLD = 7;
   var REVEAL_MS = 900;     // theme name shown on a completed field
@@ -597,7 +873,7 @@
   /** Text for screen readers (no soft hyphens; category cards are announced as such). */
   function cardLabel(c) {
     var w = wordOf(c).replace(SHY, '');
-    return c.kind === 'cat' ? t('ariaCategoryCard', { name: w }) : w;
+    return c.kind === 'cat' ? t('ariaCategoryCard', { name: w, n: game.cats[c.cat].n }) : w;
   }
 
   /** Length class for a category name, from its longest word: s <=9, l 10-12, xl 13+. */
@@ -625,13 +901,14 @@
   var els = {};
   var game, state, day, realDay, puzzleNo, isOverride;
   var ui = {
-    sel: 'draw',        // selected playable card: 'draw' | 'discard' | field index (bottom pile)
+    sel: 'draw',        // selected playable card: 'draw' | 'discard' | field index (run of a bottom pile)
     busy: false,        // true during the completion / end animation
     hold: false,        // keep showing the board (not the result) for a moment
     reveal: null,       // {field, cards, cat} while a completed field shows its theme
-    lastPlaced: null,   // card id that just landed in a field
+    lastPlaced: null,   // card ids that just landed in a field
     donePop: false,
-    lastFocus: null
+    lastFocus: null,
+    picked: false       // the selection was tapped by the player (not the default / a just turned card)
   };
   var ptr = null;       // active pointer interaction
   var toastTimer = 0;
@@ -695,6 +972,7 @@
       showFatal();
       return;
     }
+    applyStatic(); // the how-to shows today's move budget
 
     if (params && params.get('reset') === '1') {
       store.remove(gameKey(day));
@@ -739,7 +1017,7 @@
    */
   function applyStatic() {
     document.documentElement.lang = lang;
-    var vars = { cards: Core.CONFIG.CARDS_PER_CATEGORY, cats: Core.CONFIG.CATEGORIES_PER_GAME, moves: Core.CONFIG.MOVES };
+    var vars = { cats: Core.CONFIG.CATEGORIES_PER_GAME, moves: game ? game.moves : '' };
     document.querySelectorAll('[data-i18n]').forEach(function (el) {
       el.textContent = t(el.getAttribute('data-i18n'), vars);
     });
@@ -842,7 +1120,10 @@
     var label = c.kind === 'cat'
       ? h('span', { class: 'card__catname', 'data-len': themeLen(text), text: text })
       : h('span', { class: 'card__word', 'data-len': lenClass(text), text: text });
-    return h(tag, props, label, artEl(c));
+    // category card: badge with today's number of word cards of this category
+    var count = c.kind === 'cat'
+      ? h('span', { class: 'card__count', 'aria-hidden': 'true', text: String(game.cats[c.cat].n) }) : null;
+    return h(tag, props, label, artEl(c), count);
   }
 
   /* ---------- rendering ---------- */
@@ -953,35 +1234,71 @@
     els.fields.replaceChildren.apply(els.fields, nodes);
   }
 
-  /** A bottom field that still holds dealt cards: face-down cards, top one turnable or face up. */
+  function isNew(id) { return !!ui.lastPlaced && ui.lastPlaced.indexOf(id) >= 0; }
+
+  /** Elements of a playable unit ('draw' | 'discard' | 'f3'): a run has several cards. */
+  function srcEls(key) {
+    return Array.prototype.slice.call(els.board.querySelectorAll('[data-drag="' + key + '"]'));
+  }
+
+  /**
+   * A bottom field that still holds cards: the face-down cards (compact; the
+   * top one can be turned while nothing is face up), then the face-up run with
+   * the normal stack offset. All run cards are selected / dragged together;
+   * only the top one is a button (keyboard / screen reader).
+   * --nd = face-down steps, --rl = run length - 1 (style.css squeezes the
+   * face-down step so a run of 4 on 7 face-down cards fits the field).
+   */
   function pileFieldEl(f, fl, sel) {
-    var n = fl.c.length;
-    var kids = [];
-    for (var i = 0; i < n - 1; i++) {
-      kids.push(h('div', { class: 'card card--back card--down', style: '--i:' + i, 'aria-hidden': 'true' }));
+    var d = fl.d, run = fl.c.slice(d);
+    var kids = [], i;
+    for (i = 0; i < d; i++) {
+      if (i === d - 1 && !run.length) {
+        kids.push(h('button', {
+          type: 'button', class: 'card card--back card--down is-turnable', style: '--i:' + i,
+          'data-action': 'turn', 'data-field': f, 'data-fk': 'turn' + f,
+          'aria-label': t('ariaTurn', { f: f + 1, n: d })
+        }));
+      } else {
+        kids.push(h('div', { class: 'card card--back card--down', style: '--i:' + i, 'aria-hidden': 'true' }));
+      }
     }
-    var top = fl.c[n - 1];
-    if (fl.d === n) {
-      kids.push(h('button', {
-        type: 'button', class: 'card card--back card--down is-turnable', style: '--i:' + (n - 1),
-        'data-action': 'turn', 'data-field': f, 'data-fk': 'turn' + f,
-        'aria-label': t('ariaTurn', { f: f + 1, n: n })
-      }));
+    var selected = sel === f;
+    var words = run.map(function (id) { return cardLabel(game.cards[id]); }).join(', ');
+    run.forEach(function (id, r) {
+      var c = game.cards[id], isTop = r === run.length - 1;
+      var attrs = {
+        cls: 'card--run' + (isTop ? ' card--down-top' : '') + ' is-top' + (selected ? ' is-selected' : '') + (isNew(id) ? ' is-new' : ''),
+        style: '--i:' + d + ';--r:' + r,
+        'data-drag': 'f' + f
+      };
+      if (isTop) {
+        attrs['data-fk'] = 'f' + f;
+        attrs['aria-pressed'] = selected ? 'true' : 'false';
+        attrs['aria-label'] = run.length > 1
+          ? t(selected ? 'ariaRunSelected' : 'ariaRun', { f: f + 1, k: run.length, words: words })
+          : t(selected ? 'ariaPileCardSelected' : 'ariaPileCard', { f: f + 1, word: words });
+      } else {
+        attrs['aria-hidden'] = 'true';
+      }
+      kids.push(cardEl(c, isTop ? 'button' : 'div', attrs));
+    });
+    var steps = Math.max(1, run.length ? d : d - 1);
+    var props = {
+      class: 'field field--bottom field--pile' + (run.length > 1 ? ' has-run' : ''), 'data-drop': String(f),
+      style: '--nd:' + steps + ';--rl:' + Math.max(0, run.length - 1)
+    };
+    if (run.length) {
+      // a face-up word card is a target: same-category word cards / runs go on it
+      props.role = 'button';
+      props.tabindex = '0';
+      props['data-fk'] = 'drop' + f;
+      props['aria-label'] = t('ariaPileRun', { f: f + 1, n: d, words: words });
     } else {
-      var c = game.cards[top];
-      var selected = sel === f;
-      kids.push(cardEl(c, 'button', {
-        cls: 'card--down-top is-top' + (selected ? ' is-selected' : '') + (ui.lastPlaced === top ? ' is-new' : ''),
-        style: '--i:' + (n - 1),
-        'data-drag': 'f' + f, 'data-fk': 'f' + f,
-        'aria-pressed': selected ? 'true' : 'false',
-        'aria-label': t(selected ? 'ariaPileCardSelected' : 'ariaPileCard', { f: f + 1, word: cardLabel(c), n: fl.d })
-      }));
+      props.role = 'group';
+      props['aria-label'] = t('ariaPile', { f: f + 1, n: d });
     }
-    return h('div', {
-      class: 'field field--bottom field--pile', 'data-drop': String(f), role: 'group',
-      'aria-label': t('ariaPile', { f: f + 1, n: n })
-    }, kids);
+    return h('div', props, kids);
   }
 
   function fieldEl(f, sel) {
@@ -990,9 +1307,20 @@
     var rowCls = f < Core.CONFIG.TOP_FIELDS ? ' field--top' : ' field--bottom';
     if (!reveal && fl.p) return pileFieldEl(f, fl, sel);
     var ids = reveal ? reveal.cards : fl.c;
+    // a category card alone on its field is playable: it can be taken back to Discard
+    var lone = !reveal && Core.isLone(state, f) && state.status === 'playing';
     var kids = ids.map(function (id, i) {
+      if (lone) {
+        var selected = sel === f;
+        return cardEl(game.cards[id], 'button', {
+          cls: 'card--field card--lone is-top' + (selected ? ' is-selected' : '') + (isNew(id) ? ' is-new' : ''),
+          style: '--i:' + i, 'data-drag': 'f' + f, 'data-fk': 'f' + f,
+          'aria-pressed': selected ? 'true' : 'false',
+          'aria-label': t(selected ? 'ariaLoneSelected' : 'ariaLone', { f: f + 1, name: wordOf(game.cards[id]).replace(SHY, '') })
+        });
+      }
       return cardEl(game.cards[id], 'div', {
-        cls: 'card--field' + (ui.lastPlaced === id ? ' is-new' : ''),
+        cls: 'card--field' + (isNew(id) ? ' is-new' : ''),
         style: '--i:' + i, 'aria-hidden': 'true'
       });
     });
@@ -1008,12 +1336,13 @@
     } else {
       var base = game.cards[ids[0]];
       label = t('ariaField', {
-        f: f + 1, cat: wordOf(base).replace(SHY, ''), k: ids.length - 1, max: Core.CONFIG.CARDS_PER_CATEGORY,
+        f: f + 1, cat: wordOf(base).replace(SHY, ''), k: ids.length - 1, max: game.cats[base.cat].n,
         words: ids.slice(1).map(function (id) { return wordOf(game.cards[id]); }).join(', ') || '–'
       });
     }
     return h('div', {
       class: 'field' + rowCls + (ids.length ? '' : ' is-empty') + (reveal ? ' is-complete' : ''),
+      style: '--sn:' + Math.max(1, ids.length - 1), // covered cards: style.css squeezes long stacks
       'data-drop': String(f), 'data-fk': 'drop' + f, role: 'button', tabindex: '0', 'aria-label': label
     }, kids);
   }
@@ -1025,7 +1354,7 @@
     shareBtn.addEventListener('click', share);
     var parts = [h('h2', { class: 'result__title', text: t(won ? 'solved' : 'outOfMoves') })];
     if (won) {
-      parts.push(h('p', { class: 'result__stars', 'aria-label': t('ariaStars', { n: Core.stars(left) }), text: Core.starString(Core.stars(left)) }));
+      parts.push(h('p', { class: 'result__stars', 'aria-label': t('ariaStars', { n: Core.stars(left, game) }), text: Core.starString(Core.stars(left, game)) }));
       parts.push(h('p', { class: 'result__meta', text: t('resultMeta', { moves: tn('movesLeft', left), streak: streakNow() }) }));
     } else {
       parts.push(h('p', { class: 'result__lost', text: t('resultLost', { k: state.done.length, total: game.cats.length }) }));
@@ -1069,9 +1398,12 @@
     if (!res.ok) {
       if (res.cost) save();
       if (res.lost) ui.hold = true;
+      if (res.reason === 'drawOnly') { ui.sel = 'draw'; ui.picked = false; }
       render();
       if (drag) snapBack(drag);
-      else if (res.mistake) flash(els.board.querySelector('[data-drag="' + srcKey(from) + '"]'), 'is-bounce');
+      else if (res.mistake || res.reason === 'drawOnly') srcEls(srcKey(from)).forEach(function (el) { flash(el, 'is-bounce'); });
+      if (res.reason === 'drawOnly') toast(t('toastDrawOnly')); // bottom cards never go to Discard (free)
+      if (res.reason === 'fixed') toast(t('toastLone'));         // a lone category card only goes back to Discard (free)
       if (res.mistake) {
         flash(dropEl(to), 'is-wrong');
         flash(els.moves.parentNode, 'is-bump');
@@ -1082,14 +1414,15 @@
     }
     if (drag) removeGhost(drag);
     ui.sel = 'draw';
+    ui.picked = false;
     save();
     flash(els.moves.parentNode, 'is-tick', 300);
     if (res.completed !== undefined) {
-      ui.lastPlaced = res.id;
+      ui.lastPlaced = res.ids;
       runCompletion(to, res);
       return;
     }
-    if (to !== 'discard') ui.lastPlaced = res.id;
+    if (to !== 'discard') ui.lastPlaced = res.ids;
     if (res.lost) ui.hold = true;
     render();
     if (to !== 'discard') flash(dropEl(to), 'is-correct');
@@ -1113,6 +1446,7 @@
   function doFlip() {
     if (!Core.flip(state)) return;
     ui.sel = 'draw';
+    ui.picked = false;
     save();
     render();
   }
@@ -1120,6 +1454,7 @@
   function doTurn(f) {
     if (!Core.turn(state, f)) return;
     ui.sel = f; // the turned card is ready to play
+    ui.picked = false;
     save();
     render();
   }
@@ -1190,16 +1525,22 @@
     if (state.recorded) return;
     state.recorded = true;
     if (!isOverride) {
-      store.set(KEY_STATS, JSON.stringify(Core.updateStats(loadStats(), day, state.status === 'won', state.movesLeft)));
+      store.set(KEY_STATS, JSON.stringify(Core.updateStats(loadStats(), day, state.status === 'won', state.movesLeft, game)));
     }
     save();
   }
 
   /**
    * A tap (or Enter/Space) on a playable card, a pile, a field or a button.
-   * Tap a playable card = select it; tap the selected card again = discard it.
-   * Tap a field = play the selected card there. Tap Discard with a draw/field
-   * card selected = discard it (the Discard card itself is selected otherwise).
+   * The draw card is selected by default. Tap a playable card = pick it (a
+   * run: the whole run); tap the picked card again = discard it (only the
+   * draw card may go there; a run is refused for free with a hint).
+   * Tap a field = play the selected card there. Tap a run while a picked card
+   * / run of its category is selected = play it onto the run; otherwise the
+   * tap picks the run. A category card alone on a field: tapping it plays
+   * the selected card onto it if that fits, otherwise picks it; then tap
+   * Discard (or the card again) to take it back (1 move). Tap the Discard
+   * pile beside its card while a card is selected = discard it.
    */
   function tap(el) {
     var action = el.dataset.action;
@@ -1212,12 +1553,23 @@
     if (el.dataset.drag) {
       var src = parseSrc(el.dataset.drag);
       if (src === 'discard') {
-        if (typeof sel === 'number') doPlay(sel, 'discard');
-        else { ui.sel = sel === 'discard' ? 'draw' : 'discard'; render(); }
+        // a lone category card selected: take it back
+        if (typeof sel === 'number' && Core.isLone(state, sel)) { doPlay(sel, 'discard'); return; }
+        // otherwise tapping the Discard card picks it (again: back to the draw card)
+        ui.sel = sel === 'discard' ? 'draw' : 'discard';
+        ui.picked = ui.sel === 'discard';
+        render();
         return;
       }
-      if (sel === src) doPlay(src, 'discard');
-      else { ui.sel = src; render(); }
+      if (typeof src === 'number' && (ui.picked || Core.isLone(state, src)) && sel !== null && sel !== src &&
+          Core.placeReject(state, game, Core.unitOf(state, sel)[0], src) === null) {
+        doPlay(sel, src);
+        return;
+      }
+      if (sel === src && ui.picked) { doPlay(src, 'discard'); return; }
+      ui.sel = src;
+      ui.picked = true;
+      render();
       return;
     }
     var dest = el.dataset.drop;
@@ -1227,7 +1579,8 @@
     }
     if (dest === undefined || sel === null) return;
     var f = +dest;
-    if (state.fields[f] && state.fields[f].p) return; // tapped beside a pile's card
+    var fl = state.fields[f];
+    if (!fl || (fl.p && fl.d >= fl.c.length)) return; // face-down top card: not a target
     doPlay(sel, f);
   }
 
@@ -1283,15 +1636,48 @@
     setOver(dropAt(e.clientX, e.clientY));
   }
 
+  /** Copy of a card for a ghost, without ids / state. */
+  function ghostCard(el) {
+    var g = el.cloneNode(true);
+    ['data-drag', 'data-card', 'data-fk', 'aria-label', 'aria-pressed'].forEach(function (a) { g.removeAttribute(a); });
+    g.classList.remove('is-selected', 'is-new', 'is-drag-source', 'is-bounce');
+    g.setAttribute('aria-hidden', 'true');
+    g.tabIndex = -1;
+    return g;
+  }
+
+  /** Start dragging: a ghost of the card, or of the whole run (all its cards, as they lie). */
   function startDrag() {
     var el = ptr.dragEl;
-    var r = el.getBoundingClientRect();
-    var ghost = el.cloneNode(true);
-    ['data-drag', 'data-card', 'data-fk', 'aria-label', 'aria-pressed'].forEach(function (a) { ghost.removeAttribute(a); });
-    ghost.classList.remove('is-selected', 'is-new', 'is-drag-source', 'is-bounce');
-    ghost.classList.add('card-ghost');
-    ghost.setAttribute('aria-hidden', 'true');
-    ghost.tabIndex = -1;
+    var list = srcEls(el.dataset.drag);
+    if (!list.length) list = [el];
+    var rects = list.map(function (x) { return x.getBoundingClientRect(); });
+    var r = {
+      left: Math.min.apply(null, rects.map(function (x) { return x.left; })),
+      top: Math.min.apply(null, rects.map(function (x) { return x.top; })),
+      right: Math.max.apply(null, rects.map(function (x) { return x.right; })),
+      bottom: Math.max.apply(null, rects.map(function (x) { return x.bottom; }))
+    };
+    r.width = r.right - r.left;
+    r.height = r.bottom - r.top;
+    var ghost;
+    if (list.length === 1) {
+      ghost = ghostCard(el);
+      ghost.classList.add('card-ghost');
+    } else {
+      ghost = h('div', { class: 'card-ghost-run', 'aria-hidden': 'true' });
+      list.forEach(function (x, i) {
+        var g = ghostCard(x), gs = g.style;
+        g.classList.add('card-ghost-run__card');
+        gs.position = 'absolute';
+        gs.left = (rects[i].left - r.left) + 'px';
+        gs.top = (rects[i].top - r.top) + 'px';
+        gs.width = rects[i].width + 'px';
+        gs.height = rects[i].height + 'px';
+        gs.margin = '0';
+        ghost.appendChild(g);
+      });
+    }
     var st = ghost.style;
     st.position = 'fixed';
     st.left = r.left + 'px';
@@ -1309,7 +1695,8 @@
     ptr.ghost = ghost;
     ptr.dragging = true;
     ptr.src = el.dataset.drag; // 'draw' | 'discard' | 'f3'
-    el.classList.add('is-drag-source');
+    ptr.srcEls = list;
+    list.forEach(function (x) { x.classList.add('is-drag-source'); });
     document.body.classList.add('is-dragging');
   }
 
@@ -1332,7 +1719,7 @@
     ptr = null;
     if (!p) return null;
     if (p.over) p.over.classList.remove('is-drop-target');
-    if (p.dragEl) p.dragEl.classList.remove('is-drag-source');
+    (p.srcEls || (p.dragEl ? [p.dragEl] : [])).forEach(function (x) { x.classList.remove('is-drag-source'); });
     document.body.classList.remove('is-dragging');
     return p;
   }
@@ -1344,9 +1731,9 @@
   /** Fly the ghost back to where the drag started, hiding the real card meanwhile. */
   function snapBack(p) {
     if (!p.ghost) return;
-    var src = els.board.querySelector('[data-drag="' + p.src + '"]');
+    var src = srcEls(p.src); // re-rendered elements of the same unit
     if (reducedMotion() || !p.srcRect) { removeGhost(p); return; }
-    if (src) src.classList.add('is-drag-source');
+    src.forEach(function (x) { x.classList.add('is-drag-source'); });
     var g = p.ghost;
     g.classList.add('is-returning');
     g.style.transition = 'left 220ms cubic-bezier(.3,1.4,.5,1), top 220ms cubic-bezier(.3,1.4,.5,1), transform 220ms ease';
@@ -1355,7 +1742,7 @@
     g.style.top = p.srcRect.top + 'px';
     setTimeout(function () {
       removeGhost(p);
-      if (src) src.classList.remove('is-drag-source');
+      src.forEach(function (x) { x.classList.remove('is-drag-source'); });
     }, 240);
   }
 
@@ -1384,8 +1771,9 @@
     if (state.status !== 'playing' || ui.busy || dest === null || dest === undefined) { snapBack(p); return; }
     var from = parseSrc(p.src);
     var to = dest === 'discard' ? 'discard' : +dest;
-    // dropped back where it came from, or onto a bottom pile: not a move
-    if (to === from || (to !== 'discard' && state.fields[to].p) || (to === 'discard' && from === 'discard')) {
+    // dropped back where it came from: not a move (a face-down pile top is refused by
+    // Core.play for free, a bottom card on Discard too - with a hint)
+    if (to === from || (to === 'discard' && from === 'discard')) {
       snapBack(p);
       return;
     }
@@ -1395,7 +1783,8 @@
   /* ---------- share ---------- */
   function share() {
     var text = Core.shareText(puzzleNo, {
-      won: state.status === 'won', movesLeft: state.movesLeft, done: state.done.length, total: game.cats.length
+      won: state.status === 'won', movesLeft: state.movesLeft, done: state.done.length, total: game.cats.length,
+      stars: Core.stars(state.movesLeft, game)
     }, streakNow(), t);
     var coarse = false;
     try { coarse = root.matchMedia('(pointer: coarse)').matches; } catch (e) { /* ignore */ }
