@@ -26,22 +26,30 @@ works offline and can be installed on the home screen.
   Discard). Category cards never go onto a run. Once the run is gone (or
   done), the next face-down card can be turned. A bottom field becomes a free
   field only when it is completely empty.
-- An empty field only accepts a category card. Word cards (and runs) go onto
-  the stack whose category card matches. Category card + all its N words = done: the
-  name shows briefly, the stack moves to Done and the field is empty again.
+- An empty field takes a category card, a word card or a run. Word cards (and
+  runs) go onto the stack whose category card matches. Category card + all its
+  N words = done: the name shows briefly, the stack moves to Done and the field
+  is empty again.
+- **Loose runs:** word cards lying on a field without their category card.
+  More word cards of the same category can go on top (from anywhere), and the
+  whole loose run moves as one unit (1 move): onto its category stack (on a
+  field or on a bottom pile), onto another run of its category, or onto
+  another empty field. A category card is always the lowest card of a stack,
+  so it never goes onto a loose run: move the loose run onto the category card
+  later.
 - **Discard:** the draw card can be parked there. A category card that lies
   alone on a field (no word cards on it yet) can be taken back onto Discard
   too (1 move; it can't move to another field). Category cards with words on
-  them stay put. A card or run from a bottom field snaps back with "Bottom
-  cards can't go to Discard" (free).
-- Moves count down from the day's budget (cards + 25, e.g. 52 cards = 77
+  them stay put. Bottom-field cards and loose runs snap back with "Can't go to
+  Discard" (free).
+- Moves count down from the day's budget (cards + 20, e.g. 52 cards = 72
   moves). Every play costs 1 move: a card or a whole
-  run onto a stack or run, a card onto Discard (also a taken-back category
+  run onto a field, stack or run, a card onto Discard (also a taken-back category
   card), and also a wrong one (it bounces back, "Doesn't fit"). Turning
   cards, flipping the discard pile back into the empty draw pile, selecting
   and refused moves onto Discard are free.
-- All 8 done = solved; stars by moves used: ★★★ for at most cards + 7,
-  ★★☆ for at most cards + 17, else ★☆☆. Moves at 0 before that = "Out of
+- All 8 done = solved; stars by moves used: ★★★ for at most cards + 5,
+  ★★☆ for at most cards + 13, else ★☆☆. Moves at 0 before that = "Out of
   moves" (the streak breaks).
 - Controls: drag a playable card or run, or tap it (picks it; a run as a
   whole) and tap a field. The draw card is selected by default, so tapping a
@@ -62,8 +70,8 @@ works offline and can be installed on the home screen.
 | `TOP_FIELDS` / `BOTTOM_FIELDS` | 4 / 4 | empty top fields / bottom fields with face-down cards |
 | `FACE_DOWN_PER_FIELD` | 8 | face-down cards per bottom field (32 in all; the rest, 8–32, is the draw pile) |
 | `MIN_CATEGORY_CARDS_IN_DRAW` | 4 (half of 8) | category cards always dealt into the draw pile |
-| `MOVES_PER_CARD` / `MOVES_BASE` | 1 / 25 | day's move budget = cards × 1 + 25 (40 cards: 65, 64 cards: 89) |
-| `STAR3_EXTRA` / `STAR2_EXTRA` | 7 / 17 | ★★★ / ★★☆ when finished in at most cards + this many moves (= 18 / 8 moves left) |
+| `MOVES_PER_CARD` / `MOVES_BASE` | 1 / 20 | day's move budget = cards × 1 + 20 (40 cards: 60, 64 cards: 84) |
+| `STAR3_EXTRA` / `STAR2_EXTRA` | 5 / 13 | ★★★ / ★★☆ when finished in at most cards + this many moves (= 15 / 7 moves left) |
 | `DEAL_SPARE` | 10 | a deal is only used if the solver finishes it with at least this many of the day's moves to spare |
 | `DEAL_ATTEMPTS` | 200 | reshuffles tried per day before giving up (never needed more than 4) |
 | `DEAL_HELP` | 0.75 | how often a dealt face-down card is one the solver can use right away (higher = friendlier deals) |
@@ -86,13 +94,14 @@ deal; it takes about 0.1 ms (at most ~2 ms) on a laptop.
 
 The budget was calibrated with the solver over 2000 daily deals (days
 0–1999, 41–63 cards a day, median 52): the solver needs its card count
-−2 to +15 moves (median +3, 90% within +8), almost the same for small and big
-days, so the budget is cards + 25 and the stars count moves above the card
-count. 247 days needed a reshuffle (at most 2). The solver always has at least
-10 moves to spare and gets ★★★ on 89% of days, ★★☆ on the rest.
-Heads-up: the game is still unforgiving. Other sensible play styles (using
-the take-back when stuck) finish about 77–80% of days within the budget when
-they put down useful category cards first, 76% when they pick category cards
+−2 to +10 moves on the deals it accepts (median +3, 90% within +7), almost
+the same for small and big days, so the budget is cards + 20 and the stars
+count moves above the card count. 337 days needed a reshuffle (at most 4).
+The solver always has at least 10 moves to spare and gets ★★★ on 82% of days,
+★★☆ on the rest; other careful styles get ★★★ on about half of the days.
+Heads-up: the game is still not easy. Other sensible play styles (using
+the take-back when stuck) finish about 83–88% of days within the budget when
+they put down useful category cards first, 82% when they pick category cards
 at random, and only 15% when they ignore runs. When they get stuck, every
 field holds a stack that already has word cards, or a field is free but no
 category card can be reached. (With 3 + 3 fields this was 42–60% without the

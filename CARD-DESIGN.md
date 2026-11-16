@@ -97,6 +97,7 @@ background colour; aim for a 5:7 image).
 | `.card--done` + `.tier-N`, `.done__theme`, `.done__count` | Done pile top |
 | `.card--empty`, `.card__hint` | Empty pile |
 | `.card--field` | Card in a field stack (`--i` = stack position 0..4, 0 = category card) |
+| `.card--loose` | Word cards on a field without their category card (a loose run; also `.card--field.is-top`): moved together, look like any word card |
 | `.card--lone` | A category card alone on its field (also `.card--field.is-top`): playable, it can be taken back onto Discard |
 | `.card--category` + `.tier-N`, `.card__catname`, `.card__count` | Category card, its name and the badge with today's number of word cards (4–7) |
 | `.card--down` (`.is-turnable`) | Face-down cards on a bottom field (`--i` = depth; the top one can be turned while nothing is face up) |
@@ -104,7 +105,7 @@ background colour; aim for a 5:7 image).
 | `.card.is-top`, `.is-selected`, `.is-new`, `.is-bounce`, `.is-drag-source` | Playable / selected / just placed / rejected tap / being dragged (all cards of a run get these together) |
 | `.card-ghost` (`.is-returning`), `.card-ghost-run` + `.card-ghost-run__card`, `.card-flying` | Dragged copy of one card, of a whole run, copies flying to Done |
 | `.pile--draw`, `.pile--discard`, `.pile--done`, `.pile__flip` | Top-row piles, "Flip discard" button |
-| `.field` (`.field--top`, `.field--bottom`, `.field--pile`, `.has-run`, `.is-empty`, `.is-complete`, `.is-wrong`, `.is-correct`, `.is-drop-target`) | Fields (`.field--pile` = bottom field still holding cards, `.has-run` = with 2+ face-up cards) and their states |
+| `.field` (`.field--top`, `.field--bottom`, `.field--pile`, `.has-run`, `.has-loose`, `.is-empty`, `.is-complete`, `.is-wrong`, `.is-correct`, `.is-drop-target`) | Fields (`.field--pile` = bottom field still holding cards, `.has-run` = with 2+ face-up cards) and their states |
 | `.field__hint`, `.field__reveal`, `.field__theme` | Field texts; theme label on completion |
 | `.done-list__item` | Row in the Completed sheet |
 

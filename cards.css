@@ -33,6 +33,8 @@
    .card--empty              empty pile placeholder (+ .card__hint text)
    .card--field              a card inside a field stack (--i = 0..4, stack position;
                              0 = the category card)
+   .card--loose              word cards on a field without their category card (a loose run;
+                             also .card--field.is-top): moved together
    .card--lone               a category card alone on its field (also .card--field.is-top):
                              playable, can be taken back onto Discard
    .card--down               face-down card on a bottom field (--i = depth, 0 = lowest)
@@ -50,7 +52,7 @@
      .card-ghost-run__card
    .card-flying              copies flying to the Done pile
    .pile__flip               "Flip discard" button on the empty draw pile
-   .field (.field--top, .field--bottom, .field--pile, .has-run, .is-empty, .is-complete,
+   .field (.field--top, .field--bottom, .field--pile, .has-run, .has-loose, .is-empty, .is-complete,
            .is-wrong, .is-correct, .is-drop-target)
    .field__hint / .field__reveal / .field__theme
    .tier-1 ... .tier-4       sets --tier-bg / --tier-ink
