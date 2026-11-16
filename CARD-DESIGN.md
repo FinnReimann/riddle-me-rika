@@ -9,8 +9,11 @@ screen; `game.js` never sets visual styles. `cards.css` loads last, so it wins.
 - Serve the folder (any static server) or open `index.html`.
 - `?day=5` shows puzzle #6 (does not count towards stats); `?reset=1` restarts
   the shown day (`?day=5&reset=1`).
-- Test at iPhone SE (375 x 667 and 375 x 548), iPhone 15 (393 x 852) and a
-  Pro Max (430 x 932), light and dark. A field must hold a full stack of up
+- Test at iPhone SE (375 x 667 and 375 x 548), iPhone 14/15 Pro (393 x 852,
+  and 393 x 660 = Safari with its bars) and a Pro Max (430 x 932), light and
+  dark. Installed to the home screen the safe areas (59 px top for the Dynamic
+  Island, 34 px bottom) come from `--safe-top` / `--safe-bottom` in
+  `style.css`; set them to 59px / 34px temporarily to preview that. A field must hold a full stack of up
   to 8 cards (category card + 7 words); the room is `--stack-n` strips, and
   longer stacks / runs get thinner strips automatically (`style.css`). On
   screens under 600 px tall `--stack-ratio` drops to 0.19.
@@ -20,7 +23,7 @@ screen; `game.js` never sets visual styles. `cards.css` loads last, so it wins.
 | Group | Variables |
 | --- | --- |
 | Size & shape | `--card-ratio` (height / width, 1.4 = 5:7), `--card-max-w`, `--card-radius`, `--card-border`, `--card-shadow` |
-| Field stacking | `--stack-ratio` (visible strip of a covered card, fraction of card height; 0.19 on short screens), `--stack-offset` (derived; also the offset of run cards on a bottom field), `--down-offset` (step between face-down cards on a bottom field; squeezed automatically under a long run so a run of 4 on 7 face-down cards still fits), `--pile-offset` (peek of cards under a pile) |
+| Field stacking | `--stack-ratio` (visible strip of a covered card, fraction of card height; 0.19 on short screens), `--stack-ratio-max` (on tall screens, e.g. iPhone 14 Pro, the spare height makes strips taller, up to this; default 0.34), `--stack-offset` (derived, between the two; also the offset of run cards on a bottom field), `--down-offset` (step between face-down cards on a bottom field; squeezed automatically under a long run so a run of 4 on 7 face-down cards still fits), `--pile-offset` (peek of cards under a pile) |
 | Face | `--card-bg`, `--card-face-image`, `--card-face-image-size` |
 | Word (top) | `--word-font`, `--word-size`, `--word-weight`, `--word-color`, `--word-tracking`, `--word-transform`, `--word-top`, `--word-inset` |
 | Symbol (lower part) | `--symbol-top`, `--symbol-bottom`, `--symbol-inset` |

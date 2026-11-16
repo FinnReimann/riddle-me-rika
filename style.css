@@ -26,6 +26,10 @@
   --ui-font: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
   /* ---- Layout + card sizing ------------------------------------------- */
+  /* Safe areas (notch / Dynamic Island / home indicator when installed to the
+     home screen; 0 in the browser). One place, so they can be emulated. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
   --gutter-l: max(16px, env(safe-area-inset-left, 0px));
   --gutter-r: max(16px, env(safe-area-inset-right, 0px));
   --app-max: 520px;        /* max app width (wider in landscape, see below) */
@@ -42,7 +46,7 @@
   --chrome-h: 138px;       /* header + status + labels + gaps + paddings (non-card height) */
   --vh: 100vh;
   --avail-w: calc(min(100vw, var(--app-max)) - var(--gutter-l) - var(--gutter-r));
-  --avail-h: calc(var(--vh) - var(--chrome-h) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  --avail-h: calc(var(--vh) - var(--chrome-h) - var(--safe-top) - var(--safe-bottom));
   /* Card width: fits all field columns AND (top-row card + every field row
      holding a full stack of 1 + --stack-n cards) vertically.
      --card-ratio, --stack-ratio and --card-max-w come from cards.css. */
@@ -54,6 +58,11 @@
   );
   --card-h: calc(var(--card-w) * var(--card-ratio));
   --field-h: calc(var(--card-h) + var(--stack-n) * var(--stack-offset) + 2 * var(--field-pad));
+  /* Strip height that would fill the screen: on tall phones the cards are
+     limited by the width, and the spare height goes into taller strips
+     (cards.css clamps it between --stack-ratio and --stack-ratio-max). */
+  --stack-room: calc((var(--avail-h) - (var(--field-rows) - 1) * var(--col-gap) - 2 * var(--field-rows) * var(--field-pad)
+                      - var(--card-h) * (1 + var(--field-rows))) / (var(--field-rows) * var(--stack-n)));
 }
 
 @supports (height: 1dvh) {
@@ -62,7 +71,10 @@
 
 /* Portrait (and square-ish) screens: fields as 4 x 2, top fields above bottom fields. */
 @media (max-aspect-ratio: 1/1) {
-  :root { --field-cols: 4; --field-rows: 2; }
+  /* tighter gaps so 4 columns get bigger cards */
+  :root { --field-cols: 4; --field-rows: 2; --col-gap: 6px; --field-pad: 2px; }
+  /* Draw / Discard / Done spread over the full width: room for "Nachziehen · 25" */
+  .toprow { --toprow-w: 100%; }
 }
 /* Landscape: one row of 6 fields, the app may get wider. */
 @media (min-aspect-ratio: 1001/1000) {
@@ -167,8 +179,8 @@ button {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding-top: max(8px, env(safe-area-inset-top, 0px));
-  padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
+  padding-top: max(8px, var(--safe-top));       /* header below the Dynamic Island when installed */
+  padding-bottom: max(10px, var(--safe-bottom)); /* nothing under the home indicator */
   padding-left: var(--gutter-l);
   padding-right: var(--gutter-r);
 }
@@ -300,7 +312,8 @@ button {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   column-gap: var(--col-gap);
-  width: calc(100% * 3 / var(--field-cols) - var(--col-gap) * (var(--field-cols) - 3) / var(--field-cols));
+  /* aligned over the first 3 field columns; portrait: full width (see the media query above) */
+  width: var(--toprow-w, calc(100% * 3 / var(--field-cols) - var(--col-gap) * (var(--field-cols) - 3) / var(--field-cols)));
 }
 .slot {
   display: flex;
@@ -472,7 +485,7 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; }
   align-items: center;
   justify-content: center;
   background: var(--backdrop);
-  padding: max(16px, env(safe-area-inset-top, 0px)) var(--gutter-r) max(16px, env(safe-area-inset-bottom, 0px)) var(--gutter-l);
+  padding: max(16px, var(--safe-top)) var(--gutter-r) max(16px, var(--safe-bottom)) var(--gutter-l);
 }
 .modal[hidden] { display: none; }
 .modal--sheet { align-items: flex-end; }

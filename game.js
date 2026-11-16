@@ -41,7 +41,7 @@
      1. CORE
      ======================================================================= */
   var Core = (function () {
-    var SAVE_VERSION = 7;
+    var SAVE_VERSION = 8;
     var STATS_VERSION = 3;
     var EPOCH_UTC = Date.UTC(2026, 10, 14); // 2026-11-14 = puzzle #1
     var DAY_MS = 86400000;
@@ -184,8 +184,11 @@
      * Fresh state. fields[f] = { c:[card ids, bottom first], d:face-down count, p:pile? }
      *   p = true while a bottom field still holds cards. Its face-down cards are
      *   always the lowest d cards; the face-up cards above them (c.slice(d)) are
-     *   its RUN: one card, or several word cards of the same category. The run
-     *   is played as one unit; word cards of its category can be added on top.
+     *   its RUN: one card, several word cards of the same category, or a
+     *   category card with word cards of its category on it (a stack on the
+     *   pile: completes there like on a field). The run is played as one unit
+     *   (a run with its category card only onto a free field); word cards of
+     *   its category can be added on top.
      *   Once empty it becomes p = false, a free field like the top ones.
      */
     function newGame(game, day) {
@@ -250,10 +253,15 @@
             var run = ids.slice(fl.d);
             if (run.length > MAX_CARDS_PER_CATEGORY) return null;
             if (run.length > 1) {
+              // words of one category, or that category's card at the base + its words (not complete)
+              var rcat = game.cards[run[0]].cat;
               for (var r = 0; r < run.length; r++) {
                 var rc = game.cards[run[r]];
-                if (rc.kind !== 'word' || rc.cat !== game.cards[run[0]].cat) return null;
+                if (rc.cat !== rcat || (rc.kind === 'cat' && r > 0)) return null;
               }
+              if (game.cards[run[0]].kind === 'cat' && run.length > game.cats[rcat].n) return null;
+              if (game.cards[run[0]].kind === 'cat' && fieldCats[rcat]) return null;
+              if (game.cards[run[0]].kind === 'cat') fieldCats[rcat] = true;
             }
           } else {
             if (fl.d !== 0) return null;
@@ -356,8 +364,7 @@
      * Why card `id` (or a run starting with it) may not go on field f:
      *   null (fits) | 'locked' (a bottom pile whose top card is face down, no move)
      *   | 'needCategory' (word card on an empty field) | 'occupied' (category card
-     *   on a stack or run) | 'mismatch' (word card of another category, or onto a
-     *   face-up category card on a bottom pile).
+     *   on a stack or run) | 'mismatch' (word card of another category).
      */
     function placeReject(state, game, id, f) {
       var fl = state.fields[f];
@@ -365,8 +372,9 @@
       if (fl.p) {
         if (fl.d >= fl.c.length) return 'locked';
         if (card.kind === 'cat') return 'occupied';
+        // a run of word cards, or a face-up category card (with its words) acting as a stack base
         var top = game.cards[fl.c[fl.c.length - 1]];
-        return top.kind === 'word' && top.cat === card.cat ? null : 'mismatch';
+        return top.cat === card.cat ? null : 'mismatch';
       }
       if (!fl.c.length) return card.kind === 'cat' ? null : 'needCategory';
       if (card.kind === 'cat') return 'occupied';
@@ -436,11 +444,16 @@
       var stack = target.c;
       for (var u = 0; u < unit.length; u++) stack.push(unit[u]);
       var res = { ok: true, id: id, ids: unit, to: to };
-      if (!target.p && stack.length >= 1 + game.cats[game.cards[stack[0]].cat].n) {
-        res.completed = game.cards[id].cat;
-        res.completedCards = stack.slice();
+      // the stack: a field's cards, or the face-up run of a bottom pile (when its base is the category card)
+      var base = target.p ? target.d : 0;
+      var baseCard = game.cards[stack[base]];
+      if (baseCard.kind === 'cat' && stack.length - base >= 1 + game.cats[baseCard.cat].n) {
+        res.completed = baseCard.cat;
+        res.completedCards = stack.slice(base);
+        res.fromPile = target.p;
         state.done.push(res.completed);
-        state.fields[to].c = [];
+        stack.splice(base);
+        if (!stack.length) { target.p = false; target.d = 0; }
         if (state.done.length >= game.cats.length) {
           state.status = 'won';
           res.won = true;
@@ -476,7 +489,15 @@
       var stackOf = {}, free = [], runs = [];
       for (f = 0; f < FIELDS; f++) {
         var fl = s.fields[f];
-        if (fl.p) { if (fl.d < fl.c.length) runs.push(f); continue; }
+        if (fl.p) {
+          if (fl.d < fl.c.length) {
+            runs.push(f);
+            // a face-up category card on a pile is a stack base too
+            var b = cards[fl.c[fl.d]];
+            if (b.kind === 'cat' && stackOf[b.cat] === undefined) stackOf[b.cat] = f;
+          }
+          continue;
+        }
         if (fl.c.length) stackOf[cards[fl.c[0]].cat] = f; else free.push(f);
       }
       // dig where most cards are still face down
@@ -608,7 +629,7 @@
           if (!fl.p && fl.c.length && cards[fl.c[0]].cat === c.cat) return true;
           if (fl.p && fl.d < fl.c.length) {
             var top = cards[fl.c[fl.c.length - 1]];
-            if (top.kind === 'word' && top.cat === c.cat) return true;
+            if (top.cat === c.cat) return true; // a run or a category card on the pile
           }
         }
         return false;
@@ -1249,8 +1270,9 @@
    * --nd = face-down steps, --rl = run length - 1 (style.css squeezes the
    * face-down step so a run of 4 on 7 face-down cards fits the field).
    */
-  function pileFieldEl(f, fl, sel) {
-    var d = fl.d, run = fl.c.slice(d);
+  function pileFieldEl(f, fl, sel, reveal) {
+    // while a stack completes on the pile, its cards are shown on top of the face-down cards
+    var d = fl.d, run = reveal ? reveal.cards : fl.c.slice(d);
     var kids = [], i;
     for (i = 0; i < d; i++) {
       if (i === d - 1 && !run.length) {
@@ -1270,7 +1292,8 @@
       var attrs = {
         cls: 'card--run' + (isTop ? ' card--down-top' : '') + ' is-top' + (selected ? ' is-selected' : '') + (isNew(id) ? ' is-new' : ''),
         style: '--i:' + d + ';--r:' + r,
-        'data-drag': 'f' + f
+        'data-drag': reveal ? null : 'f' + f,
+        'data-fly': reveal ? '1' : null
       };
       if (isTop) {
         attrs['data-fk'] = 'f' + f;
@@ -1285,11 +1308,17 @@
     });
     var steps = Math.max(1, run.length ? d : d - 1);
     var props = {
-      class: 'field field--bottom field--pile' + (run.length > 1 ? ' has-run' : ''), 'data-drop': String(f),
+      class: 'field field--bottom field--pile' + (run.length > 1 ? ' has-run' : '') + (reveal ? ' is-complete' : ''), 'data-drop': String(f),
       style: '--nd:' + steps + ';--rl:' + Math.max(0, run.length - 1)
     };
-    if (run.length) {
-      // a face-up word card is a target: same-category word cards / runs go on it
+    if (reveal) {
+      var rcat = game.cats[reveal.cat];
+      kids.push(h('div', { class: 'field__reveal tier-' + rcat.tier },
+        h('span', { class: 'field__theme', 'data-len': themeLen(themeOf(rcat)), text: themeOf(rcat) })));
+      props.role = 'group';
+      props['aria-label'] = themeOf(rcat).replace(SHY, '');
+    } else if (run.length) {
+      // a face-up word card (or category card) is a target: same-category word cards / runs go on it
       props.role = 'button';
       props.tabindex = '0';
       props['data-fk'] = 'drop' + f;
@@ -1305,7 +1334,7 @@
     var fl = state.fields[f];
     var reveal = ui.reveal && ui.reveal.field === f ? ui.reveal : null;
     var rowCls = f < Core.CONFIG.TOP_FIELDS ? ' field--top' : ' field--bottom';
-    if (!reveal && fl.p) return pileFieldEl(f, fl, sel);
+    if (fl.p) return pileFieldEl(f, fl, sel, reveal);
     var ids = reveal ? reveal.cards : fl.c;
     // a category card alone on its field is playable: it can be taken back to Discard
     var lone = !reveal && Core.isLone(state, f) && state.status === 'playing';
@@ -1321,7 +1350,7 @@
       }
       return cardEl(game.cards[id], 'div', {
         cls: 'card--field' + (isNew(id) ? ' is-new' : ''),
-        style: '--i:' + i, 'aria-hidden': 'true'
+        style: '--i:' + i, 'aria-hidden': 'true', 'data-fly': reveal ? '1' : null
       });
     });
     var label;
@@ -1486,7 +1515,7 @@
     var field = dropEl(f);
     if (!field) return 0;
     var target = els.done.getBoundingClientRect();
-    var cardsEls = field.querySelectorAll('.card');
+    var cardsEls = field.querySelectorAll('[data-fly]'); // the completed cards (not a pile's face-down cards)
     var clones = [];
     cardsEls.forEach(function (el, i) {
       var r = el.getBoundingClientRect();

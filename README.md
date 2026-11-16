@@ -16,13 +16,16 @@ works offline and can be installed on the home screen.
   the draw pile; at least half of the category cards (4) are always in it.
 - Tap a face-down card to turn it over (free) once nothing on that field is
   face up.
-- **Runs:** onto a face-up *word* card on a bottom field you can put word cards
-  of the same category (from Draw, Discard or another bottom field). The
-  face-up cards there form a run that always moves as a whole, for 1 move:
-  onto its category stack or onto another bottom field's face-up word card of
-  the same category. Category cards never go onto a run. Once the run is gone,
-  the next face-down card can be turned. A bottom field becomes a free field
-  only when it is completely empty.
+- **Runs:** onto a face-up card on a bottom field you can put word cards of
+  its category (from Draw, Discard or another bottom field): onto a word card,
+  or onto the category card itself, which then works as a stack right there
+  (with all N words it is done and goes to Done). The face-up cards there form
+  a run that always moves as a whole, for 1 move: a run of word cards onto its
+  category stack or onto another bottom field's face-up card of the same
+  category; a run with its category card only onto a free field (never onto
+  Discard). Category cards never go onto a run. Once the run is gone (or
+  done), the next face-down card can be turned. A bottom field becomes a free
+  field only when it is completely empty.
 - An empty field only accepts a category card. Word cards (and runs) go onto
   the stack whose category card matches. Category card + all its N words = done: the
   name shows briefly, the stack moves to Done and the field is empty again.
@@ -82,20 +85,20 @@ otherwise deals again with a seed derived from the day. Everyone gets the same
 deal; it takes about 0.1 ms (at most ~2 ms) on a laptop.
 
 The budget was calibrated with the solver over 2000 daily deals (days
-0–1999, 41–63 cards a day, median 52): the solver needs its card count plus
-0–15 moves (median +4, 90% within +10), almost the same for small and big
+0–1999, 41–63 cards a day, median 52): the solver needs its card count
+−2 to +15 moves (median +3, 90% within +8), almost the same for small and big
 days, so the budget is cards + 25 and the stars count moves above the card
-count. 335 days needed a reshuffle (at most 4). The solver always has at least
-10 moves to spare and gets ★★★ on 81% of days, ★★☆ on the rest.
+count. 247 days needed a reshuffle (at most 2). The solver always has at least
+10 moves to spare and gets ★★★ on 89% of days, ★★☆ on the rest.
 Heads-up: the game is still unforgiving. Other sensible play styles (using
-the take-back when stuck) finish about 77–83% of days within the budget when
-they put down useful category cards first, 61% when they pick category cards
-at random, and only 12% when they ignore runs. When they get stuck, every
+the take-back when stuck) finish about 77–80% of days within the budget when
+they put down useful category cards first, 76% when they pick category cards
+at random, and only 15% when they ignore runs. When they get stuck, every
 field holds a stack that already has word cards, or a field is free but no
 category card can be reached. (With 3 + 3 fields this was 42–60% without the
 moves limit, which is why there are 4 + 4.)
 If you change the field / card numbers, the layout in `style.css`
-(`--field-cols`, `--field-rows`, `--stack-n`) has to match (long stacks and runs get thinner strips automatically), and the budget
+(`--field-cols`, `--field-rows`, `--stack-n`) has to match (long stacks and runs get thinner strips automatically; on tall screens the spare height makes the strips taller, up to `--stack-ratio-max` in `cards.css`), and the budget
 should be re-checked. Changing the rules makes old saves invalid; they are
 simply replaced by a new game.
 

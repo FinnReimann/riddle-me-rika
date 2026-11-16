@@ -63,7 +63,8 @@
   --card-max-w: 132px;             /* never wider than this (tablets / desktop) */
   --stack-ratio: 0.23;             /* visible strip of a covered card in a field, as a fraction of card height
                                       (smaller on short screens, see "Short screens" below) */
-  --stack-offset: calc(var(--card-h) * var(--stack-ratio));
+  --stack-ratio-max: 0.34;         /* tall screens: strips grow up to this (words read better) */
+  --stack-offset: clamp(calc(var(--card-h) * var(--stack-ratio)), var(--stack-room, 0px), calc(var(--card-h) * var(--stack-ratio-max)));
   --down-offset: calc(var(--card-h) * 0.03);  /* step between face-down cards on a bottom field (8 cards = 21% of a card);
                                                  shrinks automatically under a long face-up run (style.css) */
   --pile-offset: 2.5px;            /* how far cards under a pile's top card peek out */
