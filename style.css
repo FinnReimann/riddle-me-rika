@@ -302,6 +302,7 @@ button {
 .btn-row { display: flex; gap: 10px; }
 .btn-row .btn { flex: 1 1 0; }
 .result__practice { font-size: 13px; font-weight: 700; color: var(--accent); }
+.result__tally { font-size: 14px; font-weight: 650; color: var(--ink); }
 .slot__label.is-bump { animation: rr-bump 0.45s ease; }
 
 /* ---- Status row ----------------------------------------------------------- */

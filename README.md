@@ -26,29 +26,22 @@ works offline and can be installed on the home screen.
   Discard). Category cards never go onto a run. Once the run is gone (or
   done), the next face-down card can be turned. A bottom field becomes a free
   field only when it is completely empty.
-- An empty field takes a category card, a word card or a run. Word cards (and
-  runs) go onto the stack whose category card matches. Category card + all its
-  N words = done: the name shows briefly, the stack moves to Done and the field
-  is empty again.
-- **Loose runs:** word cards lying on a field without their category card.
-  More word cards of the same category can go on top (from anywhere), and the
-  whole loose run moves as one unit (1 move): onto its category stack (on a
-  field or on a bottom pile), onto another run of its category, or onto
-  another empty field. A category card is always the lowest card of a stack,
-  so it never goes onto a loose run: move the loose run onto the category card
-  later.
+- An empty field only accepts a category card. Word cards (and runs) go onto
+  the stack whose category card matches. Category card + all its N words =
+  done: the name shows briefly, the stack moves to Done and the field is empty
+  again.
 - **Discard:** the draw card can be parked there. A category card that lies
   alone on a field (no word cards on it yet) can be taken back onto Discard
   too (1 move; it can't move to another field). Category cards with words on
-  them stay put. Bottom-field cards and loose runs snap back with "Can't go to
-  Discard" (free).
+  them stay put. Bottom-field cards snap back with "Can't go to Discard"
+  (free).
 - Moves count down from the day's budget (cards + 20, e.g. 52 cards = 72
   moves). Every play costs 1 move: a card or a whole run onto a field, stack
   or run, a card onto Discard (also a taken-back category card). A wrong one
-  is free: it bounces back ("Doesn't fit") and breaks the combo. Turning
+  is free: it bounces back ("Doesn't fit"). Turning
   cards, flipping the discard pile back into the empty draw pile, selecting
   and refused moves onto Discard are free too.
-- All 8 done = solved; stars by moves used: ★★★ for at most cards + 7,
+- All 8 done = solved; stars by moves used: ★★★ for at most cards + 6,
   ★★☆ for at most cards + 14, else ★☆☆. Moves at 0 before that = "Out of
   moves" (the streak breaks).
 - **Restart** (↻ in the header): starts today's puzzle over from scratch (same
@@ -57,11 +50,23 @@ works offline and can be installed on the home screen.
   practice round ("Practice round – doesn't count").
 - **Feedback:** correct plays pop and sparkle, runs land one after another,
   turned cards flip, wrong ones wobble, a completed category gets a confetti
-  burst, correct plays in a row show "Combo ×3!" and up, and a win rains
-  confetti. Small synthesized sounds go with it; switch them off in the
+  burst, and a win rains confetti. Small synthesized sounds go with it; switch them off in the
   how-to sheet ("Sound" / "Ton", saved on the device). With "reduce motion"
   on the phone, particles and shaking are left out. Tuning: `fx.js` (FX
   block) and the "Feedback" variables in `cards.css`.
+- **Move ratings:** after every card play a label floats up where the card
+  landed: **Perfect!** (Perfekt!) for one of the best moves (a word card / run
+  onto its category stack, completing a category, or a category card while
+  one of its words is visible; "Perfect ×3" for Perfects in a row), **Good**
+  (Gut) for a useful move when a better one was there (building a run,
+  moving a pile's category stack to a free field, a category card with none
+  of its words visible, discarding when nothing perfect was there) and
+  **Detour** (Umweg, small and friendly) for discarding or taking back a
+  category card while a perfect move was there, or using the last free field
+  for a category card while a perfect move was elsewhere. Turning cards and
+  flipping the discard pile aren't rated, wrong moves just bounce. The result
+  panel shows the tally ("12 Perfect · 5 Good · 2 Detour") and the share text
+  adds "✨12 👍5 ↩︎2". The rules are `rateMove` in `game.js`.
 - Controls: drag a playable card or run, or tap it (picks it; a run as a
   whole) and tap a field. The draw card is selected by default, so tapping a
   field plays it; tapping the draw card twice discards it. After picking a
@@ -82,7 +87,7 @@ works offline and can be installed on the home screen.
 | `FACE_DOWN_PER_FIELD` | 6 | face-down cards per bottom field (24 in all; the rest, 16–40, is the draw pile) |
 | `MIN_CATEGORY_CARDS_IN_DRAW` | 4 (half of 8) | category cards always dealt into the draw pile |
 | `MOVES_PER_CARD` / `MOVES_BASE` | 1 / 20 | day's move budget = cards × 1 + 20 (40 cards: 60, 64 cards: 84) |
-| `STAR3_EXTRA` / `STAR2_EXTRA` | 7 / 14 | ★★★ / ★★☆ when finished in at most cards + this many moves (= 13 / 6 moves left) |
+| `STAR3_EXTRA` / `STAR2_EXTRA` | 6 / 14 | ★★★ / ★★☆ when finished in at most cards + this many moves (= 14 / 6 moves left) |
 | `DEAL_SPARE` | 10 | a deal is only used if the solver finishes it with at least this many of the day's moves to spare |
 | `DEAL_ATTEMPTS` | 200 | reshuffles tried per day before giving up (never needed more than 4) |
 | `DEAL_HELP` | 0.75 | how often a dealt face-down card is one the solver can use right away (higher = friendlier deals) |
@@ -108,13 +113,13 @@ The budget was calibrated with the solver over 2000 daily deals (days
 −1 to +10 moves on the deals it accepts (median +5, 90% within +8; with 6
 face-down cards the draw pile is bigger, so there is more cycling), almost
 the same for small and big days, so the budget is cards + 20 and the stars
-count moves above the card count. 211 days needed a reshuffle (at most 3).
-The solver always has at least 10 moves to spare and gets ★★★ on 83% of days,
+count moves above the card count. 190 days needed a reshuffle (at most 3).
+The solver always has at least 10 moves to spare and gets ★★★ on 79% of days,
 ★★☆ on the rest; other careful styles get ★★★ on about 60% of the days.
 Wrong moves are free, which doesn't change these numbers (the solver never
 makes one). Other sensible play styles (using the take-back when stuck)
-finish about 92–96% of days within the budget when they put down useful
-category cards first, 92% when they pick category cards at random, and 23%
+finish about 89–92% of days within the budget when they put down useful
+category cards first, 89% when they pick category cards at random, and 23%
 when they ignore runs. When they get stuck, every
 field holds a stack that already has word cards, or a field is free but no
 category card can be reached. (With 3 + 3 fields this was 42–60% without the
@@ -167,7 +172,7 @@ big change, bump `CACHE_VERSION` in `sw.js` so every device drops its old copy.
 |---|---|
 | Card look (colours, fonts, zones, images) | `cards.css`, guide in `CARD-DESIGN.md` |
 | Card images | `assets/card-face.png`, `assets/card-back.png` (750 × 1050) |
-| Symbols | `assets/symbols/<name>.png` (512 × 512), list in `SYMBOLS.md`; generated fallbacks in `assets/symbols/generated/<name>.svg` |
+| Symbols | `assets/symbols/<name>.png` (512 × 512), list in `SYMBOLS.md`; generated fallbacks in `assets/symbols/generated/<name>.png` (rendered from the `.svg` sources there) |
 | Design templates | `assets/templates/` |
 | Affinity files, sketches (local only, not in git) | `designer/` |
 | Categories and words (English `word`/`theme`, German `wordDe`/`themeDe`) | `categories.js` |
@@ -197,7 +202,7 @@ game uses German if the phone is set to German, otherwise English.
 ## Symbols
 
 Each card first tries `assets/symbols/<symbol>.png`, then the generated
-`assets/symbols/generated/<symbol>.svg`, then a placeholder. To use your own
+`assets/symbols/generated/<symbol>.png` (rendered from the `.svg` sources there), then a placeholder. To use your own
 drawing, drop your PNG into `assets/symbols/` with the same name and it
 replaces the generated SVG automatically. Category cards use
 `category-<categoryId>` (e.g. `category-fruit.png`).

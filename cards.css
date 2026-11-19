@@ -33,8 +33,6 @@
    .card--empty              empty pile placeholder (+ .card__hint text)
    .card--field              a card inside a field stack (--i = 0..4, stack position;
                              0 = the category card)
-   .card--loose              word cards on a field without their category card (a loose run;
-                             also .card--field.is-top): moved together
    .card--lone               a category card alone on its field (also .card--field.is-top):
                              playable, can be taken back onto Discard
    .card--down               face-down card on a bottom field (--i = depth, 0 = lowest)
@@ -47,7 +45,7 @@
    .card.is-new              just landed in a field (pop + squash; --k = position in a run → stagger)
    .card.is-flip             just turned (3D flip)   .card.is-nope   wrong move (wobble)
    .field.is-glow / .is-celebrate   correct placement glow / category completed
-   .combo (.is-show)         floating "Combo ×n!" badge   .fx-canvas   particle / confetti layer (fx.js)
+   .fx-rating(--perfect|--good|--detour)  floating move rating   .fx-canvas   particle / confetti layer (fx.js)
    .result__star (.is-on)    result stars popping in one by one
    .card.is-bounce           tapped onto a field where it didn't fit
    .card.is-drag-source      original card while being dragged
@@ -56,7 +54,7 @@
      .card-ghost-run__card
    .card-flying              copies flying to the Done pile
    .pile__flip               "Flip discard" button on the empty draw pile
-   .field (.field--top, .field--bottom, .field--pile, .has-run, .has-loose, .is-empty, .is-complete,
+   .field (.field--top, .field--bottom, .field--pile, .has-run, .is-empty, .is-complete,
            .is-wrong, .is-correct, .is-drop-target)
    .field__hint / .field__reveal / .field__theme
    .tier-1 ... .tier-4       sets --tier-bg / --tier-ink
@@ -95,8 +93,8 @@
 
   /* ---- Symbol area (lower part of the card) ---------------------------------- */
   --symbol-top: 30%;               /* top of the symbol area, % of card height */
-  --symbol-bottom: 8%;             /* gap below it */
-  --symbol-inset: 12%;             /* left/right gap */
+  --symbol-bottom: 6%;             /* gap below it */
+  --symbol-inset: 8%;              /* left/right gap */
 
   /* ---- Placeholder (when assets/symbols/<symbol>.png is missing) ------------ */
   --placeholder-size: 74%;         /* of the symbol area's width */
@@ -185,9 +183,13 @@
   --fx-nope-ms: 480ms;             /* wrong card wobbles */
   --fx-celebrate-glow: rgba(255, 215, 106, 0.85); /* completed category: warm glow (+ tier colour label) */
   --fx-theme-scale: 1.25;          /* "Obst ✓" pops in this much bigger */
-  --fx-combo-bg: linear-gradient(135deg, #ffc898, #ffdefa);
-  --fx-combo-ink: #5a2e0e;
-  --fx-combo-ms: 1100ms;
+  --fx-perfect-bg: linear-gradient(135deg, #cdf2ca, #ffe7a3); /* move ratings: Perfect = mint / gold */
+  --fx-perfect-ink: #1f4a1c;
+  --fx-good-bg: #ffc898;           /* Good = peach */
+  --fx-good-ink: #5a2e0e;
+  --fx-detour-bg: rgba(249, 243, 223, 0.92); /* Detour = muted cream, never red */
+  --fx-detour-ink: #6f6157;
+  --fx-rating-size: 16px;          /* base font size (fx.js scales per rating)*/
   --fx-star-ms: 420ms;             /* result stars pop in one by one */
   --fx-star-gap: 180ms;
 
@@ -404,33 +406,29 @@
 @keyframes rr-celebrate { 0% { box-shadow: 0 0 0 0 var(--fx-celebrate-glow); } 30% { box-shadow: 0 0 0 4px var(--fx-celebrate-glow), 0 0 34px 10px var(--fx-celebrate-glow); } 100% { box-shadow: 0 0 0 0 transparent; } }
 .field.is-celebrate .field__reveal { animation: rr-theme-pop 520ms cubic-bezier(.2,.9,.3,1.4) both; }
 @keyframes rr-theme-pop { 0% { transform: scale(0.3); opacity: 0; } 60% { transform: scale(var(--fx-theme-scale)); opacity: 1; } 100% { transform: scale(1.08); opacity: 1; } }
-/* "Combo ×3!" badge, grows with the streak (--combo-scale set by the game) */
-.combo {
-  position: absolute;
-  left: 50%;
-  top: calc(var(--card-h) + var(--label-h) + 8px);
-  z-index: 960;
-  padding: 6px 14px;
+/* Move ratings (fx.js places them at the drop point; size per rating via --fx-rating-scale) */
+.fx-rating {
+  position: fixed;
+  z-index: 1060;
+  padding: 4px 12px;
   border-radius: 999px;
-  background: var(--fx-combo-bg);
-  color: var(--fx-combo-ink);
   font-family: var(--word-font);
-  font-size: 17px;
+  font-size: var(--fx-rating-size);
   font-weight: 800;
-  letter-spacing: 0.01em;
   white-space: nowrap;
-  box-shadow: 0 6px 18px rgba(224, 123, 60, 0.35);
   pointer-events: none;
-  opacity: 0;
-  transform: translate(-50%, 0) scale(var(--combo-scale, 1));
+  transform: translate(-50%, -100%) scale(var(--fx-rating-scale, 1));
+  animation: rr-rating var(--fx-rating-ms, 1000ms) cubic-bezier(.2,.9,.3,1.2) both;
 }
-.combo.is-show { animation: rr-combo var(--fx-combo-ms) cubic-bezier(.2,.9,.3,1.2) both; }
-@keyframes rr-combo {
-  0%   { opacity: 0; transform: translate(-50%, 12px) scale(calc(var(--combo-scale, 1) * 0.5)); }
-  18%  { opacity: 1; transform: translate(-50%, 0) scale(calc(var(--combo-scale, 1) * 1.15)); }
-  30%  { transform: translate(-50%, 0) scale(var(--combo-scale, 1)); }
-  75%  { opacity: 1; transform: translate(-50%, -6px) scale(var(--combo-scale, 1)); }
-  100% { opacity: 0; transform: translate(-50%, -22px) scale(var(--combo-scale, 1)); }
+.fx-rating--perfect { background: var(--fx-perfect-bg); color: var(--fx-perfect-ink); box-shadow: 0 6px 18px rgba(224, 164, 0, 0.35); }
+.fx-rating--good { background: var(--fx-good-bg); color: var(--fx-good-ink); box-shadow: 0 4px 12px rgba(224, 123, 60, 0.25); }
+.fx-rating--detour { background: var(--fx-detour-bg); color: var(--fx-detour-ink); font-weight: 650; box-shadow: 0 2px 6px rgba(59, 47, 42, 0.12); }
+@keyframes rr-rating {
+  0%   { opacity: 0; transform: translate(-50%, -60%) scale(calc(var(--fx-rating-scale, 1) * 0.5)); }
+  20%  { opacity: 1; transform: translate(-50%, -110%) scale(calc(var(--fx-rating-scale, 1) * 1.12)); }
+  32%  { transform: translate(-50%, -110%) scale(var(--fx-rating-scale, 1)); }
+  75%  { opacity: 1; transform: translate(-50%, -150%) scale(var(--fx-rating-scale, 1)); }
+  100% { opacity: 0; transform: translate(-50%, -190%) scale(var(--fx-rating-scale, 1)); }
 }
 /* particles / confetti canvas (fx.js); above the board, below the sheets */
 .fx-canvas { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 1050; pointer-events: none; }
@@ -713,7 +711,7 @@
   .card.is-flip, .card.is-nope, .field.is-glow, .field.is-celebrate, .field.is-celebrate .field__reveal,
   .result__star, .card.is-flip::after { animation: none; }
   .card.is-flip::after { display: none; }
-  .combo.is-show { animation: rr-soft-fade 300ms ease both; animation-direction: alternate; }
+  .fx-rating { animation: rr-soft-fade 300ms ease both; }
   .result, .result--lost { animation: rr-soft-fade 300ms ease both; }
   .card-ghost, .card-ghost-run { transform: none; }
   .card--down.is-turnable::after { animation: none; }

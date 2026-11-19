@@ -34,7 +34,11 @@
       cancel: 'Cancel',
       toastRestarted: 'Fresh start!',
       practiceNote: 'Practice round – doesn’t count',
-      combo: 'Combo ×{n}!',              // floating badge for correct plays in a row
+      ratePerfect: 'Perfect!',           // move ratings, shown where the card lands
+      ratePerfectRun: 'Perfect ×{n}',    // perfect moves in a row
+      rateGood: 'Good',
+      rateDetour: 'Detour',
+      tally: '{p} Perfect · {g} Good · {d} Detour', // result panel
       sound: 'Sound',                    // sound on/off switch (how-to sheet)
       close: 'Close',                    // aria-label of the X in modals
 
@@ -44,7 +48,7 @@
       labelDiscard: 'Discard · {n}',
       labelDone: 'Done · {k}/{total}',
       parkHere: 'Park here',             // empty discard pile
-      fieldHint: 'Category card or cards', // empty field
+      fieldHint: 'Category card here',   // empty field
       flipDiscard: 'Flip discard',       // button on the empty draw pile
 
       // Toasts
@@ -65,7 +69,7 @@
       ariaDiscardOther: 'Discard pile, {n} cards',
       ariaFlip: 'Flip discard pile into draw pile',
       ariaDone: 'Done pile, {k} of {total} categories. Show completed categories',
-      ariaFieldEmpty: 'Field {f}, empty. Category card or word cards here',
+      ariaFieldEmpty: 'Field {f}, empty. Category card here',
       ariaField: 'Field {f}: {cat}, {k} of {max} cards: {words}',
       ariaPile: 'Field {f}, {n} dealt cards',
       ariaTurn: 'Field {f}: turn the top card over ({n} face down)',
@@ -73,8 +77,6 @@
       ariaPileCard: 'Field {f}: {word}',
       ariaPileCardSelected: 'Field {f}: {word} (selected)',
       ariaRun: 'Field {f}: run of {k} cards: {words}',
-      ariaLoose: 'Field {f}: word cards without category card: {words}',
-      ariaLooseSelected: 'Field {f}: word cards without category card: {words} (selected)',
       ariaLone: 'Field {f}: category card {name}, no word cards yet',
       ariaLoneSelected: 'Field {f}: category card {name} (selected, tap Discard to take it back)',
       ariaRunSelected: 'Field {f}: run of {k} cards: {words} (selected)',
@@ -98,7 +100,7 @@
       // How-to modal ({cats} from the top of game.js, {moves} = today's move budget)
       helpTitle: 'How to play',
       help1: 'Finish all {cats} categories with {moves} moves.',
-      help2: 'Put a category card on an empty field, then stack its word cards on it. The number on the category card says how many. Empty fields also take word cards – move them onto their category card later.',
+      help2: 'Put a category card on an empty field, then stack its word cards on it. The number on the category card says how many.',
       help3: 'Every card you play costs a move. Doesn’t fit? It bounces back – no move lost.',
       help4: 'Tap face-down cards to turn them over (free). An emptied bottom field is a free field.',
       helpRuns: 'On a bottom field you can pile word cards onto a face-up card of their category – a word card or the category card itself (it completes right there). Such a run moves as a whole, for one move; with its category card only onto a free field.',
@@ -140,7 +142,11 @@
       cancel: 'Abbrechen',
       toastRestarted: 'Neuer Anlauf!',
       practiceNote: 'Übungsrunde – zählt nicht',
-      combo: 'Kombo ×{n}!',
+      ratePerfect: 'Perfekt!',
+      ratePerfectRun: 'Perfekt ×{n}',
+      rateGood: 'Gut',
+      rateDetour: 'Umweg',
+      tally: '{p} Perfekt · {g} Gut · {d} Umweg',
       sound: 'Ton',
       close: 'Schließen',
 
@@ -149,7 +155,7 @@
       labelDiscard: 'Ablage · {n}',
       labelDone: 'Fertig · {k}/{total}',
       parkHere: 'Hier parken',
-      fieldHint: 'Kategorie-Karte oder Karten',
+      fieldHint: 'Kategorie-Karte hierher',
       flipDiscard: 'Ablage umdrehen',
 
       toastWrong: 'Passt nicht',
@@ -168,7 +174,7 @@
       ariaDiscardOther: 'Ablage, {n} Karten',
       ariaFlip: 'Ablage umdrehen und zum Nachziehstapel machen',
       ariaDone: 'Fertig-Stapel, {k} von {total} Kategorien. Fertige Kategorien zeigen',
-      ariaFieldEmpty: 'Feld {f}, leer. Kategorie-Karte oder Wort-Karten hierher',
+      ariaFieldEmpty: 'Feld {f}, leer. Kategorie-Karte hierher',
       ariaField: 'Feld {f}: {cat}, {k} von {max} Karten: {words}',
       ariaPile: 'Feld {f}, {n} ausgeteilte Karten',
       ariaTurn: 'Feld {f}: oberste Karte umdrehen ({n} verdeckt)',
@@ -176,8 +182,6 @@
       ariaPileCard: 'Feld {f}: {word}',
       ariaPileCardSelected: 'Feld {f}: {word} (ausgewählt)',
       ariaRun: 'Feld {f}: Reihe aus {k} Karten: {words}',
-      ariaLoose: 'Feld {f}: Wort-Karten ohne Kategorie-Karte: {words}',
-      ariaLooseSelected: 'Feld {f}: Wort-Karten ohne Kategorie-Karte: {words} (ausgewählt)',
       ariaLone: 'Feld {f}: Kategorie-Karte {name}, noch ohne Wort-Karten',
       ariaLoneSelected: 'Feld {f}: Kategorie-Karte {name} (ausgewählt, Ablage antippen zum Zurücknehmen)',
       ariaRunSelected: 'Feld {f}: Reihe aus {k} Karten: {words} (ausgewählt)',
@@ -198,7 +202,7 @@
 
       helpTitle: 'So geht’s',
       help1: 'Schaff alle {cats} Kategorien mit {moves} Zügen.',
-      help2: 'Leg eine Kategorie-Karte auf ein leeres Feld und stapel ihre Wort-Karten drauf. Die Zahl auf der Kategorie-Karte sagt, wie viele. Leere Felder nehmen auch Wort-Karten – leg sie später auf ihre Kategorie-Karte.',
+      help2: 'Leg eine Kategorie-Karte auf ein leeres Feld und stapel ihre Wort-Karten drauf. Die Zahl auf der Kategorie-Karte sagt, wie viele.',
       help3: 'Jede Karte, die du spielst, kostet einen Zug. Passt nicht? Sie springt zurück – kostet keinen Zug.',
       help4: 'Tipp verdeckte Karten an, um sie umzudrehen (gratis). Ein leer geräumtes unteres Feld ist frei.',
       helpRuns: 'Auf einem unteren Feld kannst du Wort-Karten auf eine offene Karte ihrer Kategorie legen – eine Wort-Karte oder die Kategorie-Karte selbst (dann wird sie dort fertig). So eine Reihe bewegst du als Ganzes für einen Zug, mit Kategorie-Karte nur auf ein freies Feld.',

@@ -24,7 +24,7 @@
   // calibrated with the built-in solver over 2000 daily deals (see README "Config").
   var MOVES_PER_CARD = 1;       // budget per card of the day (every play costs 1 move, also a wrong one)
   var MOVES_BASE = 20;          // + this many (40 cards = 60 moves, 64 cards = 84)
-  var STAR3_EXTRA = 7;          // ★★★: finished in at most (cards + this) moves
+  var STAR3_EXTRA = 6;          // ★★★: finished in at most (cards + this) moves
   var STAR2_EXTRA = 14;         // ★★☆: at most (cards + this) moves (more = ★☆☆)
   var DEAL_SPARE = 10;          // a deal is only used if the solver finishes it with this many moves to spare
   var DEAL_ATTEMPTS = 200;      // reshuffles tried per day before giving up
@@ -32,8 +32,8 @@
   var MAX_TIER = 1;             // only categories with tier <= MAX_TIER are used
   var SYMBOL_DIR = 'assets/symbols/';            // the owner's drawings: <symbol>.png (always win)
   var SYMBOL_EXT = 'png';
-  var SYMBOL_GEN_DIR = 'assets/symbols/generated/'; // generated fallback: <symbol>.svg
-  var SYMBOL_GEN_EXT = 'svg';
+  var SYMBOL_GEN_DIR = 'assets/symbols/generated/'; // generated fallback: <symbol>.png (rendered from the .svg sources)
+  var SYMBOL_GEN_EXT = 'png';
   var CATEGORY_SYMBOL_PREFIX = 'category-';     // category card symbol = category-<categoryId>
   var FIELDS = TOP_FIELDS + BOTTOM_FIELDS;
 
@@ -41,7 +41,7 @@
      1. CORE
      ======================================================================= */
   var Core = (function () {
-    var SAVE_VERSION = 10;
+    var SAVE_VERSION = 11;
     var STATS_VERSION = 3;
     var EPOCH_UTC = Date.UTC(2026, 10, 14); // 2026-11-14 = puzzle #1
     var DAY_MS = 86400000;
@@ -212,7 +212,8 @@
         wrong: 0,                   // wrong placements (part of moves)
         status: 'playing',          // 'playing' | 'won' | 'lost'
         recorded: false,            // stats already updated?
-        practice: !!practice        // a restart after the day was already finished: not counted
+        practice: !!practice,       // a restart after the day was already finished: not counted
+        ratings: { perfect: 0, good: 0, detour: 0 } // move ratings of this round (rateMove)
       };
     }
 
@@ -228,6 +229,10 @@
         if (!isInt(obj.moves) || obj.moves < 0 || !isInt(obj.wrong) || obj.wrong < 0) return null;
         if (['playing', 'won', 'lost'].indexOf(obj.status) < 0) return null;
         if (obj.practice !== undefined && typeof obj.practice !== 'boolean') return null;
+        if (obj.ratings !== undefined) {
+          if (!obj.ratings || typeof obj.ratings !== 'object') return null;
+          if (!['perfect', 'good', 'detour'].every(function (k) { return isInt(obj.ratings[k]) && obj.ratings[k] >= 0; })) return null;
+        }
         var nCards = game.cards.length;
         var seen = {};
         function take(id) {
@@ -268,13 +273,10 @@
           } else {
             if (fl.d !== 0) return null;
             if (ids.length) {
-              // a stack (category card + its words) or a loose run (words of one category)
+              // a stack: category card + its words (a full stack is done, not on a field)
               var base = game.cards[ids[0]];
-              if (doneSeen[base.cat]) return null;
-              if (base.kind === 'cat') {
-                if (fieldCats[base.cat] || ids.length > game.cats[base.cat].n) return null; // a full stack is done
-                fieldCats[base.cat] = true;
-              } else if (ids.length > game.cats[base.cat].n) return null;
+              if (base.kind !== 'cat' || doneSeen[base.cat] || fieldCats[base.cat] || ids.length > game.cats[base.cat].n) return null;
+              fieldCats[base.cat] = true;
               for (var w = 1; w < ids.length; w++) {
                 var wc = game.cards[ids[w]];
                 if (wc.kind !== 'word' || wc.cat !== base.cat) return null;
@@ -304,7 +306,7 @@
       if (!isInt(from)) return null;
       var fl = state.fields[from];
       if (fl && fl.p && fl.c.length && fl.d < fl.c.length) return fl.c[fl.c.length - 1];
-      if (isLone(state, from, game) || isLoose(state, from, game)) return fl.c[fl.c.length - 1];
+      if (isLone(state, from, game)) return fl.c[0];
       return null;
     }
 
@@ -315,15 +317,6 @@
     function isLone(state, f, game) {
       var fl = isInt(f) ? state.fields[f] : null;
       return !!fl && !fl.p && fl.c.length === 1 && !!game && game.cards[fl.c[0]].kind === 'cat';
-    }
-
-    /**
-     * Does field f (top or freed) hold a LOOSE RUN: word cards of one category
-     * without their category card? It moves as one unit (not onto Discard).
-     */
-    function isLoose(state, f, game) {
-      var fl = isInt(f) ? state.fields[f] : null;
-      return !!fl && !fl.p && fl.c.length > 0 && !!game && game.cards[fl.c[0]].kind === 'word';
     }
 
     /** All places with a playable card / unit right now. */
@@ -348,13 +341,13 @@
       return true;
     }
 
-    /** Is field f a free field (empty: accepts a category card, a word card or a run)? */
+    /** Is field f a free field (empty: accepts a category card)? */
     function isFree(state, f) {
       var fl = state.fields[f];
       return !!fl && !fl.p && fl.c.length === 0;
     }
 
-    /** Category index of the stack / loose run on field f, or null (empty / pile). */
+    /** Category index of the stack on field f, or null (empty / pile). */
     function fieldCat(state, game, f) {
       var fl = state.fields[f];
       return fl && !fl.p && fl.c.length ? game.cards[fl.c[0]].cat : null;
@@ -368,11 +361,11 @@
 
     /**
      * The cards a play from `from` moves: the whole run of a bottom pile, a
-     * loose run or lone category card on a field, else the top card.
+     * lone category card on a field, else the top card.
      */
     function unitOf(state, from, game) {
       if (isInt(from)) {
-        return isLone(state, from, game) || isLoose(state, from, game) ? state.fields[from].c.slice() : runOf(state, from);
+        return isLone(state, from, game) ? state.fields[from].c.slice() : runOf(state, from);
       }
       var id = topCard(state, from, game);
       return id === null ? [] : [id];
@@ -381,9 +374,9 @@
     /**
      * Why card `id` (or a run starting with it) may not go on field f:
      *   null (fits) | 'locked' (a bottom pile whose top card is face down, no move)
-     *   | 'occupied' (category card onto a stack or any run - a category card is
-     *   always the lowest card) | 'mismatch' (word card of another category).
-     *   An empty field takes anything: a category card, a word card or a run.
+     *   | 'needCategory' (word card / run onto an empty field) | 'occupied' (category
+     *   card onto a stack or run - a category card is always the lowest card)
+     *   | 'mismatch' (word card of another category).
      */
     function placeReject(state, game, id, f) {
       var fl = state.fields[f];
@@ -395,7 +388,7 @@
         var top = game.cards[fl.c[fl.c.length - 1]];
         return top.cat === card.cat ? null : 'mismatch';
       }
-      if (!fl.c.length) return null;
+      if (!fl.c.length) return card.kind === 'cat' ? null : 'needCategory';
       if (card.kind === 'cat') return 'occupied';
       return game.cards[fl.c[0]].cat === card.cat ? null : 'mismatch';
     }
@@ -433,7 +426,7 @@
      *   id = the lowest card of the moved unit, ids = all of its cards.
      *   reason (no cost): 'over' | 'invalid' | 'empty' | 'same' | 'locked' | 'drawOnly'
      *     | 'fixed' (a lone category card may only go back to Discard)
-     *   reason (wrong move, mistake: true, free): 'occupied' | 'mismatch'
+     *   reason (wrong move, mistake: true, free): 'needCategory' | 'occupied' | 'mismatch'
      */
     function play(state, game, from, to) {
       if (state.status !== 'playing') return { ok: false, reason: 'over' };
@@ -481,6 +474,98 @@
       return spend(state, res);
     }
 
+    /* ---- Move ratings -----------------------------------------------------
+       A quick judgement of a play, shown after every successful card play:
+       'perfect' (one of the best moves), 'good' (useful, but a better one was
+       there) or 'detour' (weak). Pure: looks at the state BEFORE the play. */
+
+    /** Is a word card of category ci face up somewhere playable (draw / discard top, a pile's face-up cards)? */
+    function wordsVisible(state, game, ci) {
+      var ids = [];
+      if (state.draw.length) ids.push(state.draw[0]);
+      if (state.discard.length) ids.push(state.discard[state.discard.length - 1]);
+      for (var f = 0; f < FIELDS; f++) if (state.fields[f].p) ids = ids.concat(runOf(state, f));
+      return ids.some(function (id) { var c = game.cards[id]; return c.kind === 'word' && c.cat === ci; });
+    }
+
+    function freeCount(state) {
+      var n = 0;
+      for (var f = 0; f < FIELDS; f++) if (isFree(state, f)) n++;
+      return n;
+    }
+
+    /** Rating of a LEGAL play [from, to] onto a field, ignoring the "elsewhere" rules. */
+    function placementRating(state, game, from, to) {
+      var unit = unitOf(state, from, game), first = game.cards[unit[0]], fl = state.fields[to];
+      if (first.kind === 'word') {
+        // onto its category stack (field, or a category card on a pile) = perfect; onto a word run = good
+        if (!fl.p) return 'perfect';
+        return game.cards[fl.c[fl.d]].kind === 'cat' ? 'perfect' : 'good';
+      }
+      if (unit.length > 1) return 'good'; // a pile's category stack onto a free field (uncovers cards)
+      return wordsVisible(state, game, first.cat) ? 'perfect' : 'good';
+    }
+
+    /** Every legal play onto a field right now, as [from, to]. */
+    function legalPlacements(state, game) {
+      var out = [], srcs = playableSources(state, game);
+      for (var i = 0; i < srcs.length; i++) {
+        var from = srcs[i];
+        if (isLone(state, from, game)) continue; // only goes back to Discard
+        var unit = unitOf(state, from, game);
+        if (!unit.length) continue;
+        for (var to = 0; to < FIELDS; to++) {
+          if (to === from) continue;
+          if (placeReject(state, game, unit[0], to) === null) out.push([from, to]);
+        }
+      }
+      return out;
+    }
+
+    /** Is a 'perfect' play available (optionally not from source `except`)? */
+    function perfectAvailable(state, game, except) {
+      return legalPlacements(state, game).some(function (m) {
+        return m[0] !== except && placementRating(state, game, m[0], m[1]) === 'perfect';
+      });
+    }
+
+    /**
+     * Rate the play move = [from, to] in `state` (before it is made):
+     * 'perfect' | 'good' | 'detour'.
+     *   perfect: completes a category or puts word cards onto their category
+     *            stack (field or pile category card); a category card onto a
+     *            free field while one of its words is visible.
+     *   good:    builds a run on a bottom pile; moves a pile's category stack
+     *            to a free field; a category card with none of its words
+     *            visible; discarding the draw card when nothing perfect was there.
+     *   detour:  discarding the draw card / taking back a lone category card
+     *            while a perfect move was there; a category card onto the LAST
+     *            free field while a perfect move was there elsewhere.
+     * null for a play that would be refused (wrong moves get no rating).
+     */
+    function rateMove(state, game, move) {
+      var from = move[0], to = move[1];
+      var unit0 = unitOf(state, from, game);
+      if (!unit0.length || to === from) return null;
+      if (to === 'discard') {
+        if (from !== 'draw' && !isLone(state, from, game)) return null; // refused anyway
+        return perfectAvailable(state, game) ? 'detour' : 'good';
+      }
+      if (!isInt(to) || to < 0 || to >= FIELDS || isLone(state, from, game) ||
+          placeReject(state, game, unit0[0], to) !== null) return null; // not a legal play: no rating
+      var r = placementRating(state, game, from, to);
+      var unit = unitOf(state, from, game);
+      if (game.cards[unit[0]].kind === 'cat' && !state.fields[to].p && freeCount(state) === 1 &&
+          perfectAvailable(state, game, from)) return 'detour';
+      return r;
+    }
+
+    /** Count a rating in the state (for the result tally and share text). */
+    function addRating(state, kind) {
+      if (!state.ratings) state.ratings = { perfect: 0, good: 0, detour: 0 };
+      if (state.ratings[kind] !== undefined) state.ratings[kind] += 1;
+    }
+
     /** Turn the discard pile over into the empty draw pile (first discarded = new top). Free. */
     function canFlip(state) {
       return state.status === 'playing' && state.draw.length === 0 && state.discard.length > 0;
@@ -505,7 +590,7 @@
     /** Next play [from, to] for the solver, or null (then: discard / flip). */
     function solverPick(s, game, relaxed) {
       var cards = game.cards, f, i, j, c;
-      var stackOf = {}, free = [], runs = [], loose = [];
+      var stackOf = {}, free = [], runs = [];
       for (f = 0; f < FIELDS; f++) {
         var fl = s.fields[f];
         if (fl.p) {
@@ -518,13 +603,12 @@
           continue;
         }
         if (!fl.c.length) free.push(f);
-        else if (cards[fl.c[0]].kind === 'cat') stackOf[cards[fl.c[0]].cat] = f;
-        else loose.push(f); // word cards without their category card
+        else stackOf[cards[fl.c[0]].cat] = f;
       }
       // dig where most cards are still face down
       runs.sort(function (a, b) { return s.fields[b].d - s.fields[a].d || a - b; });
-      var srcs = runs.concat(loose, s.discard.length ? ['discard'] : [], s.draw.length ? ['draw'] : []);
-      var targets = runs.concat(loose); // runs that take word cards of their category
+      var srcs = runs.concat(s.discard.length ? ['discard'] : [], s.draw.length ? ['draw'] : []);
+      var targets = runs; // runs that take word cards of their category
       function first(src) { return cards[unitOf(s, src, game)[0]]; }
       function runTop(f2) { var fl2 = s.fields[f2]; return cards[fl2.c[fl2.c.length - 1]]; }
       // 1. a card / run onto its category stack
@@ -571,12 +655,6 @@
         for (j = 0; j < targets.length; j++) {
           var t2 = runTop(targets[j]);
           if (t2.kind === 'word' && t2.cat === c.cat) return [piles[i], targets[j]];
-        }
-      }
-      // 5. dig: move a pile's run of word cards onto a free field (keep one free unless stuck)
-      if (free.length && (relaxed || free.length > 1)) {
-        for (i = 0; i < runs.length; i++) {
-          if (s.fields[runs[i]].d > 0 && first(runs[i]).kind === 'word') return [runs[i], free[0]];
         }
       }
       return null;
@@ -655,7 +733,7 @@
         for (var g = 0; g < FIELDS; g++) {
           var fl = s.fields[g];
           if (c.kind === 'cat') { if (!fl.p && !fl.c.length) return true; continue; }
-          if (!fl.p && fl.c.length && cards[fl.c[0]].cat === c.cat) return true; // its stack or a loose run
+          if (!fl.p && fl.c.length && cards[fl.c[0]].cat === c.cat) return true; // its stack
           if (fl.p && fl.d < fl.c.length) {
             var top = cards[fl.c[fl.c.length - 1]];
             if (top.cat === c.cat) return true; // a run or a category card on the pile
@@ -752,7 +830,8 @@
     };
 
     /**
-     * Share text (no spoilers). r = { won, movesLeft, done, total, stars? }.
+     * Share text (no spoilers). r = { won, movesLeft, done, total, stars?, ratings? }.
+     * ratings { perfect, good, detour } add a line "✨12 👍5 ↩︎2".
      * `tr` (optional) translates: tr(key, vars) with the i18n.js keys
      * movesLeftOne / movesLeftOther / shareLost / shareStreak. Default: English.
      */
@@ -767,6 +846,7 @@
       } else {
         lines.push(t('shareLost', { k: r.done, total: r.total }));
       }
+      if (r.ratings) lines.push('✨' + r.ratings.perfect + ' 👍' + r.ratings.good + ' ↩︎' + r.ratings.detour);
       lines.push(t('shareStreak', { n: streak }));
       return lines.join('\n');
     }
@@ -801,7 +881,6 @@
       topCard: topCard,
       runOf: runOf,
       isLone: isLone,
-      isLoose: isLoose,
       unitOf: unitOf,
       playableSources: playableSources,
       canTurn: canTurn,
@@ -812,6 +891,8 @@
       play: play,
       canFlip: canFlip,
       flip: flip,
+      rateMove: rateMove,
+      addRating: addRating,
       solve: solve,
       stars: stars,
       starString: starString,
@@ -840,7 +921,7 @@
   var FEEDBACK_MS = 480;   // red / green field flash
   var LOST_DELAY_MS = 700; // let the last move show before the result panel
   var LOW_MOVES = 5;       // move counter turns red (and pulses) at or below this
-  var COMBO_MIN = 3;       // "Combo ×3!" from this many correct plays in a row
+  var PERFECT_STREAK_MIN = 2; // "Perfect ×2" from this many perfect plays in a row
   var FAN_MS = 170;        // completed cards fan up before flying to Done
   var FLY_STAGGER = 70;    // ms between the flying cards
   var FXo = root.RikaFX || null; // fx.js (particles, confetti, sounds); optional
@@ -973,7 +1054,7 @@
     donePop: false,
     lastFocus: null,
     picked: false,      // the selection was tapped by the player (not the default / a just turned card)
-    combo: 0,           // correct plays in a row (a wrong one resets it)
+    perfectRun: 0,      // perfect plays in a row (any other rating or a wrong move resets it)
     flipField: null,    // bottom field whose card was just turned (3D flip)
     gen: 0              // bumped on restart: pending animations of the old game stop
   };
@@ -1016,8 +1097,6 @@
     els.moves = document.getElementById('moves');
     els.sub = document.getElementById('sub');
     els.toast = document.getElementById('toast');
-    els.combo = h('div', { class: 'combo', 'aria-hidden': 'true' });
-    els.board.appendChild(els.combo);
     els.langBtn = document.getElementById('lang-btn');
     els.langImg = els.langBtn.querySelector('.lang-btn__icon');
     els.langText = els.langBtn.querySelector('.lang-btn__text');
@@ -1390,25 +1469,7 @@
     var ids = reveal ? reveal.cards : fl.c;
     // a category card alone on its field is playable: it can be taken back to Discard
     var lone = !reveal && Core.isLone(state, f, game) && state.status === 'playing';
-    // a loose run (word cards without their category card) is played as one unit, like a pile's run
-    var loose = !reveal && Core.isLoose(state, f, game) && state.status === 'playing';
-    var looseWords = loose ? ids.map(function (id) { return cardLabel(game.cards[id]); }).join(', ') : '';
     var kids = ids.map(function (id, i) {
-      if (loose) {
-        var isTop = i === ids.length - 1, picked = sel === f;
-        var la = {
-          cls: 'card--field card--loose is-top' + (picked ? ' is-selected' : '') + (isNew(id) ? ' is-new' : ''),
-          style: '--i:' + i + newK(id), 'data-drag': 'f' + f
-        };
-        if (isTop) {
-          la['data-fk'] = 'f' + f;
-          la['aria-pressed'] = picked ? 'true' : 'false';
-          la['aria-label'] = t(picked ? 'ariaLooseSelected' : 'ariaLoose', { f: f + 1, k: ids.length, words: looseWords });
-        } else {
-          la['aria-hidden'] = 'true';
-        }
-        return cardEl(game.cards[id], isTop ? 'button' : 'div', la);
-      }
       if (lone) {
         var selected = sel === f;
         return cardEl(game.cards[id], 'button', {
@@ -1432,8 +1493,6 @@
     } else if (!ids.length) {
       kids = [h('span', { class: 'field__hint', text: t('fieldHint') })];
       label = t('ariaFieldEmpty', { f: f + 1 });
-    } else if (loose) {
-      label = t('ariaLoose', { f: f + 1, k: ids.length, words: looseWords });
     } else {
       var base = game.cards[ids[0]];
       label = t('ariaField', {
@@ -1442,7 +1501,7 @@
       });
     }
     return h('div', {
-      class: 'field' + rowCls + (ids.length ? '' : ' is-empty') + (reveal ? ' is-complete' : '') + (loose ? ' has-loose' : ''),
+      class: 'field' + rowCls + (ids.length ? '' : ' is-empty') + (reveal ? ' is-complete' : ''),
       style: '--sn:' + Math.max(1, ids.length - 1), // covered cards: style.css squeezes long stacks
       'data-drop': String(f), 'data-fk': 'drop' + f, role: 'button', tabindex: '0', 'aria-label': label
     }, kids);
@@ -1465,6 +1524,8 @@
       parts.push(h('p', { class: 'result__lost', text: t('resultLost', { k: state.done.length, total: game.cats.length }) }));
       parts.push(h('p', { class: 'result__meta', text: t('resultMetaLost', { streak: streakNow() }) }));
     }
+    var rt = state.ratings || { perfect: 0, good: 0, detour: 0 };
+    parts.push(h('p', { class: 'result__tally', text: t('tally', { p: rt.perfect, g: rt.good, d: rt.detour }) }));
     if (state.practice) parts.push(h('p', { class: 'result__practice', text: t('practiceNote') }));
     parts.push(shareBtn);
     parts.push(h('p', { class: 'result__next' }, t('nextPuzzle'),
@@ -1500,6 +1561,8 @@
    * pointer interaction whose ghost should land or snap back.
    */
   function doPlay(from, to, drag) {
+    var rating = null;
+    try { rating = Core.rateMove(state, game, [from, to]); } catch (e) { rating = null; } // judged on the state before
     var res = Core.play(state, game, from, to);
     if (!res.ok) {
       if (res.cost || res.mistake) save();
@@ -1511,7 +1574,7 @@
       if (res.reason === 'drawOnly') toast(t('toastDrawOnly')); // bottom cards never go to Discard (free)
       if (res.reason === 'fixed') toast(t('toastLone'));         // a lone category card only goes back to Discard (free)
       if (res.mistake) {
-        ui.combo = 0;
+        ui.perfectRun = 0;
         flash(dropEl(to), 'is-wrong');
         srcEls(srcKey(from)).forEach(function (el) { flash(el, 'is-nope', 520); });
         fx('sound.wrong');
@@ -1523,17 +1586,14 @@
     if (drag) removeGhost(drag);
     ui.sel = 'draw';
     ui.picked = false;
+    if (rating) Core.addRating(state, rating);
+    ui.perfectRun = rating === 'perfect' ? ui.perfectRun + 1 : 0;
     save();
     flash(els.moves.parentNode, 'is-tick', 300);
-    if (to === 'discard') fx('sound.discard');
-    else {
-      ui.combo += 1;
-      fx('sound.place', ui.combo);
-    }
     if (res.completed !== undefined) {
       ui.lastPlaced = res.ids;
       runCompletion(to, res);
-      showCombo();
+      showRating(rating, res, to);
       return;
     }
     if (to !== 'discard') ui.lastPlaced = res.ids;
@@ -1541,32 +1601,35 @@
     render();
     if (to !== 'discard') {
       flash(dropEl(to), 'is-correct');
-      flash(dropEl(to), 'is-glow', 700);
-      sparkleAt(res.ids[res.ids.length - 1], to);
-      showCombo();
+      if (rating === 'perfect') flash(dropEl(to), 'is-glow', 700);
     }
+    showRating(rating, res, to);
     if (res.lost) endLost();
   }
 
-  /** Sparkle where card `id` landed (or over field f). */
-  function sparkleAt(id, f) {
-    var el = els.board.querySelector('[data-card="' + id + '"]') || dropEl(f);
-    if (!el) return;
-    var r = el.getBoundingClientRect();
-    fx('sparkle', r.left + r.width / 2, r.top + Math.min(r.height / 2, 24));
+  /**
+   * Floating move rating at the drop point (fx.js draws it):
+   * Perfect (big, sparkles, rising chime; "Perfect ×n" in a row), Good (medium,
+   * soft tick) or Detour (small, muted, soft low tone).
+   */
+  function showRating(rating, res, to) {
+    if (!rating) return;
+    var el = to === 'discard' ? els.discard : (els.board.querySelector('[data-card="' + res.ids[res.ids.length - 1] + '"]') || dropEl(to));
+    var r = el ? el.getBoundingClientRect() : { left: innerWidth / 2, width: 0, top: innerHeight / 2, height: 0 };
+    var x = r.left + r.width / 2, y = r.top + Math.min(r.height / 2, 24);
+    var n = ui.perfectRun;
+    var text = rating === 'perfect'
+      ? (n >= PERFECT_STREAK_MIN ? t('ratePerfectRun', { n: n }) : t('ratePerfect'))
+      : t(rating === 'good' ? 'rateGood' : 'rateDetour');
+    fx('rating', x, y, rating, text, n);
+    if (rating === 'perfect') {
+      if (to !== 'discard') fx('sparkle', x, y);
+      fx('sound.place', Math.max(1, n));
+    } else {
+      fx(rating === 'good' ? 'sound.good' : 'sound.detour');
+    }
   }
 
-  /** Floating "Combo ×n!" badge from COMBO_MIN correct plays in a row; grows with the streak. */
-  function showCombo() {
-    var n = ui.combo;
-    if (n < COMBO_MIN) return;
-    var b = els.combo;
-    b.textContent = t('combo', { n: n });
-    b.style.setProperty('--combo-scale', String(Math.min(1.7, 1 + (n - COMBO_MIN) * 0.1)));
-    b.classList.remove('is-show');
-    void b.offsetWidth;
-    b.classList.add('is-show');
-  }
 
   /** Out of moves: show the board a moment longer, then the result panel. */
   function endLost() {
@@ -1956,7 +2019,7 @@
   function share() {
     var text = Core.shareText(puzzleNo, {
       won: state.status === 'won', movesLeft: state.movesLeft, done: state.done.length, total: game.cats.length,
-      stars: Core.stars(state.movesLeft, game)
+      stars: Core.stars(state.movesLeft, game), ratings: state.ratings
     }, streakNow(), t);
     var coarse = false;
     try { coarse = root.matchMedia('(pointer: coarse)').matches; } catch (e) { /* ignore */ }
@@ -2049,7 +2112,7 @@
     ui.reveal = null;
     ui.sel = 'draw';
     ui.picked = false;
-    ui.combo = 0;
+    ui.perfectRun = 0;
     ui.lastPlaced = null;
     els.board.classList.remove('is-busy');
     document.querySelectorAll('.card-flying,.card-ghost,.card-ghost-run').forEach(function (n) { if (n.parentNode) n.parentNode.removeChild(n); });

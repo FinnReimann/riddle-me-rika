@@ -9,7 +9,7 @@ Checklist of every card symbol in `categories.js`: **24 categories × 8 cards = 
 - **Style:** simple, bold shapes and thick outlines. Each symbol has to be readable at about 60 px on the card.
 
 Your PNG always wins: until a file exists here, the game uses a generated
-`assets/symbols/generated/<name>.svg` (if present) or a placeholder. Drop your PNG into
+`assets/symbols/generated/<name>.png` (rendered from the `.svg` sources there) (if present) or a placeholder. Drop your PNG into
 `assets/symbols/` with the same name and it replaces the generated SVG automatically.
 
 Tick a box (`[x]`) once a symbol is drawn.

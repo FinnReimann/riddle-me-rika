@@ -23,8 +23,15 @@
     gravity: 0.16,                                             // px / frame² (confetti falls)
     maxParticles: 260,
     volume: 0.35,                                              // master volume 0..1
-    comboStep: 2,                                              // semitones the combo chime climbs per step
-    comboMax: 12                                               // highest combo step for the chime pitch
+    comboStep: 2,                                              // semitones the Perfect chime climbs per Perfect in a row
+    comboMax: 12,                                              // highest step for the chime pitch
+    // move ratings floating up from the drop point (look: .fx-rating in cards.css)
+    rating: {
+      ms: 1000,                                                // how long a label stays
+      scale: { perfect: 1.25, good: 1, detour: 0.8 },          // size per rating
+      streakGrow: 0.08,                                        // "Perfect ×n" grows this much per extra Perfect
+      streakMax: 1.7                                           // ... up to this scale
+    }
   };
 
   var KEY_SOUND = 'rr:sound';
@@ -175,6 +182,31 @@
   function clear() {
     parts = [];
     rain = null;
+    if (doc) Array.prototype.forEach.call(doc.querySelectorAll('.fx-rating'), function (n) { n.parentNode.removeChild(n); });
+  }
+
+  /**
+   * Floating move rating at (x, y): kind 'perfect' | 'good' | 'detour'.
+   * streak = Perfects in a row (the label grows). Plain DOM + CSS animation.
+   */
+  function rating(x, y, kind, text, streak) {
+    if (!doc || !doc.body) return;
+    var el = doc.createElement('div');
+    el.className = 'fx-rating fx-rating--' + kind;
+    el.setAttribute('aria-hidden', 'true');
+    el.textContent = text;
+    var sc = FX.rating.scale[kind] || 1;
+    if (kind === 'perfect' && streak > 1) sc = Math.min(FX.rating.streakMax, sc * (1 + (streak - 1) * FX.rating.streakGrow));
+    el.style.left = Math.round(x) + 'px';
+    el.style.top = Math.round(y) + 'px';
+    el.style.setProperty('--fx-rating-scale', String(sc));
+    el.style.setProperty('--fx-rating-ms', FX.rating.ms + 'ms');
+    doc.body.appendChild(el);
+    // keep the label on screen (it is centred on x)
+    var half = el.offsetWidth * sc * 1.12 / 2 + 6; // 1.12 = the pop at the start of the animation
+    var cx = Math.max(half, Math.min(root.innerWidth - half, x));
+    if (cx !== x) el.style.left = Math.round(cx) + 'px';
+    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, FX.rating.ms + 50);
   }
 
   /* ---- sound ------------------------------------------------------------ */
@@ -214,7 +246,7 @@
   }
 
   var sound = {
-    /** soft tick; with combo >= 2 a chime that climbs with the combo */
+    /** Perfect: soft tick + a chime; with Perfects in a row (combo >= 2) the chime climbs */
     place: function (combo) {
       tone(1100, 0, 0.05, 'sine', 0.22);
       if (combo >= 2) {
@@ -225,6 +257,8 @@
     flip: function () { tone(320, 0, 0.09, 'sine', 0.18, 820); },
     wrong: function () { tone(170, 0, 0.18, 'square', 0.12, 95); tone(120, 0.04, 0.16, 'sine', 0.2, 80); },
     discard: function () { tone(600, 0, 0.06, 'sine', 0.12, 420); },
+    good: function () { tone(880, 0, 0.07, 'sine', 0.18); tone(1320, 0.04, 0.08, 'sine', 0.1); },
+    detour: function () { tone(330, 0, 0.18, 'sine', 0.12, 294); },
     complete: function () {
       [523.25, 659.25, 783.99, 1046.5].forEach(function (f, i) { tone(f, i * 0.075, 0.22, 'triangle', 0.25); });
     },
@@ -242,7 +276,7 @@
 
   root.RikaFX = {
     FX: FX, reduced: reduced,
-    sparkle: sparkle, celebrate: celebrate, rain: rainConfetti, clear: clear,
+    sparkle: sparkle, celebrate: celebrate, rain: rainConfetti, clear: clear, rating: rating,
     sound: sound, setSound: setSound, soundOn: function () { return enabled; },
     isAnimating: function () { return running; }
   };
