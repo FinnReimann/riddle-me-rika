@@ -1511,6 +1511,8 @@
       }, h('span', { class: 'tuck-btn__icon', 'aria-hidden': 'true', text: '⤓' }),
         h('span', { class: 'tuck-btn__cost', 'aria-hidden': 'true', text: String(Core.CONFIG.TUCK_COST) })));
     }
+    // how many face-down cards are left on this pile (chip on the corner of the lowest one)
+    if (d > 0) kids.push(h('span', { class: 'down-count', 'aria-hidden': 'true', text: String(d) }));
     var steps = Math.max(1, run.length ? d : d - 1);
     var props = {
       class: 'field field--bottom field--pile' + (run.length > 1 ? ' has-run' : '') + (reveal ? ' is-complete' : ''), 'data-drop': String(f),

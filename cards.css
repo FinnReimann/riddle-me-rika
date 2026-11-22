@@ -147,6 +147,10 @@
   --turn-ring: #e07b3c;            /* ring around the top face-down card (tap to turn) */
   --turn-badge-bg: #e07b3c;
   --turn-badge-ink: #ffffff;
+  --down-count-size: calc(var(--card-w) * 0.24);  /* chip with the number of face-down cards left */
+  --down-count-bg: #3b2f2a;
+  --down-count-ink: #fff8ec;
+  --down-count-ring: #f9f3df;
   --tuck-bg: #ffc898;              /* "tuck under" button (⤓) */
   --tuck-ink: #5a2e0e;
 
@@ -593,6 +597,29 @@
   animation: rr-turn-hint 2.4s ease-in-out infinite;
 }
 .card--down.is-turnable:active { transform: scale(0.97); }
+/* Number of face-down cards left on a bottom field: chip on the top-right
+   corner of the lowest card, above everything else on the field */
+.down-count {
+  position: absolute;
+  z-index: 15;
+  top: calc(var(--field-pad) - var(--down-count-size) * 0.35);
+  left: calc(50% + var(--card-w) / 2 - var(--down-count-size) * 0.65);
+  min-width: var(--down-count-size);
+  height: var(--down-count-size);
+  padding: 0 0.3em;
+  box-sizing: border-box;
+  border-radius: 999px;
+  background: var(--down-count-bg);
+  color: var(--down-count-ink);
+  box-shadow: 0 0 0 2px var(--down-count-ring), 0 2px 4px rgba(59, 47, 42, 0.25);
+  font-family: var(--word-font);
+  font-size: calc(var(--down-count-size) * 0.62);
+  font-weight: 800;
+  line-height: var(--down-count-size);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
 @keyframes rr-turn-hint { 0%, 70%, 100% { transform: none; } 80% { transform: rotate(-25deg); } 90% { transform: rotate(10deg); } }
 
 /* =========================================================================
