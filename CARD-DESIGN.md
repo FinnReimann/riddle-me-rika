@@ -29,7 +29,9 @@ screen; `game.js` never sets visual styles. `cards.css` loads last, so it wins.
 | Symbol (lower part) | `--symbol-top`, `--symbol-bottom`, `--symbol-inset` |
 | Placeholder | `--placeholder-size`, `-bg`, `-border`, `-radius`, `-color`, `-font`, `-font-size` |
 | Back (draw pile) | `--card-back-bg`, `--card-back-pattern`, `--card-back-image`, `--card-back-border` |
-| Category card | `--count-size`, `--count-font-size`, `--count-font-weight`, `--count-bg`, `--count-ink`, `--count-ring`, `--count-right`, `--count-bottom` (badge with today's number of word cards), `--category-card-bg`, `--category-card-image`, `--category-card-ink`, `--category-card-border-w`, `--category-band-h`, `--category-name-font`, `--category-name-size`, `--category-name-weight`, `--category-name-transform`, `--category-name-tracking` |
+| Counter "x/y" | `--counter-font-size`, `--counter-font-weight`, `--counter-bg`, `--counter-ink`, `--counter-top`, `--counter-left`, `--counter-shift` (top-left chip on the topmost card of a stack; on a category card it sits below the band, on a word card the word moves down by `--counter-shift`) |
+| Tuck under | `--tuck-bg`, `--tuck-ink` (the ⤓ button below a bottom field's run) |
+| Category card | `--category-card-bg`, `--category-card-image`, `--category-card-ink`, `--category-card-border-w`, `--category-band-h`, `--category-name-font`, `--category-name-size`, `--category-name-weight`, `--category-name-transform`, `--category-name-tracking` |
 | Face-down cards (bottom fields) | `--turn-ring`, `--turn-badge-bg`, `--turn-badge-ink` (ring + ↻ badge on the card you can turn) |
 | Empty piles / flip | `--slot-*`, `--flip-*` |
 | Fields | `--field-bg`, `--field-border`, `--field-radius`, `--field-hint` |
@@ -111,7 +113,9 @@ background colour; aim for a 5:7 image).
 | `.card--empty`, `.card__hint` | Empty pile |
 | `.card--field` | Card in a field stack (`--i` = stack position 0..4, 0 = category card) |
 | `.card--lone` | A category card alone on its field (also `.card--field.is-top`): playable, it can be taken back onto Discard |
-| `.card--category` + `.tier-N`, `.card__catname`, `.card__count` | Category card, its name and the badge with today's number of word cards (4–7) |
+| `.card--category` + `.tier-N`, `.card__catname` | Category card and its name |
+| `.card__counter`, `.card.has-counter` | "x/y" chip on the topmost card of a stack (and on a category card on Draw / Discard) |
+| `.tuck-btn` (`.is-hint`), `.tuck-btn__icon`, `.tuck-btn__cost` | ⤓ "tuck under" button below a selected run (pulsing as a hint when nothing else helps) |
 | `.card--down` (`.is-turnable`) | Face-down cards on a bottom field (`--i` = depth; the top one can be turned while nothing is face up) |
 | `.card--run`, `.card--down-top` | Face-up run on a bottom field (`--r` = position in the run; one card, or up to 4 word cards of one category that move together); `.card--down-top` = its topmost card |
 | `.card.is-top`, `.is-selected`, `.is-new`, `.is-bounce`, `.is-drag-source` | Playable / selected / just placed / rejected tap / being dragged (all cards of a run get these together) |

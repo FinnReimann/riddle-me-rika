@@ -13,19 +13,20 @@
   'use strict';
 
   /* ---- CONFIG ---------------------------------------------------------- */
-  var CATEGORIES_PER_GAME = 8;  // categories in one daily game (each has 1 category card)
+  var CATEGORIES_PER_GAME = 10; // categories in one daily game (each has 1 category card)
   var MIN_CARDS_PER_CATEGORY = 4; // word cards per category: each day every category gets a
   var MAX_CARDS_PER_CATEGORY = 7; // seeded random number N in this range (shown on its category card)
   var TOP_FIELDS = 4;           // fields in the upper row, start empty
   var BOTTOM_FIELDS = 4;        // fields in the lower row, start with face-down cards
-  var FACE_DOWN_PER_FIELD = 6;  // face-down cards per bottom field (4 x 6 = 24; the other 16-40 cards are the draw pile)
+  var FACE_DOWN_PER_FIELD = 6;  // face-down cards per bottom field (4 x 6 = 24; the other ~30-50 cards are the draw pile)
   var MIN_CATEGORY_CARDS_IN_DRAW = Math.ceil(CATEGORIES_PER_GAME / 2); // category cards dealt into the draw pile
-  // Move budget per day = round(cards x MOVES_PER_CARD) + MOVES_BASE (cards = 8 + all N),
+  // Move budget per day = round(cards x MOVES_PER_CARD) + MOVES_BASE (cards = categories + all N),
   // calibrated with the built-in solver over 2000 daily deals (see README "Config").
   var MOVES_PER_CARD = 1;       // budget per card of the day (every play costs 1 move, also a wrong one)
-  var MOVES_BASE = 20;          // + this many (40 cards = 60 moves, 64 cards = 84)
-  var STAR3_EXTRA = 6;          // ★★★: finished in at most (cards + this) moves
-  var STAR2_EXTRA = 14;         // ★★☆: at most (cards + this) moves (more = ★☆☆)
+  var MOVES_BASE = 35;          // + this many (typical day: ~65 cards = ~100 moves)
+  var STAR3_EXTRA = 18;         // ★★★: finished in at most (cards + this) moves
+  var STAR2_EXTRA = 28;         // ★★☆: at most (cards + this) moves (more = ★☆☆)
+  var TUCK_COST = 2;            // "tuck under": a pile's face-up run goes under its face-down cards
   var DEAL_SPARE = 10;          // a deal is only used if the solver finishes it with this many moves to spare
   var DEAL_ATTEMPTS = 200;      // reshuffles tried per day before giving up
   var DEAL_HELP = 0.75;         // chance that a turned card is picked among the immediately usable ones (see dealOrder)
@@ -41,7 +42,7 @@
      1. CORE
      ======================================================================= */
   var Core = (function () {
-    var SAVE_VERSION = 11;
+    var SAVE_VERSION = 12;
     var STATS_VERSION = 3;
     var EPOCH_UTC = Date.UTC(2026, 10, 14); // 2026-11-14 = puzzle #1
     var DAY_MS = 86400000;
@@ -256,7 +257,7 @@
           var ids = fl.c;
           for (var j = 0; j < ids.length; j++) if (!take(ids[j])) return null;
           if (fl.p) {
-            if (f < TOP_FIELDS || !ids.length || fl.d < 0 || fl.d > ids.length || fl.d > FACE_DOWN_PER_FIELD) return null;
+            if (f < TOP_FIELDS || !ids.length || fl.d < 0 || fl.d > ids.length) return null; // (a tuck can put more than FACE_DOWN_PER_FIELD cards face down)
             var run = ids.slice(fl.d);
             if (run.length > MAX_CARDS_PER_CATEGORY) return null;
             if (run.length > 1) {
@@ -560,6 +561,54 @@
       return r;
     }
 
+    /* ---- Tuck under + lock detection ---------------------------------------
+       "Locked" = no useful move: nothing to turn, no legal play onto a field,
+       no lone category card to take back, and no card in the draw / discard
+       pile fits anywhere (cycling them won't help). The escape: TUCK UNDER -
+       a bottom pile's face-up run slides under that pile's face-down cards
+       (TUCK_COST moves), so the next card can be turned. */
+
+    /** Can the face-up run of bottom pile f be tucked under its face-down cards? */
+    function canTuck(state, f) {
+      var fl = isInt(f) ? state.fields[f] : null;
+      return state.status === 'playing' && !!fl && fl.p && fl.d > 0 && fl.d < fl.c.length;
+    }
+
+    /** Tuck the run of pile f under (costs TUCK_COST). Returns { ok, ids, cost, lost? } or { ok:false }. */
+    function tuck(state, game, f) {
+      if (!canTuck(state, f)) return { ok: false, reason: 'invalid' };
+      var fl = state.fields[f];
+      var run = fl.c.splice(fl.d);
+      fl.c = run.concat(fl.c);
+      fl.d = fl.c.length;
+      var res = { ok: true, ids: run, cost: true };
+      state.moves += TUCK_COST;
+      state.movesLeft -= TUCK_COST;
+      if (state.movesLeft <= 0) { state.movesLeft = 0; state.status = 'lost'; res.lost = true; }
+      return res;
+    }
+
+    /** { locked, canTuck } for the current state (see above). */
+    function lockInfo(state, game) {
+      var out = { locked: false, canTuck: false };
+      if (state.status !== 'playing') return out;
+      var f;
+      for (f = 0; f < FIELDS; f++) if (canTuck(state, f)) out.canTuck = true;
+      for (f = 0; f < FIELDS; f++) if (canTurn(state, f) || isLone(state, f, game)) return out;
+      if (legalPlacements(state, game).length) return out;
+      var pile = state.draw.concat(state.discard);
+      for (var i = 0; i < pile.length; i++) {
+        for (f = 0; f < FIELDS; f++) if (placeReject(state, game, pile[i], f) === null) return out;
+      }
+      out.locked = true;
+      return out;
+    }
+
+    /** Rating of a tuck: 'good' when nothing useful was left (locked), else 'detour'. */
+    function rateTuck(state, game) {
+      return lockInfo(state, game).locked ? 'good' : 'detour';
+    }
+
     /** Count a rating in the state (for the result tally and share text). */
     function addRating(state, kind) {
       if (!state.ratings) state.ratings = { perfect: 0, good: 0, detour: 0 };
@@ -856,7 +905,7 @@
         FIELDS: FIELDS, TOP_FIELDS: TOP_FIELDS, BOTTOM_FIELDS: BOTTOM_FIELDS,
         FACE_DOWN_PER_FIELD: FACE_DOWN_PER_FIELD,
         MOVES_PER_CARD: MOVES_PER_CARD, MOVES_BASE: MOVES_BASE,
-        STAR3_EXTRA: STAR3_EXTRA, STAR2_EXTRA: STAR2_EXTRA, DEAL_SPARE: DEAL_SPARE,
+        STAR3_EXTRA: STAR3_EXTRA, STAR2_EXTRA: STAR2_EXTRA, DEAL_SPARE: DEAL_SPARE, TUCK_COST: TUCK_COST,
         CATEGORIES_PER_GAME: CATEGORIES_PER_GAME,
         MIN_CARDS_PER_CATEGORY: MIN_CARDS_PER_CATEGORY, MAX_CARDS_PER_CATEGORY: MAX_CARDS_PER_CATEGORY,
         MAX_TIER: MAX_TIER, SYMBOL_DIR: SYMBOL_DIR, SYMBOL_EXT: SYMBOL_EXT,
@@ -892,6 +941,10 @@
       canFlip: canFlip,
       flip: flip,
       rateMove: rateMove,
+      canTuck: canTuck,
+      tuck: tuck,
+      lockInfo: lockInfo,
+      rateTuck: rateTuck,
       addRating: addRating,
       solve: solve,
       stars: stars,
@@ -1260,18 +1313,18 @@
   /** A face-up card (word or category card). tag 'button' for playable cards. */
   function cardEl(c, tag, attrs) {
     var a = attrs || {};
-    var cls = 'card' + (c.kind === 'cat' ? ' card--category tier-' + game.cats[c.cat].tier : '') + (a.cls ? ' ' + a.cls : '');
+    var cls = 'card' + (c.kind === 'cat' ? ' card--category tier-' + game.cats[c.cat].tier : '') + (a.cls ? ' ' + a.cls : '') + (a.counter ? ' has-counter' : '');
     var props = { class: cls, 'data-card': c.id };
-    Object.keys(a).forEach(function (k) { if (k !== 'cls') props[k] = a[k]; });
+    Object.keys(a).forEach(function (k) { if (k !== 'cls' && k !== 'counter') props[k] = a[k]; });
     if (tag === 'button') props.type = 'button';
     var text = wordOf(c);
     var label = c.kind === 'cat'
       ? h('span', { class: 'card__catname', 'data-len': themeLen(text), text: text })
       : h('span', { class: 'card__word', 'data-len': lenClass(text), text: text });
-    // category card: badge with today's number of word cards of this category
-    var count = c.kind === 'cat'
-      ? h('span', { class: 'card__count', 'aria-hidden': 'true', text: String(game.cats[c.cat].n) }) : null;
-    return h(tag, props, label, artEl(c), count);
+    // "x/y" counter (top-left): words on the stack / today's N of this category.
+    // Only on the topmost card of a stack (and on a category card lying on Draw / Discard).
+    var counter = a.counter ? h('span', { class: 'card__counter', 'aria-hidden': 'true', text: a.counter }) : null;
+    return h(tag, props, label, artEl(c), counter);
   }
 
   /* ---------- rendering ---------- */
@@ -1282,6 +1335,8 @@
     els.moves.textContent = String(state.movesLeft);
     els.moves.parentNode.classList.toggle('is-low', state.movesLeft <= LOW_MOVES);
     var sel = state.status === 'playing' ? selSource() : null;
+    var lock = Core.lockInfo(state, game);
+    ui.locked = lock.locked;
     renderDraw(sel);
     renderDiscard(sel);
     renderDone();
@@ -1291,6 +1346,11 @@
     ui.lastPlaced = null;
     ui.donePop = false;
     ui.flipField = null;
+    // nothing useful left: a gentle hint (once per position) to tuck under, or to restart
+    if (lock.locked && !ui.busy && ui.lockHintAt !== state.moves) {
+      ui.lockHintAt = state.moves;
+      toast(t(lock.canTuck ? 'lockTuck' : 'lockRestart', { n: Core.CONFIG.TUCK_COST }), 5200, true);
+    }
 
     if (fk) {
       var n = els.board.querySelector('[data-fk="' + fk + '"]');
@@ -1313,6 +1373,7 @@
       var c = game.cards[state.draw[0]];
       kids = underCards(n, 'card--back').concat(cardEl(c, 'button', {
         cls: 'is-top' + (sel === 'draw' ? ' is-selected' : ''),
+        counter: c.kind === 'cat' ? '0/' + game.cats[c.cat].n : null,
         'data-drag': 'draw', 'data-fk': 'draw',
         'aria-pressed': sel === 'draw' ? 'true' : 'false',
         'aria-label': t(sel === 'draw' ? 'ariaDrawSelected' : 'ariaDraw', { word: cardLabel(c) })
@@ -1335,6 +1396,7 @@
       var c = game.cards[state.discard[n - 1]];
       kids = underCards(n, 'card--under').concat(cardEl(c, 'button', {
         cls: 'is-top' + (sel === 'discard' ? ' is-selected' : ''),
+        counter: c.kind === 'cat' ? '0/' + game.cats[c.cat].n : null,
         'data-drag': 'discard', 'data-fk': 'discard',
         'aria-pressed': sel === 'discard' ? 'true' : 'false',
         'aria-label': t(sel === 'discard' ? 'ariaDiscardCardSelected' : 'ariaDiscardCard', { word: cardLabel(c) })
@@ -1417,26 +1479,38 @@
     }
     var selected = sel === f;
     var words = run.map(function (id) { return cardLabel(game.cards[id]); }).join(', ');
+    var pileBase = run.length ? game.cards[run[0]] : null;
+    var pileCounter = !reveal && pileBase && pileBase.kind === 'cat' ? (run.length - 1) + '/' + game.cats[pileBase.cat].n : null;
     run.forEach(function (id, r) {
       var c = game.cards[id], isTop = r === run.length - 1;
       var attrs = {
         cls: 'card--run' + (isTop ? ' card--down-top' : '') + ' is-top' + (selected ? ' is-selected' : '') + (isNew(id) ? ' is-new' : '') +
           (isTop && ui.flipField === f && !reveal ? ' is-flip' : ''),
         style: '--i:' + d + ';--r:' + r + newK(id),
+        counter: isTop ? pileCounter : null,
         'data-drag': reveal ? null : 'f' + f,
         'data-fly': reveal ? '1' : null
       };
       if (isTop) {
         attrs['data-fk'] = 'f' + f;
         attrs['aria-pressed'] = selected ? 'true' : 'false';
-        attrs['aria-label'] = run.length > 1
+        attrs['aria-label'] = (run.length > 1
           ? t(selected ? 'ariaRunSelected' : 'ariaRun', { f: f + 1, k: run.length, words: words })
-          : t(selected ? 'ariaPileCardSelected' : 'ariaPileCard', { f: f + 1, word: words });
+          : t(selected ? 'ariaPileCardSelected' : 'ariaPileCard', { f: f + 1, word: words })) +
+          (pileCounter ? ', ' + t('ariaCounter', { x: run.length - 1, y: game.cats[pileBase.cat].n }) : '');
       } else {
         attrs['aria-hidden'] = 'true';
       }
       kids.push(cardEl(c, isTop ? 'button' : 'div', attrs));
     });
+    // tuck under: offered on the selected run, and on every possible run when nothing else helps
+    if (!reveal && Core.canTuck(state, f) && (selected || ui.locked)) {
+      kids.push(h('button', {
+        type: 'button', class: 'tuck-btn' + (ui.locked ? ' is-hint' : ''), 'data-action': 'tuck', 'data-field': f,
+        'data-fk': 'tuck' + f, 'aria-label': t('tuckBtn', { n: Core.CONFIG.TUCK_COST })
+      }, h('span', { class: 'tuck-btn__icon', 'aria-hidden': 'true', text: '⤓' }),
+        h('span', { class: 'tuck-btn__cost', 'aria-hidden': 'true', text: String(Core.CONFIG.TUCK_COST) })));
+    }
     var steps = Math.max(1, run.length ? d : d - 1);
     var props = {
       class: 'field field--bottom field--pile' + (run.length > 1 ? ' has-run' : '') + (reveal ? ' is-complete' : ''), 'data-drop': String(f),
@@ -1474,6 +1548,7 @@
         var selected = sel === f;
         return cardEl(game.cards[id], 'button', {
           cls: 'card--field card--lone is-top' + (selected ? ' is-selected' : '') + (isNew(id) ? ' is-new' : ''),
+          counter: '0/' + game.cats[game.cards[id].cat].n,
           style: '--i:' + i, 'data-drag': 'f' + f, 'data-fk': 'f' + f,
           'aria-pressed': selected ? 'true' : 'false',
           'aria-label': t(selected ? 'ariaLoneSelected' : 'ariaLone', { f: f + 1, name: wordOf(game.cards[id]).replace(SHY, '') })
@@ -1481,6 +1556,7 @@
       }
       return cardEl(game.cards[id], 'div', {
         cls: 'card--field' + (isNew(id) ? ' is-new' : ''),
+        counter: !reveal && i === ids.length - 1 ? (ids.length - 1) + '/' + game.cats[game.cards[ids[0]].cat].n : null,
         style: '--i:' + i + newK(id), 'aria-hidden': 'true', 'data-fly': reveal ? '1' : null
       });
     });
@@ -1548,9 +1624,10 @@
 
   function dropEl(dest) { return els.board.querySelector('[data-drop="' + dest + '"]'); }
 
-  function toast(msg, ms) {
+  function toast(msg, ms, long) {
     clearTimeout(toastTimer);
     els.toast.textContent = msg;
+    els.toast.classList.toggle('is-long', !!long);
     els.toast.classList.add('is-visible');
     toastTimer = setTimeout(function () { els.toast.classList.remove('is-visible'); }, ms || 1400);
   }
@@ -1654,6 +1731,26 @@
     ui.picked = false;
     save();
     render();
+  }
+
+  /** Tuck the run of pile f under its face-down cards (TUCK_COST moves). */
+  function doTuck(f) {
+    if (ui.busy) return;
+    var rating = Core.rateTuck(state, game);
+    var res = Core.tuck(state, game, f);
+    if (!res.ok) return;
+    Core.addRating(state, rating);
+    ui.perfectRun = 0;
+    ui.sel = 'draw';
+    ui.picked = false;
+    if (res.lost) ui.hold = true;
+    save();
+    flash(els.moves.parentNode, 'is-tick', 300);
+    render();
+    flash(dropEl(f), 'is-glow', 700);
+    showRating(rating, { ids: res.ids }, f);
+    fx('sound.flip');
+    if (res.lost) endLost();
   }
 
   function doTurn(f) {
@@ -1783,6 +1880,7 @@
     if (ui.busy || state.status !== 'playing') return;
     if (action === 'flip') { doFlip(); return; }
     if (action === 'turn') { doTurn(parseInt(el.dataset.field, 10)); return; }
+    if (action === 'tuck') { doTuck(parseInt(el.dataset.field, 10)); return; }
 
     var sel = selSource();
     if (el.dataset.drag) {

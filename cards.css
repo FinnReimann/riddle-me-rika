@@ -23,7 +23,7 @@
      .card.card--category.tier-N   a CATEGORY card (see "Category card" below)
        .card__catname          category name in a tier-coloured band at the top
        .card__art              symbol category-<categoryId>
-       .card__count            badge: today's number of word cards (4-7)
+       .card__counter          "x/y" chip (top-left; topmost card of a stack only)
 
    CLASS MAP (stable names, used by game.js)
    .pile--draw / .pile--discard / .pile--done   the three top-row piles
@@ -133,20 +133,22 @@
   --category-name-weight: 800;
   --category-name-transform: uppercase;
   --category-name-tracking: 0.01em;
-  /* Count badge: how many word cards this category has today (4-7) */
-  --count-size: calc(var(--card-w) * 0.36);      /* badge diameter */
-  --count-font-size: calc(var(--card-w) * 0.24);
-  --count-font-weight: 800;
-  --count-bg: #3b2f2a;                           /* dark chip, readable on every tier colour */
-  --count-ink: #fff8ec;
-  --count-ring: 2px solid #fffaf0;               /* separates the badge from the symbol */
-  --count-right: 5%;                             /* position: bottom-right corner of the card */
-  --count-bottom: 4%;
+  /* "x/y" counter: words on the stack / today's N of the category. Shown in the
+     top-left corner of the TOPMOST card of a stack (and on a category card on Draw / Discard) */
+  --counter-font-size: calc(var(--card-w) * 0.125);
+  --counter-font-weight: 800;
+  --counter-bg: #3b2f2a;                           /* dark chip, readable on every card */
+  --counter-ink: #fff8ec;
+  --counter-top: 3%;                               /* on a word card; on a category card: just below its band */
+  --counter-left: 4%;
+  --counter-shift: calc(var(--counter-font-size) * 1.35); /* the word moves down this much so the chip never covers it */
 
   /* ---- Face-down cards on bottom fields --------------------------------------- */
   --turn-ring: #e07b3c;            /* ring around the top face-down card (tap to turn) */
   --turn-badge-bg: #e07b3c;
   --turn-badge-ink: #ffffff;
+  --tuck-bg: #ffc898;              /* "tuck under" button (⤓) */
+  --tuck-ink: #5a2e0e;
 
   /* ---- Fields ------------------------------------------------------------------ */
   --field-bg: rgba(255, 253, 246, 0.55);
@@ -514,28 +516,54 @@
 .card__catname[data-len="l"]  { font-size: calc(var(--category-name-size) * 0.8); letter-spacing: -0.01em; }
 .card__catname[data-len="xl"] { font-size: calc(var(--category-name-size) * 0.7); letter-spacing: -0.02em; }
 .card--category .card__art { top: calc(var(--category-band-h) + 6%); }
-/* Count badge (today's number of word cards of this category) */
-.card__count {
+/* "x/y" counter on the topmost card of a stack */
+.card__counter {
   position: absolute;
   z-index: 2;
-  right: var(--count-right);
-  bottom: var(--count-bottom);
-  width: var(--count-size);
-  height: var(--count-size);
-  border-radius: 50%;
-  border: var(--count-ring);
-  box-sizing: border-box;
-  background: var(--count-bg);
-  color: var(--count-ink);
+  top: var(--counter-top);
+  left: var(--counter-left);
+  padding: 0.12em 0.4em;
+  border-radius: 999px;
+  background: var(--counter-bg);
+  color: var(--counter-ink);
   font-family: var(--word-font);
-  font-size: var(--count-font-size);
-  font-weight: var(--count-font-weight);
-  line-height: 1;
-  display: flex;
+  font-size: var(--counter-font-size);
+  font-weight: var(--counter-font-weight);
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.card--category .card__counter { top: calc(var(--category-band-h) + 3%); }
+.card.has-counter:not(.card--category) .card__word { top: calc(var(--word-top) + var(--counter-shift)); }
+
+/* "Tuck under" button (⤓) below a bottom field's run */
+.tuck-btn {
+  position: absolute;
+  z-index: 20;
+  left: 50%;
+  bottom: 4px;
+  transform: translateX(-50%);
+  min-width: 44px;
+  height: 44px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 999px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-variant-numeric: tabular-nums;
+  gap: 2px;
+  background: var(--tuck-bg);
+  color: var(--tuck-ink);
+  box-shadow: 0 3px 10px rgba(59, 47, 42, 0.25);
+  font-family: var(--word-font);
+  font-weight: 800;
 }
+.tuck-btn__icon { font-size: 20px; line-height: 1; }
+.tuck-btn__cost { font-size: 12px; opacity: 0.85; }
+.tuck-btn__cost::before { content: "×"; }
+.tuck-btn.is-hint { animation: rr-tuck-hint 1.6s ease-in-out infinite; }
+@keyframes rr-tuck-hint { 0%, 100% { box-shadow: 0 3px 10px rgba(59, 47, 42, 0.25); } 50% { box-shadow: 0 0 0 4px var(--fx-glow), 0 3px 10px rgba(59, 47, 42, 0.25); } }
 
 /* =========================================================================
    Face-down cards on the bottom fields
@@ -711,6 +739,7 @@
   .card.is-flip, .card.is-nope, .field.is-glow, .field.is-celebrate, .field.is-celebrate .field__reveal,
   .result__star, .card.is-flip::after { animation: none; }
   .card.is-flip::after { display: none; }
+  .tuck-btn.is-hint { animation: none; }
   .fx-rating { animation: rr-soft-fade 300ms ease both; }
   .result, .result--lost { animation: rr-soft-fade 300ms ease both; }
   .card-ghost, .card-ghost-run { transform: none; }

@@ -34,6 +34,10 @@
       cancel: 'Cancel',
       toastRestarted: 'Fresh start!',
       practiceNote: 'Practice round – doesn’t count',
+      tuckBtn: 'Tuck under ({n} moves)',  // ⤓ button on a bottom field's run
+      lockTuck: 'No useful move left – tap ⤓ to tuck a run under its pile ({n} moves).',
+      lockRestart: 'Nothing left to play – start over with ↻.',
+      ariaCounter: '{x} of {y} words',   // "x/y" counter on the top card of a stack
       ratePerfect: 'Perfect!',           // move ratings, shown where the card lands
       ratePerfectRun: 'Perfect ×{n}',    // perfect moves in a row
       rateGood: 'Good',
@@ -100,11 +104,12 @@
       // How-to modal ({cats} from the top of game.js, {moves} = today's move budget)
       helpTitle: 'How to play',
       help1: 'Finish all {cats} categories with {moves} moves.',
-      help2: 'Put a category card on an empty field, then stack its word cards on it. The number on the category card says how many.',
+      help2: 'Put a category card on an empty field, then stack its word cards on it. The counter (e.g. 2/5) shows how many are on it and how many belong there.',
       help3: 'Every card you play costs a move. Doesn’t fit? It bounces back – no move lost.',
       help4: 'Tap face-down cards to turn them over (free). An emptied bottom field is a free field.',
       helpRuns: 'On a bottom field you can pile word cards onto a face-up card of their category – a word card or the category card itself (it completes right there). Such a run moves as a whole, for one move; with its category card only onto a free field.',
       help5: 'Park draw cards on Discard. A category card still alone on its field can go back there too (1 move). Draw pile empty? Flip the discard pile (free).',
+      helpTuck: 'Stuck? Tap a run on a bottom field, then ⤓: it slides under that pile’s face-down cards (2 moves) and you can turn the next card.',
       helpTip: 'Drag a card or run, or tap it and then tap where it goes. Tap the draw card twice to discard it.',
       helpDaily: 'A new puzzle every day at midnight.',
       play: 'Play',
@@ -142,6 +147,10 @@
       cancel: 'Abbrechen',
       toastRestarted: 'Neuer Anlauf!',
       practiceNote: 'Übungsrunde – zählt nicht',
+      tuckBtn: 'Unterlegen ({n} Züge)',
+      lockTuck: 'Kein sinnvoller Zug mehr – tipp ⤓ und leg eine Reihe unter ihren Stapel ({n} Züge).',
+      lockRestart: 'Hier geht nichts mehr – starte mit ↻ neu.',
+      ariaCounter: '{x} von {y} Wörtern',
       ratePerfect: 'Perfekt!',
       ratePerfectRun: 'Perfekt ×{n}',
       rateGood: 'Gut',
@@ -202,11 +211,12 @@
 
       helpTitle: 'So geht’s',
       help1: 'Schaff alle {cats} Kategorien mit {moves} Zügen.',
-      help2: 'Leg eine Kategorie-Karte auf ein leeres Feld und stapel ihre Wort-Karten drauf. Die Zahl auf der Kategorie-Karte sagt, wie viele.',
+      help2: 'Leg eine Kategorie-Karte auf ein leeres Feld und stapel ihre Wort-Karten drauf. Der Zähler (z. B. 2/5) zeigt, wie viele drauf sind und wie viele dazugehören.',
       help3: 'Jede Karte, die du spielst, kostet einen Zug. Passt nicht? Sie springt zurück – kostet keinen Zug.',
       help4: 'Tipp verdeckte Karten an, um sie umzudrehen (gratis). Ein leer geräumtes unteres Feld ist frei.',
       helpRuns: 'Auf einem unteren Feld kannst du Wort-Karten auf eine offene Karte ihrer Kategorie legen – eine Wort-Karte oder die Kategorie-Karte selbst (dann wird sie dort fertig). So eine Reihe bewegst du als Ganzes für einen Zug, mit Kategorie-Karte nur auf ein freies Feld.',
       help5: 'Auf die Ablage dürfen Karten vom Nachziehstapel – und eine Kategorie-Karte, die noch allein auf ihrem Feld liegt (1 Zug). Nachziehstapel leer? Dreh die Ablage um (gratis).',
+      helpTuck: 'Festgefahren? Tipp eine Reihe auf einem unteren Feld an, dann ⤓: Sie rutscht unter die verdeckten Karten (2 Züge) und du kannst die nächste Karte umdrehen.',
       helpTip: 'Zieh eine Karte oder Reihe oder tipp sie an und dann dahin, wo sie hin soll. Die Nachziehkarte zweimal antippen legt sie ab.',
       helpDaily: 'Jeden Tag um Mitternacht gibt’s ein neues Rätsel.',
       play: 'Los geht’s',
