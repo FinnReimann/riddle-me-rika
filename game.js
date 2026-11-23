@@ -13,7 +13,7 @@
   'use strict';
 
   /* ---- CONFIG ---------------------------------------------------------- */
-  var CATEGORIES_PER_GAME = 10; // categories in one daily game (each has 1 category card)
+  var CATEGORIES_PER_GAME = 12; // categories in one daily game (each has 1 category card)
   var MIN_CARDS_PER_CATEGORY = 4; // word cards per category: each day every category gets a
   var MAX_CARDS_PER_CATEGORY = 7; // seeded random number N in this range (shown on its category card)
   var TOP_FIELDS = 4;           // fields in the upper row, start empty
@@ -23,11 +23,11 @@
   // Move budget per day = round(cards x MOVES_PER_CARD) + MOVES_BASE (cards = categories + all N),
   // calibrated with the built-in solver over 2000 daily deals (see README "Config").
   var MOVES_PER_CARD = 1;       // budget per card of the day (every play costs 1 move, also a wrong one)
-  var MOVES_BASE = 35;          // + this many (typical day: ~65 cards = ~100 moves)
-  var STAR3_EXTRA = 18;         // ★★★: finished in at most (cards + this) moves
-  var STAR2_EXTRA = 28;         // ★★☆: at most (cards + this) moves (more = ★☆☆)
+  var MOVES_BASE = 42;          // + this many (typical day: ~78 cards = ~120 moves)
+  var STAR3_EXTRA = 24;         // ★★★: finished in at most (cards + this) moves
+  var STAR2_EXTRA = 34;         // ★★☆: at most (cards + this) moves (more = ★☆☆)
   var TUCK_COST = 2;            // "tuck under": a pile's face-up run goes under its face-down cards
-  var DEAL_SPARE = 10;          // a deal is only used if the solver finishes it with this many moves to spare
+  var DEAL_SPARE = 17;          // a deal is only used if the solver finishes it with this many moves to spare
   var DEAL_ATTEMPTS = 200;      // reshuffles tried per day before giving up
   var DEAL_HELP = 0.75;         // chance that a turned card is picked among the immediately usable ones (see dealOrder)
   var MAX_TIER = 1;             // only categories with tier <= MAX_TIER are used
@@ -42,7 +42,7 @@
      1. CORE
      ======================================================================= */
   var Core = (function () {
-    var SAVE_VERSION = 12;
+    var SAVE_VERSION = 13;
     var STATS_VERSION = 3;
     var EPOCH_UTC = Date.UTC(2026, 10, 14); // 2026-11-14 = puzzle #1
     var DAY_MS = 86400000;
@@ -153,7 +153,8 @@
         // N word cards for this category today (clamped to the pool, see eligibleCategories)
         var pool2 = c.cards.filter(validCard);
         var n = Math.min(pool2.length, MIN_CARDS_PER_CATEGORY + Math.floor(rng() * (MAX_CARDS_PER_CATEGORY - MIN_CARDS_PER_CATEGORY + 1)));
-        cats.push({ id: c.id, theme: c.theme, themeDe: optText(c.themeDe), tier: tierOf(c), n: n });
+        cats.push({ id: c.id, theme: c.theme, themeDe: optText(c.themeDe), tier: tierOf(c), n: n,
+          look: typeof c.look === 'string' ? c.look.replace(/[^a-z0-9-]/g, '') : '' });
         cards.push({ id: cards.length, kind: 'cat', cat: ci, word: c.theme, wordDe: optText(c.themeDe),
           symbol: CATEGORY_SYMBOL_PREFIX + c.id });
         shuffleWith(pool2, rng).slice(0, n).forEach(function (cd) {
@@ -1292,6 +1293,13 @@
    */
   function artEl(c) {
     var art = h('span', { class: 'card__art', 'aria-hidden': 'true' });
+    // a word card without a symbol (text categories, see categories.js "look"): a typographic
+    // badge styled per look in cards.css (.card--text.look-<look> .card__mono)
+    if (c.kind === 'word' && !c.symbol) {
+      var w = wordOf(c), look = game.cats[c.cat].look;
+      art.appendChild(h('span', { class: 'card__mono', 'data-len': lenClass(w), text: look === 'hello' ? w : w.charAt(0).toUpperCase() }));
+      return art;
+    }
     var sym = c.symbol;
     var stage = sym ? (symbolStage[sym] || 0) : 2;
     if (stage >= 2) {
@@ -1313,7 +1321,9 @@
   /** A face-up card (word or category card). tag 'button' for playable cards. */
   function cardEl(c, tag, attrs) {
     var a = attrs || {};
-    var cls = 'card' + (c.kind === 'cat' ? ' card--category tier-' + game.cats[c.cat].tier : '') + (a.cls ? ' ' + a.cls : '') + (a.counter ? ' has-counter' : '');
+    var look = game.cats[c.cat].look;
+    var cls = 'card' + (c.kind === 'cat' ? ' card--category tier-' + game.cats[c.cat].tier : '') +
+      (look ? ' look-' + look : '') + (c.kind === 'word' && !c.symbol ? ' card--text' : '') + (a.cls ? ' ' + a.cls : '') + (a.counter ? ' has-counter' : '');
     var props = { class: cls, 'data-card': c.id };
     Object.keys(a).forEach(function (k) { if (k !== 'cls' && k !== 'counter') props[k] = a[k]; });
     if (tag === 'button') props.type = 'button';

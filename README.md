@@ -1,14 +1,14 @@
 # Riddle Me Rika
 
-A daily card puzzle: build a stack for each of 10 categories (category card +
+A daily card puzzle: build a stack for each of 12 categories (category card +
 its 4–7 word cards) before your moves run out. Plain HTML/CSS/JS, no build step,
 works offline and can be installed on the home screen.
 
 ## Rules
 
-- 10 categories per day. Each gets a number N from 4 to 7 (random per day and
-  category): it has 1 category card + N word cards. So a day has about 54–76
-  cards (usually around 65), dealt the same for everyone (seeded by the day).
+- 12 categories per day (from a pool of 32). Each gets a number N from 4 to 7 (random per day and
+  category): it has 1 category card + N word cards. So a day has about 65–89
+  cards (usually around 78), dealt the same for everyone (seeded by the day).
 - **Counter:** the topmost card of every category stack (on a field or on a
   bottom pile) shows "x/y" in its top-left corner: x word cards are on it, y
   belong to it. A category card on Draw / Discard shows "0/y".
@@ -45,14 +45,14 @@ works offline and can be installed on the home screen.
   too (1 move; it can't move to another field). Category cards with words on
   them stay put. Bottom-field cards snap back with "Can't go to Discard"
   (free).
-- Moves count down from the day's budget (cards + 35, e.g. 65 cards = 100
+- Moves count down from the day's budget (cards + 42, e.g. 78 cards = 120
   moves). Every play costs 1 move: a card or a whole run onto a field, stack
   or run, a card onto Discard (also a taken-back category card). A wrong one
   is free: it bounces back ("Doesn't fit"). Turning
   cards, flipping the discard pile back into the empty draw pile, selecting
   and refused moves onto Discard are free too.
-- All 10 done = solved; stars by moves used: ★★★ for at most cards + 18,
-  ★★☆ for at most cards + 28, else ★☆☆. Moves at 0 before that = "Out of
+- All 12 done = solved; stars by moves used: ★★★ for at most cards + 24,
+  ★★☆ for at most cards + 34, else ★☆☆. Moves at 0 before that = "Out of
   moves" (the streak breaks).
 - **Restart** (↻ in the header): starts today's puzzle over from scratch (same
   cards, all moves back) after a confirmation. Only the first finished result
@@ -91,16 +91,16 @@ works offline and can be installed on the home screen.
 
 | Constant | Value | Meaning |
 |---|---|---|
-| `CATEGORIES_PER_GAME` | 10 | categories per day (10 → about 100 moves; 12 would need about 120) |
+| `CATEGORIES_PER_GAME` | 12 | categories per day (about 120 moves) |
 | `MIN_CARDS_PER_CATEGORY` / `MAX_CARDS_PER_CATEGORY` | 4 / 7 | word cards per category: a seeded random N in this range per day and category (clamped to the category's pool, which must have at least 4) |
 | `TOP_FIELDS` / `BOTTOM_FIELDS` | 4 / 4 | empty top fields / bottom fields with face-down cards |
 | `FACE_DOWN_PER_FIELD` | 6 | face-down cards per bottom field (24 in all; the rest, about 30–50, is the draw pile) |
-| `MIN_CATEGORY_CARDS_IN_DRAW` | 5 (half of 10) | category cards always dealt into the draw pile |
-| `MOVES_PER_CARD` / `MOVES_BASE` | 1 / 35 | day's move budget = cards × 1 + 35 (65 cards: 100) |
-| `STAR3_EXTRA` / `STAR2_EXTRA` | 18 / 28 | ★★★ / ★★☆ when finished in at most cards + this many moves (= 17 / 7 moves left) |
+| `MIN_CATEGORY_CARDS_IN_DRAW` | 6 (half of 12) | category cards always dealt into the draw pile |
+| `MOVES_PER_CARD` / `MOVES_BASE` | 1 / 42 | day's move budget = cards × 1 + 42 (78 cards: 120) |
+| `STAR3_EXTRA` / `STAR2_EXTRA` | 24 / 34 | ★★★ / ★★☆ when finished in at most cards + this many moves (= 18 / 8 moves left) |
 | `TUCK_COST` | 2 | moves for tucking a run under its pile (⤓) |
-| `DEAL_SPARE` | 10 | a deal is only used if the solver finishes it with at least this many of the day's moves to spare |
-| `DEAL_ATTEMPTS` | 200 | reshuffles tried per day before giving up (never needed more than 4) |
+| `DEAL_SPARE` | 17 | a deal is only used if the solver finishes it with at least this many of the day's moves to spare (keeps deals as friendly as with the old cards + 35 budget) |
+| `DEAL_ATTEMPTS` | 200 | reshuffles tried per day before giving up (12 categories: up to ~70) |
 | `DEAL_HELP` | 0.75 | how often a dealt face-down card is one the solver can use right away (higher = friendlier deals) |
 | `SYMBOL_DIR` + `SYMBOL_EXT` | `assets/symbols/`, `png` | the owner's symbols (always win) |
 | `SYMBOL_GEN_DIR` + `SYMBOL_GEN_EXT` | `assets/symbols/generated/`, `svg` | generated fallback symbols |
@@ -119,7 +119,13 @@ same game; `buildGame` checks exactly that within the budget minus `DEAL_SPARE` 
 otherwise deals again with a seed derived from the day. Everyone gets the same
 deal; it takes about 0.1 ms (at most ~2 ms) on a laptop.
 
-The budget was calibrated with the solver over 2000 daily deals (days
+**12 categories (current):** re-calibrated over 1000 days (65–89 cards, median 78).
+Careful play styles need about +16 to +28 moves over the card count (median +19 to +26),
+with a long tail from draw-pile cycling. With cards + 42 and `DEAL_SPARE` 17 they
+finish 72–90% of days within the budget and get ★★★ on 41–80%; 0.8–3% stay stuck
+even with tuck under. Harder than 10 categories (81–95% / 55–85%), by design.
+
+**Older numbers (10 categories):** The budget was calibrated with the solver over 2000 daily deals (days
 0–1999, 53–77 cards a day, median 65, budget 88–112, median 100): the solver
 needs its card count +2 to +25 moves on the deals it accepts (median +15, 90%
 within +21; the big draw pile means a lot of cycling), so the budget is

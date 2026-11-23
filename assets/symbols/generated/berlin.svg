@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="marker" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <!-- 1. wobbly hand-drawn edges -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="10" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <!-- 2. soft marker edge -->
+      <feGaussianBlur in="wobble" stdDeviation="1.6" result="soft"/>
+      <!-- 3. blotchy marker shading (dark patches) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="45" result="blotch"/>
+      <feColorMatrix in="blotch" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.25 -0.62" result="blotchA"/>
+      <feComposite in="blotchA" in2="soft" operator="in" result="shade"/>
+      <!-- 4. fine paper/fibre texture (light speckles) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="119" result="fibre"/>
+      <feColorMatrix in="fibre" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.75 -0.55" result="fibreA"/>
+      <feComposite in="fibreA" in2="soft" operator="in" result="speckle"/>
+      <feMerge><feMergeNode in="soft"/><feMergeNode in="shade"/><feMergeNode in="speckle"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#marker)">
+    <!-- quadriga (green patina) -->
+    <path d="M168 150 L168 126 Q176 98 196 104 L204 84 Q214 76 222 92 L226 104 Q236 92 248 100 L252 112 L268 112 L272 98 Q284 90 292 104 Q298 88 308 86 L316 104 Q334 98 344 126 L344 150 Z" fill="#3f9a7a"/>
+    <path d="M256 112 L256 60" stroke="#3f9a7a" stroke-width="16" stroke-linecap="round" fill="none"/>
+    <circle cx="256" cy="58" r="14" fill="#3f9a7a"/>
+    <path d="M276 104 L292 48" stroke="#2f7a5e" stroke-width="8" stroke-linecap="round" fill="none"/>
+    <circle cx="293" cy="46" r="11" fill="none" stroke="#2f7a5e" stroke-width="7"/>
+    <!-- attic -->
+    <rect x="150" y="146" width="212" height="42" rx="4" fill="#e3b46a"/>
+    <path d="M150 146 L256 120 L362 146 Z" fill="#e3b46a"/>
+    <!-- entablature -->
+    <rect x="52" y="184" width="408" height="46" rx="4" fill="#d9a356"/>
+    <path d="M60 208 L452 208" stroke="#b07e3a" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <!-- columns -->
+    <rect x="68" y="226" width="30" height="206" fill="#e3b46a"/>
+    <rect x="86" y="226" width="12" height="206" fill="#c08a44"/>
+    <rect x="134" y="226" width="30" height="206" fill="#e3b46a"/>
+    <rect x="152" y="226" width="12" height="206" fill="#c08a44"/>
+    <rect x="200" y="226" width="30" height="206" fill="#e3b46a"/>
+    <rect x="218" y="226" width="12" height="206" fill="#c08a44"/>
+    <rect x="282" y="226" width="30" height="206" fill="#e3b46a"/>
+    <rect x="300" y="226" width="12" height="206" fill="#c08a44"/>
+    <rect x="348" y="226" width="30" height="206" fill="#e3b46a"/>
+    <rect x="366" y="226" width="12" height="206" fill="#c08a44"/>
+    <rect x="414" y="226" width="30" height="206" fill="#e3b46a"/>
+    <rect x="432" y="226" width="12" height="206" fill="#c08a44"/>
+    <!-- base -->
+    <rect x="48" y="428" width="416" height="28" rx="6" fill="#b07e3a"/>
+  </g>
+</svg>

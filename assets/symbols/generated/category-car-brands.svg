@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="marker" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <!-- 1. wobbly hand-drawn edges -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="10" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <!-- 2. soft marker edge -->
+      <feGaussianBlur in="wobble" stdDeviation="1.6" result="soft"/>
+      <!-- 3. blotchy marker shading (dark patches) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="53" result="blotch"/>
+      <feColorMatrix in="blotch" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.25 -0.62" result="blotchA"/>
+      <feComposite in="blotchA" in2="soft" operator="in" result="shade"/>
+      <!-- 4. fine paper/fibre texture (light speckles) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="171" result="fibre"/>
+      <feColorMatrix in="fibre" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.75 -0.55" result="fibreA"/>
+      <feComposite in="fibreA" in2="soft" operator="in" result="speckle"/>
+      <feMerge><feMergeNode in="soft"/><feMergeNode in="shade"/><feMergeNode in="speckle"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#marker)">
+    <!-- wheels -->
+    <rect x="100" y="352" width="58" height="80" rx="16" fill="#33302e"/>
+    <rect x="354" y="352" width="58" height="80" rx="16" fill="#33302e"/>
+    <!-- cabin -->
+    <path d="M138 206 Q150 124 204 120 L308 120 Q362 124 374 206 Z" fill="#2c4f8f"/>
+    <path d="M164 200 Q174 146 210 142 L302 142 Q338 146 348 200 Z" fill="#8cc3ea"/>
+    <path d="M200 186 L232 154" stroke="#c7e1f3" stroke-width="12" stroke-linecap="round" fill="none"/>
+    <!-- mirrors -->
+    <ellipse cx="84" cy="214" rx="26" ry="18" fill="#2c4f8f"/>
+    <ellipse cx="428" cy="214" rx="26" ry="18" fill="#2c4f8f"/>
+    <!-- body -->
+    <rect x="72" y="196" width="368" height="168" rx="44" fill="#3f8fd0"/>
+    <!-- headlights -->
+    <ellipse cx="136" cy="256" rx="38" ry="24" fill="#f2c230"/>
+    <ellipse cx="376" cy="256" rx="38" ry="24" fill="#f2c230"/>
+    <!-- grille -->
+    <rect x="168" y="282" width="176" height="56" rx="16" fill="#2c4f8f"/>
+    <path d="M190 302 L322 302 M190 320 L322 320" stroke="#5a7fbf" stroke-width="8" stroke-linecap="round" fill="none"/>
+    <!-- blank badge -->
+    <circle cx="256" cy="246" r="26" fill="#b7bdc5"/>
+    <circle cx="256" cy="246" r="14" fill="#e3e6ea"/>
+    <!-- bumper -->
+    <rect x="82" y="346" width="348" height="30" rx="15" fill="#717a86"/>
+  </g>
+</svg>

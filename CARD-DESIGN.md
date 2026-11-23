@@ -96,6 +96,28 @@ the generated SVG automatically. Folders and extensions are the
 constants at the top of `game.js`. Transparent square images work best; they
 are scaled with `object-fit: contain` into the symbol area.
 
+## Category looks (personality)
+
+A category in `categories.js` can have `look: "<name>"`. All its cards then get
+the class `.look-<name>` (font of the word etc.), and its word cards WITHOUT a
+`symbol` become text cards (`.card--text`): the symbol area shows `.card__mono`,
+a badge with the word's first letter (look `hello`: the whole word in a speech
+bubble). Styles are in the "Category looks" section of `cards.css`:
+
+| look | category | style |
+|---|---|---|
+| `fashion` | High Fashion | Playfair Display caps, black monogram |
+| `airlines` | Airlines | bold italic caps, blue tail fin |
+| `cars` | Car Brands | heavy italic caps, chrome badge |
+| `hello` | Saying Hello | Caveat handwriting, pink speech bubble |
+| `dances` | Dances | italic serif, rose medallion |
+| `gods` | Gods of Myth | Cinzel, gold medallion |
+| `cheese` | Cheese | cheese wedge with holes |
+| `capitals` | European Capitals | pictures (landmarks), no extra style yet |
+
+New look: add `look` in `categories.js` and a `.look-<name>` block in `cards.css`.
+Extra fonts go into the Google Fonts link in `index.html`.
+
 ## Card face / back images
 
 Put files in `assets/` and set e.g.

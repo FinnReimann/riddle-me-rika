@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="marker" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <!-- 1. wobbly hand-drawn edges -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="10" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <!-- 2. soft marker edge -->
+      <feGaussianBlur in="wobble" stdDeviation="1.6" result="soft"/>
+      <!-- 3. blotchy marker shading (dark patches) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="27" result="blotch"/>
+      <feColorMatrix in="blotch" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.25 -0.62" result="blotchA"/>
+      <feComposite in="blotchA" in2="soft" operator="in" result="shade"/>
+      <!-- 4. fine paper/fibre texture (light speckles) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="63" result="fibre"/>
+      <feColorMatrix in="fibre" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.75 -0.55" result="fibreA"/>
+      <feComposite in="fibreA" in2="soft" operator="in" result="speckle"/>
+      <feMerge><feMergeNode in="soft"/><feMergeNode in="shade"/><feMergeNode in="speckle"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#marker)">
+    <!-- water -->
+    <path d="M44 432 L468 432 L468 468 L44 468 Z" fill="#3f8fd0"/>
+    <path d="M90 452 Q110 442 130 452 M370 454 Q390 444 410 454" stroke="#8cc3ea" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <!-- bastion -->
+    <rect x="84" y="330" width="344" height="108" fill="#f4efe6"/>
+    <rect x="384" y="330" width="44" height="108" fill="#c9ced4"/>
+    <path d="M84 338 L428 338" stroke="#9aa1aa" stroke-width="12" stroke-linecap="round" fill="none"/>
+    <path d="M110 330 L110 312 Q122 298 134 312 L134 330 Z M152 330 L152 312 Q164 298 176 312 L176 330 Z M336 330 L336 312 Q348 298 360 312 L360 330 Z M378 330 L378 312 Q390 298 402 312 L402 330 Z" fill="#e6e1d8"/>
+    <path d="M200 392 L200 370 Q214 352 228 370 L228 392 Z M284 392 L284 370 Q298 352 312 370 L312 392 Z" fill="#5a3a26"/>
+    <!-- bastion corner turrets -->
+    <rect x="62" y="300" width="40" height="64" rx="4" fill="#c9ced4"/>
+    <path d="M58 304 Q82 252 106 304 Z" fill="#717a86"/>
+    <rect x="410" y="300" width="40" height="64" rx="4" fill="#b7bdc5"/>
+    <path d="M406 304 Q430 252 454 304 Z" fill="#5f6670"/>
+    <!-- tower -->
+    <rect x="192" y="108" width="128" height="226" fill="#f4efe6"/>
+    <rect x="290" y="108" width="30" height="226" fill="#c9ced4"/>
+    <path d="M192 200 L320 200 M192 270 L320 270" stroke="#9aa1aa" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <path d="M196 108 L196 88 Q208 76 220 88 L220 108 Z M234 108 L234 88 Q246 76 258 88 L258 108 Z M272 108 L272 88 Q284 76 296 88 L296 108 Z" fill="#e6e1d8"/>
+    <!-- tower corner turrets -->
+    <rect x="168" y="126" width="36" height="56" rx="4" fill="#c9ced4"/>
+    <path d="M164 130 Q186 82 208 130 Z" fill="#717a86"/>
+    <rect x="308" y="126" width="36" height="56" rx="4" fill="#b7bdc5"/>
+    <path d="M304 130 Q326 82 348 130 Z" fill="#5f6670"/>
+    <!-- windows -->
+    <path d="M220 190 L220 154 Q236 132 252 154 L252 190 Z M262 190 L262 154 Q278 132 294 154 L294 190 Z" fill="#5a3a26"/>
+    <path d="M240 258 L240 230 Q256 212 272 230 L272 258 Z" fill="#5a3a26"/>
+    <rect x="212" y="186" width="88" height="16" rx="5" fill="#b7bdc5"/>
+  </g>
+</svg>

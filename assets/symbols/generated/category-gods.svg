@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="marker" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <!-- 1. wobbly hand-drawn edges -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="10" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <!-- 2. soft marker edge -->
+      <feGaussianBlur in="wobble" stdDeviation="1.6" result="soft"/>
+      <!-- 3. blotchy marker shading (dark patches) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="19" result="blotch"/>
+      <feColorMatrix in="blotch" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.25 -0.62" result="blotchA"/>
+      <feComposite in="blotchA" in2="soft" operator="in" result="shade"/>
+      <!-- 4. fine paper/fibre texture (light speckles) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="66" result="fibre"/>
+      <feColorMatrix in="fibre" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.75 -0.55" result="fibreA"/>
+      <feComposite in="fibreA" in2="soft" operator="in" result="speckle"/>
+      <feMerge><feMergeNode in="soft"/><feMergeNode in="shade"/><feMergeNode in="speckle"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#marker)">
+    <!-- lightning bolt -->
+    <path d="M306 40 L172 172 L240 172 L198 262 L350 122 L282 122 L338 40 Z" fill="#f2c230"/>
+    <path d="M308 58 L208 158" stroke="#f8de7a" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <!-- laurel branches -->
+    <path d="M196 448 Q118 400 128 290 M316 448 Q394 400 384 290" stroke="#2f6f2c" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <ellipse cx="124" cy="306" rx="12" ry="26" fill="#3f9a3a" transform="rotate(-10 124 306)"/>
+    <ellipse cx="112" cy="356" rx="12" ry="26" fill="#3f9a3a" transform="rotate(-40 112 356)"/>
+    <ellipse cx="134" cy="406" rx="12" ry="26" fill="#3f9a3a" transform="rotate(-60 134 406)"/>
+    <ellipse cx="150" cy="340" rx="11" ry="24" fill="#4fae48" transform="rotate(30 150 340)"/>
+    <ellipse cx="166" cy="392" rx="11" ry="24" fill="#4fae48" transform="rotate(20 166 392)"/>
+    <ellipse cx="388" cy="306" rx="12" ry="26" fill="#3f9a3a" transform="rotate(10 388 306)"/>
+    <ellipse cx="400" cy="356" rx="12" ry="26" fill="#3f9a3a" transform="rotate(40 400 356)"/>
+    <ellipse cx="378" cy="406" rx="12" ry="26" fill="#3f9a3a" transform="rotate(60 378 406)"/>
+    <ellipse cx="362" cy="340" rx="11" ry="24" fill="#4fae48" transform="rotate(-30 362 340)"/>
+    <ellipse cx="346" cy="392" rx="11" ry="24" fill="#4fae48" transform="rotate(-20 346 392)"/>
+    <!-- column -->
+    <rect x="202" y="438" width="108" height="26" rx="6" fill="#b7bdc5"/>
+    <rect x="216" y="296" width="80" height="146" fill="#f4efe6"/>
+    <path d="M240 308 L240 430 M264 308 L264 430" stroke="#c9ced4" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <rect x="280" y="296" width="16" height="146" fill="#c9ced4"/>
+    <rect x="200" y="280" width="112" height="22" rx="6" fill="#e6e1d8"/>
+    <circle cx="202" cy="294" r="16" fill="#b7bdc5"/>
+    <circle cx="310" cy="294" r="16" fill="#b7bdc5"/>
+    <rect x="194" y="268" width="124" height="16" rx="5" fill="#f4efe6"/>
+  </g>
+</svg>

@@ -2,7 +2,7 @@
    Strategy: serve from cache right away, refresh the cache in the background
    (stale-while-revalidate). Bump CACHE_VERSION when you want every device to
    drop its old copy at once (e.g. after a big redesign). */
-const CACHE_VERSION = 'rmr-v15';
+const CACHE_VERSION = 'rmr-v16';
 
 const CORE = [
   './',

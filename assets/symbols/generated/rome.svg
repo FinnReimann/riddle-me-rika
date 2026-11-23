@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="marker" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <!-- 1. wobbly hand-drawn edges -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="10" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <!-- 2. soft marker edge -->
+      <feGaussianBlur in="wobble" stdDeviation="1.6" result="soft"/>
+      <!-- 3. blotchy marker shading (dark patches) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="23" result="blotch"/>
+      <feColorMatrix in="blotch" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.25 -0.62" result="blotchA"/>
+      <feComposite in="blotchA" in2="soft" operator="in" result="shade"/>
+      <!-- 4. fine paper/fibre texture (light speckles) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="77" result="fibre"/>
+      <feColorMatrix in="fibre" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.75 -0.55" result="fibreA"/>
+      <feComposite in="fibreA" in2="soft" operator="in" result="speckle"/>
+      <feMerge><feMergeNode in="soft"/><feMergeNode in="shade"/><feMergeNode in="speckle"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#marker)">
+    <!-- inner far wall seen over the low side -->
+    <path d="M300 200 Q380 196 446 236 L446 270 L300 270 Z" fill="#b8793a"/>
+    <!-- facade: tall left, ruined stepped right -->
+    <path d="M52 172 Q160 140 290 150 L300 150 L300 196 L352 206 L352 236 L404 240 L404 270 L460 276 L460 426 Q256 452 52 426 Z" fill="#dca05a"/>
+    <!-- cornices -->
+    <path d="M52 254 Q256 236 460 264 M52 338 Q256 322 460 344" stroke="#f0c486" stroke-width="12" stroke-linecap="round" fill="none"/>
+    <path d="M70 424 L70 375 A17 17 0 0 1 104 375 L104 424 Z" fill="#6e4422"/>
+    <path d="M130 424 L130 375 A17 17 0 0 1 164 375 L164 424 Z" fill="#6e4422"/>
+    <path d="M190 424 L190 375 A17 17 0 0 1 224 375 L224 424 Z" fill="#6e4422"/>
+    <path d="M250 424 L250 375 A17 17 0 0 1 284 375 L284 424 Z" fill="#6e4422"/>
+    <path d="M310 424 L310 375 A17 17 0 0 1 344 375 L344 424 Z" fill="#6e4422"/>
+    <path d="M370 424 L370 375 A17 17 0 0 1 404 375 L404 424 Z" fill="#6e4422"/>
+    <path d="M420 424 L420 375 A17 17 0 0 1 454 375 L454 424 Z" fill="#6e4422"/>
+    <path d="M70 330 L70 289 A17 17 0 0 1 104 289 L104 330 Z" fill="#6e4422"/>
+    <path d="M130 330 L130 289 A17 17 0 0 1 164 289 L164 330 Z" fill="#6e4422"/>
+    <path d="M190 330 L190 289 A17 17 0 0 1 224 289 L224 330 Z" fill="#6e4422"/>
+    <path d="M250 330 L250 289 A17 17 0 0 1 284 289 L284 330 Z" fill="#6e4422"/>
+    <path d="M310 330 L310 289 A17 17 0 0 1 344 289 L344 330 Z" fill="#6e4422"/>
+    <path d="M370 330 L370 289 A17 17 0 0 1 404 289 L404 330 Z" fill="#6e4422"/>
+    <path d="M420 330 L420 289 A17 17 0 0 1 454 289 L454 330 Z" fill="#6e4422"/>
+    <path d="M70 244 L70 207 A17 17 0 0 1 104 207 L104 244 Z" fill="#6e4422"/>
+    <path d="M130 244 L130 207 A17 17 0 0 1 164 207 L164 244 Z" fill="#6e4422"/>
+    <path d="M190 244 L190 207 A17 17 0 0 1 224 207 L224 244 Z" fill="#6e4422"/>
+    <path d="M250 244 L250 207 A17 17 0 0 1 284 207 L284 244 Z" fill="#6e4422"/>
+    <path d="M310 244 L310 220 Q327 204 344 220 L344 244 Z" fill="#6e4422"/>
+  </g>
+</svg>

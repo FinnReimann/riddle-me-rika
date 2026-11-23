@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="marker" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <!-- 1. wobbly hand-drawn edges -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="10" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <!-- 2. soft marker edge -->
+      <feGaussianBlur in="wobble" stdDeviation="1.6" result="soft"/>
+      <!-- 3. blotchy marker shading (dark patches) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="58" result="blotch"/>
+      <feColorMatrix in="blotch" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.25 -0.62" result="blotchA"/>
+      <feComposite in="blotchA" in2="soft" operator="in" result="shade"/>
+      <!-- 4. fine paper/fibre texture (light speckles) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="131" result="fibre"/>
+      <feColorMatrix in="fibre" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.75 -0.55" result="fibreA"/>
+      <feComposite in="fibreA" in2="soft" operator="in" result="speckle"/>
+      <feMerge><feMergeNode in="soft"/><feMergeNode in="shade"/><feMergeNode in="speckle"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#marker)">
+    <!-- rocky hill -->
+    <path d="M44 462 Q70 414 118 410 L394 410 Q442 414 468 462 Z" fill="#9a5b2e"/>
+    <!-- steps -->
+    <rect x="70" y="384" width="372" height="28" rx="4" fill="#b7bdc5"/>
+    <rect x="84" y="360" width="344" height="28" rx="4" fill="#f4efe6"/>
+    <!-- pediment and entablature -->
+    <path d="M66 170 L256 88 L446 170 Z" fill="#f4efe6"/>
+    <path d="M120 160 L256 104 L392 160 Z" fill="#c9ced4"/>
+    <rect x="72" y="166" width="368" height="40" rx="4" fill="#f4efe6"/>
+    <path d="M80 194 L432 194" stroke="#b7bdc5" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <!-- shadow behind columns -->
+    <rect x="92" y="206" width="328" height="156" fill="#9aa1aa"/>
+    <rect x="92" y="204" width="32" height="158" fill="#f4efe6"/>
+    <rect x="112" y="204" width="12" height="158" fill="#c9ced4"/>
+    <rect x="140" y="204" width="32" height="158" fill="#f4efe6"/>
+    <rect x="160" y="204" width="12" height="158" fill="#c9ced4"/>
+    <rect x="188" y="204" width="32" height="158" fill="#f4efe6"/>
+    <rect x="208" y="204" width="12" height="158" fill="#c9ced4"/>
+    <rect x="236" y="204" width="32" height="158" fill="#f4efe6"/>
+    <rect x="256" y="204" width="12" height="158" fill="#c9ced4"/>
+    <rect x="284" y="204" width="32" height="158" fill="#f4efe6"/>
+    <rect x="304" y="204" width="12" height="158" fill="#c9ced4"/>
+    <rect x="332" y="204" width="32" height="158" fill="#f4efe6"/>
+    <rect x="352" y="204" width="12" height="158" fill="#c9ced4"/>
+    <rect x="380" y="204" width="32" height="158" fill="#f4efe6"/>
+    <rect x="400" y="204" width="12" height="158" fill="#c9ced4"/>
+  </g>
+</svg>

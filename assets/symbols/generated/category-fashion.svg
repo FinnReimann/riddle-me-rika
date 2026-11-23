@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="marker" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <!-- 1. wobbly hand-drawn edges -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="10" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <!-- 2. soft marker edge -->
+      <feGaussianBlur in="wobble" stdDeviation="1.6" result="soft"/>
+      <!-- 3. blotchy marker shading (dark patches) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="18" result="blotch"/>
+      <feColorMatrix in="blotch" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.25 -0.62" result="blotchA"/>
+      <feComposite in="blotchA" in2="soft" operator="in" result="shade"/>
+      <!-- 4. fine paper/fibre texture (light speckles) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="112" result="fibre"/>
+      <feColorMatrix in="fibre" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.75 -0.55" result="fibreA"/>
+      <feComposite in="fibreA" in2="soft" operator="in" result="speckle"/>
+      <feMerge><feMergeNode in="soft"/><feMergeNode in="shade"/><feMergeNode in="speckle"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#marker)">
+    <!-- handle -->
+    <path d="M168 230 Q164 92 256 92 Q348 92 344 230" stroke="#a8436f" stroke-width="28" stroke-linecap="round" fill="none"/>
+    <!-- body -->
+    <path d="M118 210 L394 210 Q414 210 418 230 L446 432 Q448 456 424 456 L88 456 Q64 456 66 432 L94 230 Q98 210 118 210 Z" fill="#e57fae"/>
+    <path d="M410 240 L432 430" stroke="#c9638f" stroke-width="14" stroke-linecap="round" fill="none"/>
+    <!-- flap -->
+    <path d="M100 216 Q104 210 118 210 L394 210 Q408 210 412 216 L404 300 Q256 350 108 300 Z" fill="#c9638f"/>
+    <path d="M128 236 L384 236" stroke="#f0a6c6" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <!-- clasp -->
+    <rect x="234" y="300" width="44" height="40" rx="12" fill="#f2c230"/>
+    <circle cx="256" cy="320" r="8" fill="#c99a1c"/>
+  </g>
+</svg>

@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="marker" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <!-- 1. wobbly hand-drawn edges -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="10" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <!-- 2. soft marker edge -->
+      <feGaussianBlur in="wobble" stdDeviation="1.6" result="soft"/>
+      <!-- 3. blotchy marker shading (dark patches) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="12" result="blotch"/>
+      <feColorMatrix in="blotch" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.25 -0.62" result="blotchA"/>
+      <feComposite in="blotchA" in2="soft" operator="in" result="shade"/>
+      <!-- 4. fine paper/fibre texture (light speckles) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="88" result="fibre"/>
+      <feColorMatrix in="fibre" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.75 -0.55" result="fibreA"/>
+      <feComposite in="fibreA" in2="soft" operator="in" result="speckle"/>
+      <feMerge><feMergeNode in="soft"/><feMergeNode in="shade"/><feMergeNode in="speckle"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#marker)">
+    <!-- shaft -->
+    <rect x="200" y="250" width="112" height="216" fill="#d39a4a"/>
+    <rect x="282" y="250" width="30" height="216" fill="#b37a36"/>
+    <path d="M232 290 L232 440 M262 290 L262 440" stroke="#8a5a26" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <!-- clock block -->
+    <rect x="182" y="150" width="148" height="126" rx="4" fill="#d39a4a"/>
+    <rect x="300" y="150" width="30" height="126" fill="#b37a36"/>
+    <circle cx="256" cy="213" r="54" fill="#8a5a26"/>
+    <circle cx="256" cy="213" r="44" fill="#f4efe6"/>
+    <path d="M256 213 L256 180 M256 213 L280 222" stroke="#33302e" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <!-- belfry -->
+    <rect x="196" y="106" width="120" height="46" fill="#c08a40"/>
+    <path d="M220 146 L220 124 M244 146 L244 124 M268 146 L268 124 M292 146 L292 124" stroke="#5a3a26" stroke-width="12" stroke-linecap="round" fill="none"/>
+    <!-- spire roof -->
+    <path d="M186 112 L256 40 L326 112 Z" fill="#4a5560"/>
+    <path d="M256 44 L326 112 L292 112 Z" fill="#353e48"/>
+    <path d="M186 112 L186 92 M326 112 L326 92" stroke="#4a5560" stroke-width="12" stroke-linecap="round" fill="none"/>
+    <circle cx="256" cy="40" r="9" fill="#f2c230"/>
+  </g>
+</svg>

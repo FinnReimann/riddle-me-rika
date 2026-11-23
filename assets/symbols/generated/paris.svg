@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="marker" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <!-- 1. wobbly hand-drawn edges -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="10" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <!-- 2. soft marker edge -->
+      <feGaussianBlur in="wobble" stdDeviation="1.6" result="soft"/>
+      <!-- 3. blotchy marker shading (dark patches) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="71" result="blotch"/>
+      <feColorMatrix in="blotch" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.25 -0.62" result="blotchA"/>
+      <feComposite in="blotchA" in2="soft" operator="in" result="shade"/>
+      <!-- 4. fine paper/fibre texture (light speckles) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="141" result="fibre"/>
+      <feColorMatrix in="fibre" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.75 -0.55" result="fibreA"/>
+      <feComposite in="fibreA" in2="soft" operator="in" result="speckle"/>
+      <feMerge><feMergeNode in="soft"/><feMergeNode in="shade"/><feMergeNode in="speckle"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#marker)">
+    <!-- legs with arch -->
+    <path d="M112 462 L196 300 L316 300 L400 462 L346 462 Q256 352 166 462 Z" fill="#9a5b2e"/>
+    <path d="M150 440 L210 316 M362 440 L302 316" stroke="#5a3a26" stroke-width="12" stroke-linecap="round" fill="none"/>
+    <!-- first platform -->
+    <rect x="172" y="282" width="168" height="28" rx="6" fill="#5a3a26"/>
+    <!-- middle section -->
+    <path d="M204 284 L234 172 L278 172 L308 284 Z" fill="#9a5b2e"/>
+    <path d="M226 270 L284 196 M286 270 L228 196" stroke="#5a3a26" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <!-- second platform -->
+    <rect x="214" y="158" width="84" height="22" rx="6" fill="#5a3a26"/>
+    <!-- upper spire -->
+    <path d="M236 162 L248 66 L264 66 L276 162 Z" fill="#9a5b2e"/>
+    <path d="M256 150 L256 84" stroke="#c07a42" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <rect x="240" y="56" width="32" height="16" rx="5" fill="#5a3a26"/>
+    <path d="M256 58 L256 34" stroke="#5a3a26" stroke-width="10" stroke-linecap="round" fill="none"/>
+  </g>
+</svg>

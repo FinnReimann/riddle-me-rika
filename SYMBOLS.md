@@ -1,7 +1,7 @@
 # Riddle Me Rika — Symbols to draw
 
-Checklist of every card symbol in `categories.js`: **24 categories × 8 cards = 192 symbols**, plus
-**24 category-card symbols** (see "Category cards" at the end).
+Checklist of every card symbol in `categories.js`: **25 picture categories × 8 cards = 200 symbols**, plus
+**32 category-card symbols** (7 more categories are text-only, see below) (see "Category cards" at the end).
 
 - **Folder:** `assets/symbols/`
 - **Filename:** must match exactly, lowercase, e.g. `ice-cream.png`
@@ -254,6 +254,23 @@ Tick a box (`[x]`) once a symbol is drawn.
 - [ ] rectangle.png — Rectangle / Rechteck
 - [ ] oval.png — Oval / Oval
 
+## European Capitals
+- [ ] paris.png — Paris / Paris (Eiffel Tower)
+- [ ] london.png — London / London (Big Ben)
+- [ ] rome.png — Rome / Rom (Colosseum)
+- [ ] berlin.png — Berlin / Berlin (Brandenburg Gate)
+- [ ] athens.png — Athens / Athen (Parthenon)
+- [ ] amsterdam.png — Amsterdam / Amsterdam (canal houses)
+- [ ] prague.png — Prague / Prag (Charles Bridge)
+- [ ] lisbon.png — Lisbon / Lissabon (Belém Tower)
+
+## Text-only categories (no word symbols)
+
+High Fashion, Airlines, Car Brands, Saying Hello, Dances, Gods of Myth, Cheese:
+their word cards have no `symbol` in `categories.js` and show a typographic badge
+instead (style per `look` in `cards.css`). Brand names stay plain words - no logos.
+If you ever want a picture on one, add `symbol: "..."` to that card and drop the PNG here.
+
 ## Category cards
 
 Each category has one category card (always the bottom card of a stack). It shows the
@@ -283,3 +300,11 @@ category name and this symbol: `category-<categoryId>.png`, same folder and form
 - [ ] category-camping.png — Camping / Camping
 - [ ] category-office-supplies.png — Office Supplies / Bürobedarf
 - [ ] category-shapes.png — Shapes / Formen
+- [ ] category-capitals.png — European Capitals / Hauptstädte Europas
+- [ ] category-fashion.png — High Fashion / High Fashion
+- [ ] category-airlines.png — Airlines / Fluglinien
+- [ ] category-car-brands.png — Car Brands / Automarken
+- [ ] category-hello.png — Saying Hello / Hallo sagen
+- [ ] category-dances.png — Dances / Tänze
+- [ ] category-gods.png — Gods of Myth / Götter der Sagen
+- [ ] category-cheese.png — Cheese / Käse

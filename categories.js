@@ -1,4 +1,4 @@
-// Category pool. Each daily game picks 8 categories (plus one category card per
+// Category pool. Each daily game picks 12 categories (plus one category card per
 // category, showing theme / themeDe and symbol category-<id>).
 // 8 cards per category; each game uses 4–7 of them.
 // symbol = file name (without extension) in assets/symbols/, e.g. assets/symbols/apple.png
@@ -8,7 +8,7 @@
 //   Symbols are shared between languages, so a card has one symbol for both words.
 //
 // Pool rules: every word (per language) and symbol id is unique across the whole pool,
-// and no card may plausibly belong to another category in either language (any 8
+// and no card may plausibly belong to another category in either language (any 12
 // categories can appear together). Keep card words short (max ~14 characters).
 // This file is UTF-8 (German umlauts are stored as real characters).
 window.CATEGORIES = [
@@ -251,5 +251,92 @@ window.CATEGORIES = [
       { word: "Hexagon", wordDe: "Sechseck", symbol: "hexagon" },
       { word: "Rectangle", wordDe: "Rechteck", symbol: "rectangle" },
       { word: "Oval", wordDe: "Oval", symbol: "oval" }
+  ]},
+
+  // ---- Categories with personality -------------------------------------------
+  // look = card style in cards.css (.look-<look>): font and typographic badge.
+  // Cards WITHOUT a symbol are text cards: instead of a picture they show a
+  // badge with the word's first letter (look "hello": the whole word in a bubble).
+  // Add a symbol later and the card shows the picture as usual.
+  // Brand names are only written as plain words - never draw their logos.
+  { id: "capitals", theme: "European Capitals", themeDe: "Hauptstädte Europas", tier: 1, look: "capitals", cards: [
+      { word: "Paris", wordDe: "Paris", symbol: "paris" },
+      { word: "London", wordDe: "London", symbol: "london" },
+      { word: "Rome", wordDe: "Rom", symbol: "rome" },
+      { word: "Berlin", wordDe: "Berlin", symbol: "berlin" },
+      { word: "Athens", wordDe: "Athen", symbol: "athens" },
+      { word: "Amsterdam", wordDe: "Amsterdam", symbol: "amsterdam" },
+      { word: "Prague", wordDe: "Prag", symbol: "prague" },
+      { word: "Lisbon", wordDe: "Lissabon", symbol: "lisbon" }
+  ]},
+  { id: "fashion", theme: "High Fashion", themeDe: "High Fashion", tier: 1, look: "fashion", cards: [
+      { word: "Gucci", wordDe: "Gucci" },
+      { word: "Prada", wordDe: "Prada" },
+      { word: "Chanel", wordDe: "Chanel" },
+      { word: "Dior", wordDe: "Dior" },
+      { word: "Versace", wordDe: "Versace" },
+      { word: "Hermès", wordDe: "Hermès" },
+      { word: "Balenciaga", wordDe: "Balenciaga" },
+      { word: "Valentino", wordDe: "Valentino" }
+  ]},
+  { id: "airlines", theme: "Airlines", themeDe: "Fluglinien", tier: 1, look: "airlines", cards: [
+      { word: "Lufthansa", wordDe: "Lufthansa" },
+      { word: "Emirates", wordDe: "Emirates" },
+      { word: "Ryanair", wordDe: "Ryanair" },
+      { word: "KLM", wordDe: "KLM" },
+      { word: "Qantas", wordDe: "Qantas" },
+      { word: "easyJet", wordDe: "easyJet" },
+      { word: "Air France", wordDe: "Air France" },
+      { word: "Eurowings", wordDe: "Eurowings" }
+  ]},
+  { id: "car-brands", theme: "Car Brands", themeDe: "Automarken", tier: 1, look: "cars", cards: [
+      { word: "Porsche", wordDe: "Porsche" },
+      { word: "Ferrari", wordDe: "Ferrari" },
+      { word: "Toyota", wordDe: "Toyota" },
+      { word: "Volvo", wordDe: "Volvo" },
+      { word: "Audi", wordDe: "Audi" },
+      { word: "Tesla", wordDe: "Tesla" },
+      { word: "Fiat", wordDe: "Fiat" },
+      { word: "Renault", wordDe: "Renault" }
+  ]},
+  { id: "hello", theme: "Saying Hello", themeDe: "Hallo sagen", tier: 1, look: "hello", cards: [
+      { word: "Hola", wordDe: "Hola" },
+      { word: "Bonjour", wordDe: "Bonjour" },
+      { word: "Ciao", wordDe: "Ciao" },
+      { word: "Hej", wordDe: "Hej" },
+      { word: "Merhaba", wordDe: "Merhaba" },
+      { word: "Konnichiwa", wordDe: "Konnichiwa" },
+      { word: "Namaste", wordDe: "Namaste" },
+      { word: "Olá", wordDe: "Olá" }
+  ]},
+  { id: "dances", theme: "Dances", themeDe: "Tänze", tier: 1, look: "dances", cards: [
+      { word: "Tango", wordDe: "Tango" },
+      { word: "Waltz", wordDe: "Walzer" },
+      { word: "Salsa", wordDe: "Salsa" },
+      { word: "Samba", wordDe: "Samba" },
+      { word: "Flamenco", wordDe: "Flamenco" },
+      { word: "Ballet", wordDe: "Ballett" },
+      { word: "Breakdance", wordDe: "Breakdance" },
+      { word: "Cha-cha", wordDe: "Cha-Cha-Cha" }
+  ]},
+  { id: "gods", theme: "Gods of Myth", themeDe: "Götter der Sagen", tier: 1, look: "gods", cards: [
+      { word: "Zeus", wordDe: "Zeus" },
+      { word: "Thor", wordDe: "Thor" },
+      { word: "Odin", wordDe: "Odin" },
+      { word: "Hera", wordDe: "Hera" },
+      { word: "Poseidon", wordDe: "Poseidon" },
+      { word: "Athena", wordDe: "Athene" },
+      { word: "Freya", wordDe: "Freya" },
+      { word: "Ra", wordDe: "Ra" }
+  ]},
+  { id: "cheese", theme: "Cheese", themeDe: "Käse", tier: 1, look: "cheese", cards: [
+      { word: "Gouda", wordDe: "Gouda" },
+      { word: "Brie", wordDe: "Brie" },
+      { word: "Feta", wordDe: "Feta" },
+      { word: "Cheddar", wordDe: "Cheddar" },
+      { word: "Parmesan", wordDe: "Parmesan" },
+      { word: "Camembert", wordDe: "Camembert" },
+      { word: "Mozzarella", wordDe: "Mozzarella" },
+      { word: "Emmental", wordDe: "Emmentaler" }
   ]}
 ];
