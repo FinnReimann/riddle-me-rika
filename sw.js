@@ -2,7 +2,7 @@
    Strategy: serve from cache right away, refresh the cache in the background
    (stale-while-revalidate). Bump CACHE_VERSION when you want every device to
    drop its old copy at once (e.g. after a big redesign). */
-const CACHE_VERSION = 'rmr-v14';
+const CACHE_VERSION = 'rmr-v15';
 
 const CORE = [
   './',
@@ -24,7 +24,8 @@ const CORE = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_VERSION)
-      .then((cache) => cache.addAll(CORE))
+      // cache: 'reload' skips the browser's HTTP cache, so a new version never precaches old files
+      .then((cache) => cache.addAll(CORE.map((u) => new Request(u, { cache: 'reload' }))))
       .then(() => self.skipWaiting())
   );
 });
