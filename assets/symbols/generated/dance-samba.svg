@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="marker" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <!-- 1. wobbly hand-drawn edges -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="10" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <!-- 2. soft marker edge -->
+      <feGaussianBlur in="wobble" stdDeviation="1.6" result="soft"/>
+      <!-- 3. blotchy marker shading (dark patches) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="484" result="blotch"/>
+      <feColorMatrix in="blotch" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.25 -0.62" result="blotchA"/>
+      <feComposite in="blotchA" in2="soft" operator="in" result="shade"/>
+      <!-- 4. fine paper/fibre texture (light speckles) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="732" result="fibre"/>
+      <feColorMatrix in="fibre" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.75 -0.55" result="fibreA"/>
+      <feComposite in="fibreA" in2="soft" operator="in" result="speckle"/>
+      <feMerge><feMergeNode in="soft"/><feMergeNode in="shade"/><feMergeNode in="speckle"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#marker)">
+    <!-- outer feathers -->
+    <ellipse cx="143" cy="325" rx="32" ry="115" transform="rotate(-60 143 325)" fill="#e57fae"/>
+    <ellipse cx="369" cy="325" rx="32" ry="115" transform="rotate(60 369 325)" fill="#e57fae"/>
+    <ellipse cx="164" cy="298" rx="32" ry="115" transform="rotate(-45 164 298)" fill="#e8812a"/>
+    <ellipse cx="348" cy="298" rx="32" ry="115" transform="rotate(45 348 298)" fill="#e8812a"/>
+    <ellipse cx="191" cy="277" rx="32" ry="115" transform="rotate(-30 191 277)" fill="#f2c230"/>
+    <ellipse cx="321" cy="277" rx="32" ry="115" transform="rotate(30 321 277)" fill="#f2c230"/>
+    <ellipse cx="222" cy="264" rx="32" ry="115" transform="rotate(-15 222 264)" fill="#3f9a3a"/>
+    <ellipse cx="290" cy="264" rx="32" ry="115" transform="rotate(15 290 264)" fill="#3f9a3a"/>
+    <ellipse cx="256" cy="260" rx="34" ry="120" fill="#c8432c"/>
+    <!-- feather quills -->
+    <path d="M256 380 L256 170 M256 380 L200 182 M256 380 L312 182 M256 380 L150 214 M256 380 L362 214 M256 380 L110 262 M256 380 L402 262 M256 380 L82 318 M256 380 L430 318" stroke="#f4efe6" stroke-width="8" stroke-linecap="round" fill="none" opacity="0.55"/>
+    <!-- inner short feathers -->
+    <ellipse cx="206" cy="340" rx="22" ry="70" transform="rotate(-45 206 340)" fill="#6d4fa8"/>
+    <ellipse cx="306" cy="340" rx="22" ry="70" transform="rotate(45 306 340)" fill="#6d4fa8"/>
+    <ellipse cx="238" cy="322" rx="22" ry="70" transform="rotate(-15 238 322)" fill="#3f8fd0"/>
+    <ellipse cx="274" cy="322" rx="22" ry="70" transform="rotate(15 274 322)" fill="#3f8fd0"/>
+    <!-- jewelled band -->
+    <path d="M118 424 Q256 330 394 424" stroke="#f2c230" stroke-width="44" stroke-linecap="round" fill="none"/>
+    <path d="M136 410 Q256 334 376 410" stroke="#f8de7a" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <circle cx="176" cy="392" r="16" fill="#c8432c"/>
+    <circle cx="336" cy="392" r="16" fill="#3f9a3a"/>
+    <path d="M256 344 L284 374 L256 404 L228 374 Z" fill="#3f8fd0"/>
+  </g>
+</svg>

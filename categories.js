@@ -257,8 +257,8 @@ window.CATEGORIES = [
   // look = card style in cards.css (.look-<look>): font and typographic badge.
   // Cards WITHOUT a symbol are text cards: instead of a picture they show a
   // badge with the word's first letter (look "hello": the whole word in a bubble).
-  // Add a symbol later and the card shows the picture as usual.
-  // Brand names are only written as plain words - never draw their logos.
+  // All cards have symbols now; remove one to get the text badge back.
+  // Brands: plain words and generic pictures (item + home-country flag) - never their logos.
   { id: "capitals", theme: "European Capitals", themeDe: "Hauptstädte Europas", tier: 1, look: "capitals", cards: [
       { word: "Paris", wordDe: "Paris", symbol: "paris" },
       { word: "London", wordDe: "London", symbol: "london" },
@@ -270,73 +270,73 @@ window.CATEGORIES = [
       { word: "Lisbon", wordDe: "Lissabon", symbol: "lisbon" }
   ]},
   { id: "fashion", theme: "High Fashion", themeDe: "High Fashion", tier: 1, look: "fashion", cards: [
-      { word: "Gucci", wordDe: "Gucci" },
-      { word: "Prada", wordDe: "Prada" },
-      { word: "Chanel", wordDe: "Chanel" },
-      { word: "Dior", wordDe: "Dior" },
-      { word: "Versace", wordDe: "Versace" },
-      { word: "Hermès", wordDe: "Hermès" },
-      { word: "Balenciaga", wordDe: "Balenciaga" },
-      { word: "Valentino", wordDe: "Valentino" }
+      { word: "Gucci", wordDe: "Gucci", symbol: "fashion-gucci" },
+      { word: "Prada", wordDe: "Prada", symbol: "fashion-prada" },
+      { word: "Chanel", wordDe: "Chanel", symbol: "fashion-chanel" },
+      { word: "Dior", wordDe: "Dior", symbol: "fashion-dior" },
+      { word: "Versace", wordDe: "Versace", symbol: "fashion-versace" },
+      { word: "Hermès", wordDe: "Hermès", symbol: "fashion-hermes" },
+      { word: "Balenciaga", wordDe: "Balenciaga", symbol: "fashion-balenciaga" },
+      { word: "Valentino", wordDe: "Valentino", symbol: "fashion-valentino" }
   ]},
   { id: "airlines", theme: "Airlines", themeDe: "Fluglinien", tier: 1, look: "airlines", cards: [
-      { word: "Lufthansa", wordDe: "Lufthansa" },
-      { word: "Emirates", wordDe: "Emirates" },
-      { word: "Ryanair", wordDe: "Ryanair" },
-      { word: "KLM", wordDe: "KLM" },
-      { word: "Qantas", wordDe: "Qantas" },
-      { word: "easyJet", wordDe: "easyJet" },
-      { word: "Air France", wordDe: "Air France" },
-      { word: "Eurowings", wordDe: "Eurowings" }
+      { word: "Lufthansa", wordDe: "Lufthansa", symbol: "airline-lufthansa" },
+      { word: "Emirates", wordDe: "Emirates", symbol: "airline-emirates" },
+      { word: "Ryanair", wordDe: "Ryanair", symbol: "airline-ryanair" },
+      { word: "KLM", wordDe: "KLM", symbol: "airline-klm" },
+      { word: "Qantas", wordDe: "Qantas", symbol: "airline-qantas" },
+      { word: "easyJet", wordDe: "easyJet", symbol: "airline-easyjet" },
+      { word: "Air France", wordDe: "Air France", symbol: "airline-airfrance" },
+      { word: "Eurowings", wordDe: "Eurowings", symbol: "airline-eurowings" }
   ]},
   { id: "car-brands", theme: "Car Brands", themeDe: "Automarken", tier: 1, look: "cars", cards: [
-      { word: "Porsche", wordDe: "Porsche" },
-      { word: "Ferrari", wordDe: "Ferrari" },
-      { word: "Toyota", wordDe: "Toyota" },
-      { word: "Volvo", wordDe: "Volvo" },
-      { word: "Audi", wordDe: "Audi" },
-      { word: "Tesla", wordDe: "Tesla" },
-      { word: "Fiat", wordDe: "Fiat" },
-      { word: "Renault", wordDe: "Renault" }
+      { word: "Porsche", wordDe: "Porsche", symbol: "car-porsche" },
+      { word: "Ferrari", wordDe: "Ferrari", symbol: "car-ferrari" },
+      { word: "Toyota", wordDe: "Toyota", symbol: "car-toyota" },
+      { word: "Volvo", wordDe: "Volvo", symbol: "car-volvo" },
+      { word: "Audi", wordDe: "Audi", symbol: "car-audi" },
+      { word: "Tesla", wordDe: "Tesla", symbol: "car-tesla" },
+      { word: "Fiat", wordDe: "Fiat", symbol: "car-fiat" },
+      { word: "Renault", wordDe: "Renault", symbol: "car-renault" }
   ]},
   { id: "hello", theme: "Saying Hello", themeDe: "Hallo sagen", tier: 1, look: "hello", cards: [
-      { word: "Hola", wordDe: "Hola" },
-      { word: "Bonjour", wordDe: "Bonjour" },
-      { word: "Ciao", wordDe: "Ciao" },
-      { word: "Hej", wordDe: "Hej" },
-      { word: "Merhaba", wordDe: "Merhaba" },
-      { word: "Konnichiwa", wordDe: "Konnichiwa" },
-      { word: "Namaste", wordDe: "Namaste" },
-      { word: "Olá", wordDe: "Olá" }
+      { word: "Hola", wordDe: "Hola", symbol: "hello-hola" },
+      { word: "Bonjour", wordDe: "Bonjour", symbol: "hello-bonjour" },
+      { word: "Ciao", wordDe: "Ciao", symbol: "hello-ciao" },
+      { word: "Hej", wordDe: "Hej", symbol: "hello-hej" },
+      { word: "Merhaba", wordDe: "Merhaba", symbol: "hello-merhaba" },
+      { word: "Konnichiwa", wordDe: "Konnichiwa", symbol: "hello-konnichiwa" },
+      { word: "Namaste", wordDe: "Namaste", symbol: "hello-namaste" },
+      { word: "Olá", wordDe: "Olá", symbol: "hello-ola" }
   ]},
   { id: "dances", theme: "Dances", themeDe: "Tänze", tier: 1, look: "dances", cards: [
-      { word: "Tango", wordDe: "Tango" },
-      { word: "Waltz", wordDe: "Walzer" },
-      { word: "Salsa", wordDe: "Salsa" },
-      { word: "Samba", wordDe: "Samba" },
-      { word: "Flamenco", wordDe: "Flamenco" },
-      { word: "Ballet", wordDe: "Ballett" },
-      { word: "Breakdance", wordDe: "Breakdance" },
-      { word: "Cha-cha", wordDe: "Cha-Cha-Cha" }
+      { word: "Tango", wordDe: "Tango", symbol: "dance-tango" },
+      { word: "Waltz", wordDe: "Walzer", symbol: "dance-waltz" },
+      { word: "Salsa", wordDe: "Salsa", symbol: "dance-salsa" },
+      { word: "Samba", wordDe: "Samba", symbol: "dance-samba" },
+      { word: "Flamenco", wordDe: "Flamenco", symbol: "dance-flamenco" },
+      { word: "Ballet", wordDe: "Ballett", symbol: "dance-ballet" },
+      { word: "Breakdance", wordDe: "Breakdance", symbol: "dance-breakdance" },
+      { word: "Cha-cha", wordDe: "Cha-Cha-Cha", symbol: "dance-chacha" }
   ]},
   { id: "gods", theme: "Gods of Myth", themeDe: "Götter der Sagen", tier: 1, look: "gods", cards: [
-      { word: "Zeus", wordDe: "Zeus" },
-      { word: "Thor", wordDe: "Thor" },
-      { word: "Odin", wordDe: "Odin" },
-      { word: "Hera", wordDe: "Hera" },
-      { word: "Poseidon", wordDe: "Poseidon" },
-      { word: "Athena", wordDe: "Athene" },
-      { word: "Freya", wordDe: "Freya" },
-      { word: "Ra", wordDe: "Ra" }
+      { word: "Zeus", wordDe: "Zeus", symbol: "god-zeus" },
+      { word: "Thor", wordDe: "Thor", symbol: "god-thor" },
+      { word: "Odin", wordDe: "Odin", symbol: "god-odin" },
+      { word: "Hera", wordDe: "Hera", symbol: "god-hera" },
+      { word: "Poseidon", wordDe: "Poseidon", symbol: "god-poseidon" },
+      { word: "Athena", wordDe: "Athene", symbol: "god-athena" },
+      { word: "Freya", wordDe: "Freya", symbol: "god-freya" },
+      { word: "Ra", wordDe: "Ra", symbol: "god-ra" }
   ]},
   { id: "cheese", theme: "Cheese", themeDe: "Käse", tier: 1, look: "cheese", cards: [
-      { word: "Gouda", wordDe: "Gouda" },
-      { word: "Brie", wordDe: "Brie" },
-      { word: "Feta", wordDe: "Feta" },
-      { word: "Cheddar", wordDe: "Cheddar" },
-      { word: "Parmesan", wordDe: "Parmesan" },
-      { word: "Camembert", wordDe: "Camembert" },
-      { word: "Mozzarella", wordDe: "Mozzarella" },
-      { word: "Emmental", wordDe: "Emmentaler" }
+      { word: "Gouda", wordDe: "Gouda", symbol: "cheese-gouda" },
+      { word: "Brie", wordDe: "Brie", symbol: "cheese-brie" },
+      { word: "Feta", wordDe: "Feta", symbol: "cheese-feta" },
+      { word: "Cheddar", wordDe: "Cheddar", symbol: "cheese-cheddar" },
+      { word: "Parmesan", wordDe: "Parmesan", symbol: "cheese-parmesan" },
+      { word: "Camembert", wordDe: "Camembert", symbol: "cheese-camembert" },
+      { word: "Mozzarella", wordDe: "Mozzarella", symbol: "cheese-mozzarella" },
+      { word: "Emmental", wordDe: "Emmentaler", symbol: "cheese-emmental" }
   ]}
 ];

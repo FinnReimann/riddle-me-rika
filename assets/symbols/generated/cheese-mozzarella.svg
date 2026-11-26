@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="marker" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <!-- 1. wobbly hand-drawn edges -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="10" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <!-- 2. soft marker edge -->
+      <feGaussianBlur in="wobble" stdDeviation="1.6" result="soft"/>
+      <!-- 3. blotchy marker shading (dark patches) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="27" result="blotch"/>
+      <feColorMatrix in="blotch" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.25 -0.62" result="blotchA"/>
+      <feComposite in="blotchA" in2="soft" operator="in" result="shade"/>
+      <!-- 4. fine paper/fibre texture (light speckles) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="307" result="fibre"/>
+      <feColorMatrix in="fibre" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.75 -0.55" result="fibreA"/>
+      <feComposite in="fibreA" in2="soft" operator="in" result="speckle"/>
+      <feMerge><feMergeNode in="soft"/><feMergeNode in="shade"/><feMergeNode in="speckle"/></feMerge>
+    </filter>
+
+  </defs>
+  <g filter="url(#marker)">
+    <!-- tomato slice -->
+    <circle cx="340" cy="170" r="110" fill="#c8432c"/>
+    <circle cx="340" cy="170" r="84" fill="#e0603e"/>
+    <path d="M340 170 L340 96 M340 170 L404 208 M340 170 L276 208" stroke="#c8432c" stroke-width="14" stroke-linecap="round"/>
+    <ellipse cx="312" cy="134" rx="9" ry="12" fill="#f2c230"/>
+    <ellipse cx="372" cy="140" rx="9" ry="12" fill="#f2c230"/>
+    <ellipse cx="340" cy="222" rx="12" ry="9" fill="#f2c230"/>
+    <!-- mozzarella balls -->
+    <circle cx="176" cy="320" r="112" fill="#d6d2ca"/>
+    <circle cx="166" cy="310" r="98" fill="#f4efe6"/>
+    <circle cx="360" cy="370" r="86" fill="#d6d2ca"/>
+    <circle cx="352" cy="362" r="74" fill="#f4efe6"/>
+    <ellipse cx="136" cy="270" rx="24" ry="14" fill="#ffffff"/>
+    <!-- basil leaf -->
+    <path d="M100 168 Q120 64 230 70 Q216 172 100 168 Z" fill="#3f9a3a"/>
+    <path d="M108 160 Q160 110 222 76" stroke="#2f6f2c" stroke-width="10" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>

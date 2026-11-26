@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="marker" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <!-- 1. wobbly hand-drawn edges -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="10" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <!-- 2. soft marker edge -->
+      <feGaussianBlur in="wobble" stdDeviation="1.6" result="soft"/>
+      <!-- 3. blotchy marker shading (dark patches) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="28" result="blotch"/>
+      <feColorMatrix in="blotch" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.25 -0.62" result="blotchA"/>
+      <feComposite in="blotchA" in2="soft" operator="in" result="shade"/>
+      <!-- 4. fine paper/fibre texture (light speckles) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="308" result="fibre"/>
+      <feColorMatrix in="fibre" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.75 -0.55" result="fibreA"/>
+      <feComposite in="fibreA" in2="soft" operator="in" result="speckle"/>
+      <feMerge><feMergeNode in="soft"/><feMergeNode in="shade"/><feMergeNode in="speckle"/></feMerge>
+    </filter>
+    <mask id="holes"><rect x="0" y="0" width="512" height="512" fill="#fff"/><g fill="#000"><circle cx="170" cy="190" r="44"/><circle cx="330" cy="250" r="56"/><circle cx="200" cy="340" r="30"/><circle cx="420" cy="150" r="36"/><circle cx="62" cy="300" r="34"/><circle cx="300" cy="400" r="34"/></g></mask>
+  </defs>
+  <g filter="url(#marker)">
+    <g mask="url(#holes)">
+      <!-- slice edge -->
+      <path d="M70 120 L452 90 L460 400 L80 432 Z" fill="#e0b83a" transform="translate(0 14)"/>
+      <!-- slice face -->
+      <path d="M70 120 L452 90 L460 400 L80 432 Z" fill="#f6dc7a"/>
+    </g>
+    <!-- hole inner walls -->
+    <path d="M128 200 A44 44 0 0 0 212 200 A44 30 0 0 1 128 200 Z" fill="#e0b83a"/>
+    <path d="M274 260 A56 56 0 0 0 386 260 A56 38 0 0 1 274 260 Z" fill="#e0b83a"/>
+  </g>
+</svg>

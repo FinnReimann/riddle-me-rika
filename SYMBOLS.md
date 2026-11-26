@@ -1,7 +1,7 @@
 # Riddle Me Rika — Symbols to draw
 
-Checklist of every card symbol in `categories.js`: **25 picture categories × 8 cards = 200 symbols**, plus
-**32 category-card symbols** (7 more categories are text-only, see below) (see "Category cards" at the end).
+Checklist of every card symbol in `categories.js`: **32 categories × 8 cards = 256 symbols**, plus
+**32 category-card symbols** (see "Category cards" at the end).
 
 - **Folder:** `assets/symbols/`
 - **Filename:** must match exactly, lowercase, e.g. `ice-cream.png`
@@ -264,12 +264,77 @@ Tick a box (`[x]`) once a symbol is drawn.
 - [ ] prague.png — Prague / Prag (Charles Bridge)
 - [ ] lisbon.png — Lisbon / Lissabon (Belém Tower)
 
-## Text-only categories (no word symbols)
+## High Fashion
+- [ ] fashion-gucci.png — Gucci / Gucci
+- [ ] fashion-prada.png — Prada / Prada
+- [ ] fashion-chanel.png — Chanel / Chanel
+- [ ] fashion-dior.png — Dior / Dior
+- [ ] fashion-versace.png — Versace / Versace
+- [ ] fashion-hermes.png — Hermès / Hermès
+- [ ] fashion-balenciaga.png — Balenciaga / Balenciaga
+- [ ] fashion-valentino.png — Valentino / Valentino
 
-High Fashion, Airlines, Car Brands, Saying Hello, Dances, Gods of Myth, Cheese:
-their word cards have no `symbol` in `categories.js` and show a typographic badge
-instead (style per `look` in `cards.css`). Brand names stay plain words - no logos.
-If you ever want a picture on one, add `symbol: "..."` to that card and drop the PNG here.
+## Airlines
+- [ ] airline-lufthansa.png — Lufthansa / Lufthansa
+- [ ] airline-emirates.png — Emirates / Emirates
+- [ ] airline-ryanair.png — Ryanair / Ryanair
+- [ ] airline-klm.png — KLM / KLM
+- [ ] airline-qantas.png — Qantas / Qantas
+- [ ] airline-easyjet.png — easyJet / easyJet
+- [ ] airline-airfrance.png — Air France / Air France
+- [ ] airline-eurowings.png — Eurowings / Eurowings
+
+## Car Brands
+- [ ] car-porsche.png — Porsche / Porsche
+- [ ] car-ferrari.png — Ferrari / Ferrari
+- [ ] car-toyota.png — Toyota / Toyota
+- [ ] car-volvo.png — Volvo / Volvo
+- [ ] car-audi.png — Audi / Audi
+- [ ] car-tesla.png — Tesla / Tesla
+- [ ] car-fiat.png — Fiat / Fiat
+- [ ] car-renault.png — Renault / Renault
+
+## Saying Hello
+- [ ] hello-hola.png — Hola / Hola
+- [ ] hello-bonjour.png — Bonjour / Bonjour
+- [ ] hello-ciao.png — Ciao / Ciao
+- [ ] hello-hej.png — Hej / Hej
+- [ ] hello-merhaba.png — Merhaba / Merhaba
+- [ ] hello-konnichiwa.png — Konnichiwa / Konnichiwa
+- [ ] hello-namaste.png — Namaste / Namaste
+- [ ] hello-ola.png — Olá / Olá
+
+## Dances
+- [ ] dance-tango.png — Tango / Tango
+- [ ] dance-waltz.png — Waltz / Walzer
+- [ ] dance-salsa.png — Salsa / Salsa
+- [ ] dance-samba.png — Samba / Samba
+- [ ] dance-flamenco.png — Flamenco / Flamenco
+- [ ] dance-ballet.png — Ballet / Ballett
+- [ ] dance-breakdance.png — Breakdance / Breakdance
+- [ ] dance-chacha.png — Cha-cha / Cha-Cha-Cha
+
+## Gods of Myth
+- [ ] god-zeus.png — Zeus / Zeus
+- [ ] god-thor.png — Thor / Thor
+- [ ] god-odin.png — Odin / Odin
+- [ ] god-hera.png — Hera / Hera
+- [ ] god-poseidon.png — Poseidon / Poseidon
+- [ ] god-athena.png — Athena / Athene
+- [ ] god-freya.png — Freya / Freya
+- [ ] god-ra.png — Ra / Ra
+
+## Cheese
+- [ ] cheese-gouda.png — Gouda / Gouda
+- [ ] cheese-brie.png — Brie / Brie
+- [ ] cheese-feta.png — Feta / Feta
+- [ ] cheese-cheddar.png — Cheddar / Cheddar
+- [ ] cheese-parmesan.png — Parmesan / Parmesan
+- [ ] cheese-camembert.png — Camembert / Camembert
+- [ ] cheese-mozzarella.png — Mozzarella / Mozzarella
+- [ ] cheese-emmental.png — Emmental / Emmentaler
+
+Brands (fashion, airlines, cars) only get generic pictures (an item, a home-country flag) - never logos.
 
 ## Category cards
 

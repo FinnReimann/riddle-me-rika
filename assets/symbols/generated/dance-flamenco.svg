@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="marker" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <!-- 1. wobbly hand-drawn edges -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="10" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <!-- 2. soft marker edge -->
+      <feGaussianBlur in="wobble" stdDeviation="1.6" result="soft"/>
+      <!-- 3. blotchy marker shading (dark patches) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="491" result="blotch"/>
+      <feColorMatrix in="blotch" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.25 -0.62" result="blotchA"/>
+      <feComposite in="blotchA" in2="soft" operator="in" result="shade"/>
+      <!-- 4. fine paper/fibre texture (light speckles) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="743" result="fibre"/>
+      <feColorMatrix in="fibre" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.75 -0.55" result="fibreA"/>
+      <feComposite in="fibreA" in2="soft" operator="in" result="speckle"/>
+      <feMerge><feMergeNode in="soft"/><feMergeNode in="shade"/><feMergeNode in="speckle"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#marker)">
+    <!-- raised arm with open fan -->
+    <path d="M250 140 L342 128" stroke="#d9915e" stroke-width="18" stroke-linecap="round" fill="none"/>
+    <path d="M356 138 L272 90 A96 96 0 0 1 438 84 Z" fill="#33302e"/>
+    <path d="M356 138 L300 68 M356 138 L340 46 M356 138 L384 46 M356 138 L420 64" stroke="#c8432c" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <path d="M272 90 A96 96 0 0 1 438 84" stroke="#c8432c" stroke-width="12" stroke-linecap="round" fill="none"/>
+    <circle cx="356" cy="138" r="12" fill="#f2c230"/>
+    <!-- hand on hip -->
+    <path d="M210 148 Q166 188 208 222" stroke="#d9915e" stroke-width="18" stroke-linecap="round" fill="none"/>
+    <!-- long dress with ruffle train -->
+    <path d="M212 232 L252 232 Q262 320 300 372 Q370 398 450 430 Q430 462 384 458 L118 458 Q96 444 146 418 Q192 330 212 232 Z" fill="#c8432c"/>
+    <path d="M150 392 Q222 366 304 382 Q370 396 420 420" stroke="#33302e" stroke-width="18" stroke-linecap="round" fill="none"/>
+    <path d="M118 446 Q200 420 280 432 Q360 432 446 444" stroke="#33302e" stroke-width="22" stroke-linecap="round" fill="none"/>
+    <g fill="#33302e">
+      <circle cx="222" cy="290" r="9"/><circle cx="244" cy="330" r="9"/><circle cx="200" cy="344" r="9"/>
+      <circle cx="270" cy="356" r="9"/><circle cx="182" cy="408" r="9"/><circle cx="250" cy="410" r="9"/>
+      <circle cx="330" cy="414" r="9"/>
+    </g>
+    <!-- bodice -->
+    <path d="M206 128 L254 128 L252 240 L212 240 Z" fill="#c8432c"/>
+    <path d="M208 238 L256 238" stroke="#33302e" stroke-width="14" stroke-linecap="round" fill="none"/>
+    <!-- head with bun and flower -->
+    <circle cx="230" cy="94" r="28" fill="#d9915e"/>
+    <path d="M202 90 Q206 62 236 64 Q258 70 258 86 Q230 76 202 90 Z" fill="#33302e"/>
+    <circle cx="204" cy="72" r="20" fill="#33302e"/>
+    <circle cx="246" cy="62" r="15" fill="#c8432c"/>
+  </g>
+</svg>

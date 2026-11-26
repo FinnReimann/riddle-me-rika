@@ -102,7 +102,9 @@ A category in `categories.js` can have `look: "<name>"`. All its cards then get
 the class `.look-<name>` (font of the word etc.), and its word cards WITHOUT a
 `symbol` become text cards (`.card--text`): the symbol area shows `.card__mono`,
 a badge with the word's first letter (look `hello`: the whole word in a speech
-bubble). Styles are in the "Category looks" section of `cards.css`:
+bubble). Right now every card has a symbol, so only the font part of the look
+shows; the badge is the fallback for a card whose `symbol` you remove.
+Styles are in the "Category looks" section of `cards.css`:
 
 | look | category | style |
 |---|---|---|

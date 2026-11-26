@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="marker" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <!-- 1. wobbly hand-drawn edges -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="10" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <!-- 2. soft marker edge -->
+      <feGaussianBlur in="wobble" stdDeviation="1.6" result="soft"/>
+      <!-- 3. blotchy marker shading (dark patches) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="456" result="blotch"/>
+      <feColorMatrix in="blotch" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.25 -0.62" result="blotchA"/>
+      <feComposite in="blotchA" in2="soft" operator="in" result="shade"/>
+      <!-- 4. fine paper/fibre texture (light speckles) -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="688" result="fibre"/>
+      <feColorMatrix in="fibre" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.75 -0.55" result="fibreA"/>
+      <feComposite in="fibreA" in2="soft" operator="in" result="speckle"/>
+      <feMerge><feMergeNode in="soft"/><feMergeNode in="shade"/><feMergeNode in="speckle"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#marker)">
+    <!-- wings: gold top band, blue middle, navy long feathers -->
+    <path d="M200 236 Q120 170 40 196 Q60 236 110 250 Q160 262 200 268 Z" fill="#f2c230"/>
+    <path d="M312 236 Q392 170 472 196 Q452 236 402 250 Q352 262 312 268 Z" fill="#f2c230"/>
+    <path d="M200 262 L104 250 Q60 240 46 214 Q48 282 120 300 L200 300 Z" fill="#3f8fd0"/>
+    <path d="M312 262 L408 250 Q452 240 466 214 Q464 282 392 300 L312 300 Z" fill="#3f8fd0"/>
+    <path d="M200 296 L80 292 L96 316 L82 330 L112 340 L106 360 L148 356 L150 374 L200 352 Z" fill="#2c4f8f"/>
+    <path d="M312 296 L432 292 L416 316 L430 330 L400 340 L406 360 L364 356 L362 374 L312 352 Z" fill="#2c4f8f"/>
+    <path d="M70 216 Q130 230 196 250 M442 216 Q382 230 316 250" stroke="#d9a218" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <path d="M100 280 L190 282 M412 280 L322 282" stroke="#8cc4ee" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <!-- sun disk -->
+    <circle cx="256" cy="230" r="98" fill="#f2c230"/>
+    <circle cx="256" cy="230" r="78" fill="#c8432c"/>
+    <path d="M208 196 Q226 170 258 166" stroke="#e57060" stroke-width="12" stroke-linecap="round" fill="none"/>
+    <!-- cobras -->
+    <path d="M196 312 Q170 330 186 360 Q200 384 176 404" stroke="#3f9a3a" stroke-width="18" stroke-linecap="round" fill="none"/>
+    <path d="M316 312 Q342 330 326 360 Q312 384 336 404" stroke="#3f9a3a" stroke-width="18" stroke-linecap="round" fill="none"/>
+    <ellipse cx="172" cy="410" rx="18" ry="14" fill="#3f9a3a"/>
+    <ellipse cx="340" cy="410" rx="18" ry="14" fill="#3f9a3a"/>
+  </g>
+</svg>
